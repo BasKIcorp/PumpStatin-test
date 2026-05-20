@@ -78,9 +78,6 @@ export default function Account() {
   const [historyPickIds, setHistoryPickIds] = useState<number[]>([]);
   const [historyPickAdding, setHistoryPickAdding] = useState(false);
 
-  useEffect(() => {
-    if (!loading && !user) navigate("/login");
-  }, [user, loading, navigate]);
 
   useEffect(() => {
     if (!user) return;

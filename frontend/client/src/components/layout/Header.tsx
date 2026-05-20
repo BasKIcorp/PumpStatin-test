@@ -82,7 +82,7 @@ const Header: React.FC<HeaderProps> = ({
                 </>
               ) : (
                 <a
-                  href="/login"
+                  href="/account"
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-black/20 text-gray-700 transition-colors hover:bg-gray-50"
                   title="Войти"
                 >
@@ -159,7 +159,7 @@ const Header: React.FC<HeaderProps> = ({
               </>
             ) : (
               <a
-                href="/login"
+                href="/account"
                 className="flex items-center space-x-2 px-3 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

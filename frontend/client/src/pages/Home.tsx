@@ -759,7 +759,7 @@ useEffect(() => {
       </>
     ) : (
       <a
-        href="/login"
+        href="/account"
         className="flex items-center justify-center w-9 h-9 rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors shrink-0"
         title="Войти"
       >

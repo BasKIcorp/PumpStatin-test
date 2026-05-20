@@ -5,6 +5,10 @@ import axios, { ensureCsrf } from "./csrf";
 /** Увеличивается при login/register/logout, чтобы ответ «стартового» GET /api/auth/user/ не затирал сессию после входа. */
 let authEpoch = 0;
 
+/** Демо-вход в ЛК без формы (совпадает с seed SQLite). */
+export const DEMO_ADMIN_EMAIL = "admin@strela.local";
+export const DEMO_ADMIN_PASSWORD = "admin12345";
+
 export interface AuthUser {
   id: number;
   email: string;
@@ -27,30 +31,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const sessionProbeAbortRef = useRef<AbortController | null>(null);
 
+  const loginAsDemoAdmin = useCallback(async (epochAtStart: number) => {
+    try {
+      await ensureCsrf();
+      const r = await axios.post("/api/auth/login/", {
+        email: DEMO_ADMIN_EMAIL,
+        password: DEMO_ADMIN_PASSWORD,
+      });
+      if (epochAtStart !== authEpoch) return;
+      setUser(r.data);
+    } catch {
+      if (epochAtStart !== authEpoch) return;
+      setUser(null);
+    }
+  }, []);
+
   useEffect(() => {
     const ac = new AbortController();
     sessionProbeAbortRef.current = ac;
     const epochAtStart = authEpoch;
-    axios
-      .get("/api/auth/user/", { signal: ac.signal })
-      .then((r) => {
+
+    async function bootstrapSession() {
+      try {
+        const r = await axios.get("/api/auth/user/", { signal: ac.signal });
         if (epochAtStart !== authEpoch) return;
         setUser(r.data);
-      })
-      .catch((err: unknown) => {
+      } catch (err: unknown) {
         if (epochAtStart !== authEpoch) return;
         const code = err && typeof err === "object" && "code" in err ? (err as { code?: string }).code : undefined;
         if (code === "ERR_CANCELED" || code === "ECONNABORTED") return;
-        setUser(null);
-      })
-      .finally(() => {
+        await loginAsDemoAdmin(epochAtStart);
+      } finally {
         if (epochAtStart !== authEpoch) return;
         setLoading(false);
-      });
+      }
+    }
+
+    void bootstrapSession();
     return () => {
       ac.abort();
     };
-  }, []);
+  }, [loginAsDemoAdmin]);
 
   const login = useCallback(async (email: string, password: string) => {
     sessionProbeAbortRef.current?.abort();

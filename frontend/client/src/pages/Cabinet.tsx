@@ -88,7 +88,7 @@ function WorkingPoint({ Q, H }: { Q: number; H: number }) {
 export default function Cabinet() {
   const { user, loading, logout } = useAuth();
   const [, navigate] = useLocation();
-  const [activeTab, setActiveTab] = useState<TabId>("selections");
+  const [activeTab, setActiveTab] = useState<TabId>("dashboard");
   const [publicDataIntent, setPublicDataIntent] = useState<{ table: string; id: number } | null>(
     null,
   );
@@ -128,11 +128,6 @@ export default function Cabinet() {
   const [historyPickFilter, setHistoryPickFilter] = useState("");
   const [historyPickIds, setHistoryPickIds] = useState<number[]>([]);
   const [historyPickAdding, setHistoryPickAdding] = useState(false);
-
-  /* Редиректим неавторизованных */
-  useEffect(() => {
-    if (!loading && !user) navigate("/login");
-  }, [user, loading, navigate]);
 
   const isAdmin = user?.role === "admin";
 
