@@ -8,7 +8,7 @@ User=root
 WorkingDirectory=/opt/pumpstatin-test/frontend
 EnvironmentFile=-/opt/pumpstatin-test/deploy/production.env
 Environment=NODE_ENV=production
-ExecStart=/usr/bin/npx tsx server/index.ts
+ExecStart=/usr/bin/node dist/index.js
 Restart=on-failure
 RestartSec=5
 

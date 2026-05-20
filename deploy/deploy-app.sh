@@ -26,10 +26,15 @@ fi
 
 export NODE_ENV=production
 
+mkdir -p "$INSTALL_DIR/data"
 cd frontend
 npm ci
 npm run db:seed
 npm run build
+
+install -m 0644 "$INSTALL_DIR/deploy/nginx-pumpstatin.conf" /etc/nginx/sites-available/pumpstatin
+ln -sf /etc/nginx/sites-available/pumpstatin /etc/nginx/sites-enabled/pumpstatin
+nginx -t && systemctl reload nginx
 
 systemctl restart pumpstatin-frontend
 systemctl --no-pager status pumpstatin-frontend || true
