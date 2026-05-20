@@ -34,12 +34,15 @@ cd frontend
 
 # На VPS npm ci иногда оставляет битый node_modules (ENOENT в @radix-ui, lodash/_getRawTag.js и др.)
 npm_deps_ok() {
-  [[ -f node_modules/@radix-ui/react-tooltip/dist/index.mjs ]] \
+  [[ -f node_modules/better-sqlite3/build/Release/better_sqlite3.node ]] \
+    && [[ -f node_modules/@radix-ui/react-tooltip/dist/index.mjs ]] \
     && [[ -f node_modules/lodash/_getRawTag.js ]] \
     && [[ -f node_modules/lodash/omit.js ]]
 }
 
 install_node_modules() {
+  export MAKEFLAGS="-j1"
+  export npm_config_jobs=1
   local attempt
   for attempt in 1 2 3; do
     rm -rf node_modules
@@ -48,10 +51,14 @@ install_node_modules() {
     fi
     unset NODE_ENV
     npm ci --no-audit --no-fund
+    if [[ ! -f node_modules/better-sqlite3/build/Release/better_sqlite3.node ]]; then
+      echo "Rebuilding better-sqlite3 (attempt ${attempt}/3)..."
+      npm rebuild better-sqlite3 --build-from-source
+    fi
     if npm_deps_ok; then
       return 0
     fi
-    echo "npm ci incomplete (attempt ${attempt}/3): missing radix-ui or lodash files"
+    echo "npm ci incomplete (attempt ${attempt}/3): missing native or frontend deps"
   done
   echo "node_modules still broken after 3 npm ci attempts"
   ls -la node_modules/lodash/ 2>/dev/null | head -20 || true
