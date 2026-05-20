@@ -1,25 +1,30 @@
-# SSH и GitHub (PumpStatin_test)
+# SSH, VPS и GitHub (PumpStatin_test)
 
-## SSH-ключ для сервера 159.194.215.53
+## VPS production
 
 | | |
 |---|---|
-| Приватный ключ | `C:\Users\KonBas\.ssh\id_ed25519_pumpstatin` |
-| Публичный ключ | `C:\Users\KonBas\.ssh\id_ed25519_pumpstatin.pub` |
-| SSH config Host | `pumpstatin` или `pumpstatin-server` |
-| Подключение | `ssh pumpstatin` |
+| IP | `83.222.16.200` |
+| SSH | `ssh pumpstatin` (root, ключ `id_ed25519_pumpstatin`) |
+| Сайт | http://83.222.16.200/ |
+| Каталог на сервере | `/opt/pumpstatin-test` |
+| systemd | `pumpstatin-frontend` (порт 5000) |
+| nginx | прокси 80 → 5000 |
 
-Публичный ключ (добавить на сервер в `/root/.ssh/authorized_keys`):
+Ручной деплой на сервере:
 
+```bash
+cd /opt/pumpstatin-test && bash deploy/deploy-app.sh
 ```
-ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPT32fxFvWbi7B27zWDbtlkeb3MA7NnzlmkW1ECUprVw BaskovKonstantin-pumpstatin-159.194.215.53
-```
 
-Проверка после установки ключа на сервере:
+## SSH-ключ (локальный → сервер)
 
-```powershell
-ssh pumpstatin "hostname"
-```
+| | |
+|---|---|
+| Приватный | `C:\Users\KonBas\.ssh\id_ed25519_pumpstatin` |
+| Публичный | `C:\Users\KonBas\.ssh\id_ed25519_pumpstatin.pub` |
+
+Deploy key на сервере для `git pull` (GitHub): `/root/.ssh/github_pumpstatin_deploy`
 
 ## GitHub-репозиторий
 
@@ -30,3 +35,11 @@ ssh pumpstatin "hostname"
 | Видимость | private |
 | Ветка по умолчанию | `master` |
 | Remote | `origin` → `git@github.com:BasKIcorp/PumpStatin-test.git` (HTTPS push через gh) |
+
+## Автообновление при push
+
+Workflow `.github/workflows/deploy.yml` — при push в `master` выполняется SSH на VPS и `deploy/deploy-app.sh`.
+
+Секреты репозитория: `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`.
+
+Переменные окружения на сервере: `/opt/pumpstatin-test/deploy/production.env` (`DJANGO_API_URL` и т.д.).
