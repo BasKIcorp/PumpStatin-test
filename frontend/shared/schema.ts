@@ -4,8 +4,23 @@ import { z } from "zod";
 
 export const users = sqliteTable("users", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+  email: text("email").notNull().unique(),
+  username: text("username").notNull(),
+  firstName: text("first_name").notNull().default(""),
+  lastName: text("last_name").notNull().default(""),
+  passwordHash: text("password_hash").notNull(),
+  role: text("role").notNull().default("user"),
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  createdAt: text("created_at").notNull(),
+  lastLogin: text("last_login"),
+});
+
+export const sessions = sqliteTable("sessions", {
+  token: text("token").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  expiresAt: integer("expires_at").notNull(),
 });
 
 export const appSettings = sqliteTable("app_settings", {
@@ -20,8 +35,9 @@ export const pumps = sqliteTable("pumps", {
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
+  email: true,
   username: true,
-  password: true,
+  passwordHash: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;

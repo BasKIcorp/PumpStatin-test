@@ -2,7 +2,8 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { eq } from "drizzle-orm";
-import { appSettings, pumps } from "@shared/schema";
+import { appSettings, pumps, users } from "@shared/schema";
+import { hashPassword } from "./auth-store";
 import { getDb, getSqlitePath, initDatabase } from "./db";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -133,6 +134,7 @@ export async function seedDatabase(force = false): Promise<void> {
   const existing = db.select().from(appSettings).where(eq(appSettings.key, "appearance")).get();
   if (existing && !force) {
     const pumpCount = db.select().from(pumps).all().length;
+    seedDefaultUsers(false);
     if (pumpCount > 0) return;
   }
 
@@ -158,7 +160,43 @@ export async function seedDatabase(force = false): Promise<void> {
       .run();
   }
 
+  seedDefaultUsers(force);
   console.log(`SQLite seeded: ${getSqlitePath()}`);
+}
+
+const DEFAULT_ADMIN_EMAIL = "admin@strela.local";
+const DEFAULT_ADMIN_PASSWORD = "admin12345";
+
+function seedDefaultUsers(force: boolean): void {
+  const db = getDb();
+  const existingAdmin = db
+    .select()
+    .from(users)
+    .where(eq(users.email, DEFAULT_ADMIN_EMAIL))
+    .get();
+
+  if (existingAdmin && !force) return;
+
+  if (existingAdmin && force) {
+    db.delete(users).where(eq(users.email, DEFAULT_ADMIN_EMAIL)).run();
+  }
+
+  const createdAt = new Date().toISOString();
+  db.insert(users)
+    .values({
+      email: DEFAULT_ADMIN_EMAIL,
+      username: "admin",
+      firstName: "Администратор",
+      lastName: "Системы",
+      passwordHash: hashPassword(DEFAULT_ADMIN_PASSWORD),
+      role: "admin",
+      isActive: true,
+      createdAt,
+      lastLogin: null,
+    })
+    .run();
+
+  console.log(`Default admin: ${DEFAULT_ADMIN_EMAIL} / ${DEFAULT_ADMIN_PASSWORD}`);
 }
 
 const isSeedCli = process.argv[1]?.replace(/\\/g, "/").endsWith("server/seed.ts");

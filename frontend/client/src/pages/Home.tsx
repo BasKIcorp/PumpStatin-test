@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import Header from "@/components/layout/Header";
 import { SelectionFlowLayout } from "@/components/layout/SelectionFlowLayout";
+import { SelectionStageProgress } from "@/components/selection/SelectionStageProgress";
 import PumpSearchForm, {
   PumpSearchFormValues,
   PumpOperatingPointDisplay,
@@ -63,7 +64,7 @@ const WORK_BTN_PRIMARY = cn(
 const WORK_DESKTOP_FOCUS_RING =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--funnel-primary)] focus-visible:ring-offset-2";
 
-type FlowStep = "category" | "work";
+type FlowStep = "cards" | "parameters";
 
 const Home: React.FC = () => {
   const { showNotification } = useToastNotification();
@@ -76,7 +77,7 @@ const Home: React.FC = () => {
   }, [user]);
   const pendingSelectionSnapshotIdRef = useRef<number | null>(null);
 
-  const [flowStep, setFlowStep] = useState<FlowStep>("category");
+  const [flowStep, setFlowStep] = useState<FlowStep>("cards");
   const [productCategory, setProductCategory] = useState<ProductCategory | null>(null);
   const [hydromoduleLine, setHydromoduleLine] = useState<HydromoduleLineId | null>(null);
   const [pumpUnitLine, setPumpUnitLine] = useState<PumpUnitLineCode | null>(null);
@@ -111,7 +112,7 @@ const Home: React.FC = () => {
     if (productCategory === "simpel_pumps" && (!user || user.role !== "admin")) {
       setProductCategory(null);
       setSelectedPumpTypeCode(null);
-      setFlowStep("category");
+      setFlowStep("cards");
     }
   }, [productCategory, user, authLoading]);
 
@@ -259,7 +260,7 @@ const Home: React.FC = () => {
       setSelectedPumpTypeCode(null);
     }
 
-    setFlowStep("work");
+    setFlowStep("parameters");
   };
 
   // State for search parameters
@@ -297,7 +298,7 @@ const Home: React.FC = () => {
     setPumpUnitLineLabel(null);
     setPuStationSubtype(null);
     setSelectedPumpTypeCode(null);
-    setFlowStep("category");
+    setFlowStep("cards");
   }, []);
 
   const lastStationSuccessToastKeyRef = useRef<string>("");
@@ -1033,7 +1034,7 @@ useEffect(() => {
     handleSelectPump,
   ]);
 
-  if (flowStep === "category") {
+  if (flowStep === "cards") {
     const v = funnelStepVisuals("category");
     return (
       <SelectionFlowLayout
@@ -1042,6 +1043,7 @@ useEffect(() => {
         cardCaptionLogoSrc={v.cardCaptionLogo}
         title={v.title}
         subtitle={v.subtitle}
+        stageIndicator={<SelectionStageProgress current={1} />}
         headerRight={selectionHeaderRight}
         bodyClassName="overflow-hidden"
         stageBackgroundSrc={selectionSlidePng(1)}
@@ -1063,6 +1065,9 @@ useEffect(() => {
       className="selection-work-root flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden bg-[var(--funnel-page-bg)]"
       style={{ fontFamily: "var(--funnel-font-body)" }}
     >
+      <div className="mx-auto w-full max-w-[1440px] px-4 pt-2 sm:px-6 lg:px-8">
+        <SelectionStageProgress current={2} />
+      </div>
       <Header
         variant="simpel"
         pageTitle={headerPageTitle}
@@ -1081,7 +1086,7 @@ useEffect(() => {
                 clipRule="evenodd"
               />
             </svg>
-            <span className="truncate">Назад</span>
+            <span className="truncate">К карточкам</span>
             {selectedPumpTypeCode && (
               <span className="ml-0.5 shrink-0 text-xs font-semibold opacity-70">{selectedPumpTypeCode}</span>
             )}

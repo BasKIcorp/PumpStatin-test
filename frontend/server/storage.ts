@@ -22,7 +22,19 @@ export class SqliteStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const row = getDb().insert(users).values(insertUser).returning().get();
+    const row = getDb()
+      .insert(users)
+      .values({
+        ...insertUser,
+        firstName: "",
+        lastName: "",
+        role: "user",
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        lastLogin: null,
+      })
+      .returning()
+      .get();
     return row;
   }
 }

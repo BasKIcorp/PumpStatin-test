@@ -86,6 +86,8 @@ export interface SelectionFlowLayoutProps {
   backLabel?: string;
   /** Блок справа в шапке (профиль, админ) */
   headerRight?: React.ReactNode;
+  /** Индикатор этапов (1 — карточки, 2 — параметры) */
+  stageIndicator?: React.ReactNode;
   children: React.ReactNode;
   /** Нижняя панель (кнопка «Далее» и т.п.) */
   footer?: React.ReactNode;
@@ -322,6 +324,7 @@ export const SelectionFlowLayout: React.FC<SelectionFlowLayoutProps> = ({
   onBack,
   backLabel = "← Класс продукции",
   headerRight,
+  stageIndicator,
   children,
   footer,
   bodyClassName = "",
@@ -353,6 +356,7 @@ export const SelectionFlowLayout: React.FC<SelectionFlowLayoutProps> = ({
         >
           <header className="flex-shrink-0 border-0 px-2 py-2 sm:px-4 sm:py-2.5 lg:px-5">
             <div className="flex min-h-[44px] flex-col gap-2 sm:hidden">
+              {stageIndicator ? <div className="pb-0.5">{stageIndicator}</div> : null}
               <HeaderTitleBlock title={title} subtitle={subtitle} />
               <div className="flex min-h-[40px] items-center justify-between gap-2">
                 <div className="min-w-0 flex-1">
@@ -385,6 +389,7 @@ export const SelectionFlowLayout: React.FC<SelectionFlowLayoutProps> = ({
               </div>
 
               <div className="min-w-0 px-1">
+                {stageIndicator ? <div className="mb-2">{stageIndicator}</div> : null}
                 <HeaderTitleBlock title={title} subtitle={subtitle} />
               </div>
 
