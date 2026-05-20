@@ -25,19 +25,10 @@ rm -rf node_modules
 unset NODE_ENV
 npm ci --no-audit --no-fund
 
-for pkg in @radix-ui/react-tooltip wouter regexparam; do
-  if [[ "$pkg" == @* ]]; then
-    path="node_modules/${pkg}/dist/index.mjs"
-  else
-    path="node_modules/${pkg}/package.json"
-  fi
-  if [[ ! -f "$path" ]]; then
-    echo "Missing dependency file: $path — retrying npm ci"
-    rm -rf node_modules
-    npm ci --no-audit --no-fund
-    break
-  fi
-done
+if [[ ! -f node_modules/@radix-ui/react-tooltip/dist/index.mjs ]]; then
+  echo "npm ci incomplete (radix-ui tooltip), aborting"
+  exit 1
+fi
 
 npm run db:seed
 NODE_ENV=production npm run build
