@@ -9,7 +9,7 @@ NODE_MAJOR="${NODE_MAJOR:-20}"
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
-apt-get install -y -qq git curl nginx ca-certificates
+apt-get install -y -qq git curl nginx ca-certificates build-essential python3
 
 if ! command -v node &>/dev/null || [[ "$(node -v | sed 's/v//' | cut -d. -f1)" -lt 18 ]]; then
   curl -fsSL "https://deb.nodesource.com/setup_${NODE_MAJOR}.x" | bash -

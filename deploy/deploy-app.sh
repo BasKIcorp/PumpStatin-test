@@ -7,6 +7,18 @@ BRANCH="${BRANCH:-master}"
 REPO_URL="${REPO_URL:-git@github.com:BasKIcorp/PumpStatin-test.git}"
 ENV_FILE="${ENV_FILE:-$INSTALL_DIR/deploy/production.env}"
 
+ensure_native_build_tools() {
+  if command -v make >/dev/null && command -v g++ >/dev/null; then
+    return 0
+  fi
+  echo "Installing build-essential for better-sqlite3 (node-gyp)..."
+  export DEBIAN_FRONTEND=noninteractive
+  apt-get update -qq
+  apt-get install -y -qq build-essential python3
+}
+
+ensure_native_build_tools
+
 cd "$INSTALL_DIR"
 
 if [[ -d .git ]]; then
