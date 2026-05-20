@@ -15,6 +15,13 @@
 - `frontend/client/src/pages/AppAdmin.tsx` — админ-панель
 - `run-frontend.ps1`, `deploy/`
 
+## База данных
+
+- **SQLite** (`better-sqlite3` + Drizzle), путь: `SQLITE_PATH` (по умолчанию `frontend/data/app.sqlite`)
+- Сиды: `npm run db:seed` — appearance, form-config, демо-насосы
+- `USE_SQLITE=true` (по умолчанию) — локальные ручки `/api/appearance`, `/api/form-config`, `/api/get_matching_pumps`, `/api/get_station_result`
+- `BACKEND_API_URL` — если нужен внешний API вместо SQLite
+
 ## Переменные
 
-- `BACKEND_API_URL` — URL backend API
+- `USE_SQLITE`, `SQLITE_PATH`, `BACKEND_API_URL`

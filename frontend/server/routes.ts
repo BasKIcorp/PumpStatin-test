@@ -3,18 +3,26 @@ import { createServer, type Server } from "http";
 import axios from "axios";
 import FormData from "form-data";
 import { createProxyMiddleware } from "http-proxy-middleware";
-import { storage } from "./storage";
+import { ensureSqliteReady, registerSqliteRoutes } from "./sqlite-routes";
+import { log } from "./vite";
 
-// Simple CSRF token storage (in production, use Redis or database)
+// Simple CSRF token storage (in production, use SQLite app_settings or Redis)
 const csrfTokens = new Set<string>();
 
-// Для локальной разработки используем localhost, для продакшена - VPS
-const API_BASE_URL =
-  process.env.BACKEND_API_URL ||
-  process.env.DJANGO_API_URL ||
-  (process.env.NODE_ENV === "production"
+const useSqlite = process.env.USE_SQLITE !== "false";
+
+function resolveBackendUrl(): string {
+  const explicit =
+    process.env.BACKEND_API_URL?.trim() || process.env.DJANGO_API_URL?.trim() || "";
+  if (explicit) return explicit;
+  if (useSqlite) return "";
+  return process.env.NODE_ENV === "production"
     ? "http://localhost:8000"
-    : "http://127.0.0.1:8000");
+    : "http://127.0.0.1:8000";
+}
+
+const API_BASE_URL = resolveBackendUrl();
+const proxyToExternalBackend = Boolean(API_BASE_URL);
 
 /** Понятное сообщение вместо сырого «Proxy error», если API не слушает порт. */
 function describeProxyFailure(error: unknown): { status: number; message: string } {
@@ -47,14 +55,23 @@ function describeProxyFailure(error: unknown): { status: number; message: string
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Медиа API (изображения типов насосов, логотипы): абсолютные URL с 127.0.0.1 не открываются в браузере
-  app.use(
-    "/media",
-    createProxyMiddleware({
-      target: API_BASE_URL,
-      changeOrigin: true,
-    }),
-  );
+  if (useSqlite) {
+    await ensureSqliteReady();
+    if (!proxyToExternalBackend) {
+      registerSqliteRoutes(app);
+      log("SQLite API enabled (standalone)");
+    }
+  }
+
+  if (proxyToExternalBackend) {
+    app.use(
+      "/media",
+      createProxyMiddleware({
+        target: API_BASE_URL,
+        changeOrigin: true,
+      }),
+    );
+  }
 
   // ✅ CSRF token endpoint
   app.get("/api/csrf-token", (req, res) => {
@@ -172,7 +189,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     */
   };
 
-  // ✅ API proxy route for getting matching pumps
+  if (proxyToExternalBackend) {
+  // API proxy routes (external backend)
   app.get("/api/get_matching_pumps", async (req, res) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/get_matching_pumps`, {
@@ -559,6 +577,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const queryStr = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
     await proxyAuth(req, res, apiPath + queryStr);
   });
+  } else if (useSqlite) {
+    app.all("/api/*", (req, res) => {
+      res.status(501).json({
+        error: "Endpoint not available in SQLite mode",
+        path: req.path,
+      });
+    });
+  }
 
   const httpServer = createServer(app);
   return httpServer;

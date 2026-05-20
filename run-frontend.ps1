@@ -6,6 +6,7 @@ if (-not (Test-Path "node_modules")) {
     Write-Host "Installing dependencies..."
     npm install
 }
-$env:BACKEND_API_URL = "http://127.0.0.1:8000"
-Write-Host "Starting frontend on http://127.0.0.1:5000 (API proxy -> 8000)"
+$env:USE_SQLITE = "true"
+$env:SQLITE_PATH = Join-Path $frontendDir "data\app.sqlite"
+Write-Host "Starting frontend on http://127.0.0.1:5000 (SQLite API)"
 npm run dev

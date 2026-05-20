@@ -1,7 +1,6 @@
+import { eq } from "drizzle-orm";
 import { users, type User, type InsertUser } from "@shared/schema";
-
-// modify the interface with any CRUD methods
-// you might need
+import { getDb, initDatabase } from "./db";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -9,31 +8,23 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  currentId: number;
-
+export class SqliteStorage implements IStorage {
   constructor() {
-    this.users = new Map();
-    this.currentId = 1;
+    initDatabase();
   }
 
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    return getDb().select().from(users).where(eq(users.id, id)).get();
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    return getDb().select().from(users).where(eq(users.username, username)).get();
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentId++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+    const row = getDb().insert(users).values(insertUser).returning().get();
+    return row;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new SqliteStorage();

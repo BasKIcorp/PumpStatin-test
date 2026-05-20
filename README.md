@@ -9,7 +9,8 @@ React + Vite + Node/Express. Репозиторий: https://github.com/BasKIcor
 ```
 
 - UI: http://127.0.0.1:5000
-- Прокси `/api` и `/media` → `BACKEND_API_URL` (по умолчанию http://127.0.0.1:8000)
+- API на **SQLite** (`USE_SQLITE=true`, файл `frontend/data/app.sqlite`)
+- Опционально внешний backend: `BACKEND_API_URL` (если задан — прокси вместо SQLite)
 
 ## Production
 

@@ -28,6 +28,7 @@ export NODE_ENV=production
 
 cd frontend
 npm ci
+npm run db:seed
 npm run build
 
 systemctl restart pumpstatin-frontend

@@ -35,15 +35,18 @@ export async function setupVite(app: Express, server: Server) {
     customLogger: viteLogger,
   });
 
-  // Прокси на backend API — строго до vite.middlewares
-  app.use(
-    "/api",
-    createProxyMiddleware({
-      target: "http://127.0.0.1:8000",
-      changeOrigin: true,
-      selfHandleResponse: false
-    })
-  );
+  const useSqlite = process.env.USE_SQLITE !== "false";
+  const backendUrl = process.env.BACKEND_API_URL?.trim() || "";
+  if (!useSqlite || backendUrl) {
+    app.use(
+      "/api",
+      createProxyMiddleware({
+        target: backendUrl || "http://127.0.0.1:8000",
+        changeOrigin: true,
+        selfHandleResponse: false,
+      }),
+    );
+  }
 
   // ✅ Vite middleware для HTML/JS/CSS
   app.use(vite.middlewares);
