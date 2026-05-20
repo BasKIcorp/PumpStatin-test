@@ -1,0 +1,16 @@
+[Unit]
+Description=PumpStatin frontend (Node + static)
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/pumpstatin-test/frontend
+EnvironmentFile=-/opt/pumpstatin-test/deploy/production.env
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/npx tsx server/index.ts
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
