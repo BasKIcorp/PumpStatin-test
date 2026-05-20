@@ -37,20 +37,33 @@ function SelectionFlowSidebar({
   }
   return (
     <div
-      className="flex h-full min-h-0 w-full flex-col items-start justify-start gap-2 overflow-x-visible overflow-y-auto bg-[var(--funnel-surface)] px-1.5 pt-2 sm:px-2 sm:pt-2.5"
+      className="flex h-full min-h-0 w-full flex-col items-stretch justify-start gap-2 overflow-x-visible overflow-y-auto bg-[var(--funnel-surface)] pt-2 sm:pt-3"
       aria-hidden
     >
       {wordmarkSrc ? (
-        <img
-          src={wordmarkSrc}
-          alt=""
-          className="w-full max-w-full object-contain object-[left_top]"
-          style={{ maxHeight: "min(72dvh, calc(100dvh - 6rem))" }}
-          decoding="async"
-        />
+        <div
+          className="relative w-full shrink-0 overflow-hidden"
+          style={{ height: "min(72dvh, 26rem)" }}
+        >
+          <img
+            src={wordmarkSrc}
+            alt="Kentatsu"
+            className="absolute left-0 top-0 max-w-none object-fill"
+            style={{
+              width: "min(72dvh, 26rem)",
+              height: "var(--selection-sidebar-width, clamp(4.25rem, 11vw, 13.5rem))",
+              transform:
+                "translateX(var(--selection-sidebar-width, clamp(4.25rem, 11vw, 13.5rem))) rotate(90deg)",
+              transformOrigin: "top left",
+            }}
+            decoding="async"
+          />
+        </div>
       ) : null}
       {text ? (
-        <p className="max-w-full text-[10px] leading-snug text-slate-600 sm:text-xs">{text}</p>
+        <p className="max-w-full px-1.5 text-center text-[10px] leading-snug text-slate-600 sm:px-2 sm:text-xs">
+          {text}
+        </p>
       ) : null}
     </div>
   );
@@ -345,7 +358,12 @@ export const SelectionFlowLayout: React.FC<SelectionFlowLayoutProps> = ({
       >
         <div
           className="fixed bottom-0 left-0 top-0 z-30 flex flex-col overflow-x-visible border-r border-neutral-200 bg-[var(--funnel-surface)]"
-          style={{ width: SELECTION_SIDEBAR_WIDTH }}
+          style={
+            {
+              width: SELECTION_SIDEBAR_WIDTH,
+              "--selection-sidebar-width": SELECTION_SIDEBAR_WIDTH,
+            } as React.CSSProperties
+          }
         >
           <SelectionFlowSidebar wordmarkSrc={sidebarWordmarkSrc ?? null} sidebarText={sidebarText} />
         </div>

@@ -129,7 +129,7 @@ export function resolveSelectionCardUi(raw: SelectionCardSettings | null | undef
     cardAreaMaxHeightCss: CARD_AREA[cardArea],
     imageMaxHeightCss: IMAGE_MAX[imageZone],
     imageAspectRatio: "5 / 4",
-    titleH3Class: `selection-flow-funnel-heading text-[var(--funnel-primary)] ${TITLE_H3[titleScale]}`,
+    titleH3Class: `selection-flow-funnel-heading text-red-600 ${TITLE_H3[titleScale]}`,
     codeLineClass: `selection-flow-funnel-heading text-[var(--funnel-primary)] opacity-85 ${CODE_LINE[codeScale]}`,
     bulletSingleClass: `font-sans ${bulletSingle}`,
     bulletListClass: `font-sans ${bulletList}`,

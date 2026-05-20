@@ -26,7 +26,7 @@ import { getMatchingPumps, getStationResult, downloadTechSheetPdf, downloadStati
 import { Pump, StationResult } from "@/lib/types";
 import { ensureCsrf } from "@/lib/csrf";
 import axiosInstance from "@/lib/csrf";
-import { selectionSlidePng } from "@/lib/selectionAssets";
+import { FUNNEL_SIDEBAR_WORDMARK_DEFAULT, selectionSlidePng } from "@/lib/selectionAssets";
 import { bustAppearanceMediaUrls } from "@/lib/appearanceMedia";
 import { applyFunnelTheme, type FunnelFontKey } from "@/lib/funnelTheme";
 import type { SelectionStageTitles } from "@/lib/api";
@@ -93,7 +93,7 @@ const Home: React.FC = () => {
     funnel_card_media_background_color: "#eff0f9",
     funnel_font_heading: "segoe" as FunnelFontKey,
     funnel_font_body: "open_sans" as FunnelFontKey,
-    sidebar_text: "стрела",
+    sidebar_text: "",
     brand_key: "strela" as "strela" | "simpel",
     hydromodule_card_urls: {} as Partial<Record<HydromoduleLineId, string | null>>,
     logo_url: null as string | null,
@@ -780,7 +780,7 @@ useEffect(() => {
       </a>
     );
 
-  const sidebarWordmarkSrc = appearance.funnel_sidebar_wordmark_url ?? null;
+  const sidebarWordmarkSrc = appearance.funnel_sidebar_wordmark_url ?? FUNNEL_SIDEBAR_WORDMARK_DEFAULT;
 
   const selectionFlowHeaderLogoSrc = useMemo(
     () => appearance.selection_flow_header_logo_url ?? appearance.logo_url ?? null,

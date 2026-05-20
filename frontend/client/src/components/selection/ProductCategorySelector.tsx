@@ -25,7 +25,7 @@ interface CategoryCard {
 const CATEGORIES: CategoryCard[] = [
   {
     category: "hydromodule",
-    label: "Гидромодули",
+    label: "Насосные установки циркуляции",
     description:
       "Для закрытых систем вентиляции и кондиционирования. Циркуляция теплоносителя между чиллером и местными теплообменниками в схемах «чиллер — фанкойл».",
   },
@@ -50,6 +50,8 @@ const CATEGORIES: CategoryCard[] = [
 
 const HOVER_VARIANTS: SelectionCardImageHoverVariant[] = ["zoom", "zoomSubtle", "lift"];
 
+const HYDROMODULE_CATEGORY_IMAGE = "/selection-assets/hydromodule-category.png";
+
 export const ProductCategorySelector: React.FC<ProductCategorySelectorProps> = ({
   onSelect,
   allowSimpelPumps = false,
@@ -64,7 +66,18 @@ export const ProductCategorySelector: React.FC<ProductCategorySelectorProps> = (
       <SelectionMockupCard
         key={c.label}
         fullWidth={fullWidthLayout}
-        image={<div className="h-full w-full bg-[var(--funnel-card-media-bg)]" aria-hidden />}
+        image={
+          c.category === "hydromodule" ? (
+            <img
+              src={HYDROMODULE_CATEGORY_IMAGE}
+              alt=""
+              className="max-h-full max-w-full object-contain"
+              loading="lazy"
+            />
+          ) : (
+            <div className="h-full w-full bg-[var(--funnel-card-media-bg)]" aria-hidden />
+          )
+        }
         identifier={c.label}
         boxTitle={null}
         bullets={[c.description]}

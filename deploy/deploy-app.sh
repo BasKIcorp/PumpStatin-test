@@ -20,15 +20,33 @@ fi
 mkdir -p "$INSTALL_DIR/data"
 cd frontend
 
-# Чистая установка: на VPS иначе периодически битые node_modules (ENOENT в @radix-ui и др.)
-rm -rf node_modules
-unset NODE_ENV
-npm ci --no-audit --no-fund
+# На VPS npm ci иногда оставляет битый node_modules (ENOENT в @radix-ui, lodash/_getRawTag.js и др.)
+npm_deps_ok() {
+  [[ -f node_modules/@radix-ui/react-tooltip/dist/index.mjs ]] \
+    && [[ -f node_modules/lodash/_getRawTag.js ]] \
+    && [[ -f node_modules/lodash/omit.js ]]
+}
 
-if [[ ! -f node_modules/@radix-ui/react-tooltip/dist/index.mjs ]]; then
-  echo "npm ci incomplete (radix-ui tooltip), aborting"
+install_node_modules() {
+  local attempt
+  for attempt in 1 2 3; do
+    rm -rf node_modules
+    if [[ "$attempt" -gt 1 ]]; then
+      npm cache verify || true
+    fi
+    unset NODE_ENV
+    npm ci --no-audit --no-fund
+    if npm_deps_ok; then
+      return 0
+    fi
+    echo "npm ci incomplete (attempt ${attempt}/3): missing radix-ui or lodash files"
+  done
+  echo "node_modules still broken after 3 npm ci attempts"
+  ls -la node_modules/lodash/ 2>/dev/null | head -20 || true
   exit 1
-fi
+}
+
+install_node_modules
 
 npm run db:seed
 NODE_ENV=production npm run build
