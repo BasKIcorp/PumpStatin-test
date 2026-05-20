@@ -27,7 +27,7 @@ fi
 export NODE_ENV=production
 
 cd frontend
-npm ci --omit=dev=false
+npm ci
 npm run build
 
 systemctl restart pumpstatin-frontend
