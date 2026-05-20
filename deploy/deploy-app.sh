@@ -17,20 +17,19 @@ else
   cd "$INSTALL_DIR"
 fi
 
+mkdir -p "$INSTALL_DIR/data"
+cd frontend
+npm ci
+npm run db:seed
+NODE_ENV=production npm run build
+
 if [[ -f "$ENV_FILE" ]]; then
   set -a
   # shellcheck disable=SC1090
   source "$ENV_FILE"
   set +a
 fi
-
 export NODE_ENV=production
-
-mkdir -p "$INSTALL_DIR/data"
-cd frontend
-npm ci
-npm run db:seed
-npm run build
 
 install -m 0644 "$INSTALL_DIR/deploy/nginx-pumpstatin.conf" /etc/nginx/sites-available/pumpstatin
 ln -sf /etc/nginx/sites-available/pumpstatin /etc/nginx/sites-enabled/pumpstatin

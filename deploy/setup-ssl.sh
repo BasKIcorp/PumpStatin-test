@@ -4,7 +4,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOMAIN="${SSL_DOMAIN:-83-222-16-200.sslip.io}"
-EMAIL="${SSL_EMAIL:-admin@strela.local}"
+EMAIL="${SSL_EMAIL:-hostmaster@83-222-16-200.sslip.io}"
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
