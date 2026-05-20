@@ -1048,7 +1048,7 @@ export async function adminExtDesignCatalog(): Promise<ExtDesignCatalog> {
   return data;
 }
 
-export type ExtDesignPortDjangoResult = {
+export type ExtDesignPortLegacyResult = {
   overwrite: boolean;
   dest_schema?: string;
   created: Array<{ source: string; dest: string; rows: number }>;
@@ -1056,17 +1056,18 @@ export type ExtDesignPortDjangoResult = {
   errors: Array<{ source: string; error: string }>;
 };
 
-export async function adminExtDesignPortDjangoTables(payload?: {
+/** Перенос legacy-таблиц в схему ext (маршрут API сохранён для совместимости). */
+export async function adminExtDesignPortLegacyTables(payload?: {
   overwrite?: boolean;
-}): Promise<ExtDesignPortDjangoResult> {
-  const { data } = await axios.post<ExtDesignPortDjangoResult>(
+}): Promise<ExtDesignPortLegacyResult> {
+  const { data } = await axios.post<ExtDesignPortLegacyResult>(
     "/api/admin/ext-design/port-django-tables",
     payload ?? {},
   );
   return data;
 }
 
-export type ExtDesignPortFullPublicResult = ExtDesignPortDjangoResult & {
+export type ExtDesignPortFullPublicResult = ExtDesignPortLegacyResult & {
   mode?: string;
 };
 

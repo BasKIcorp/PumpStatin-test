@@ -1,5 +1,5 @@
 /**
- * Django часто возвращает абсолютные URL через request.build_absolute_uri()
+ * API часто возвращает абсолютные URL через build_absolute_uri на backend
  * с внутренним host:port или схемой http при работе пользователя по https —
  * браузер тогда режет загрузку (mixed content / чужой origin).
  * Для путей приложения переводим в относительный URL текущего origin.

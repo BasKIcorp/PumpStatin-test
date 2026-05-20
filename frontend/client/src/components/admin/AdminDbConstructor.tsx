@@ -1895,7 +1895,7 @@ export function AdminDbConstructor({
           <CardTitle>Конструктор БД</CardTitle>
           {schemaTarget !== "public" ? (
             <p className="text-sm text-muted-foreground">
-              Устаревший режим: чертёж и метаданные схемы <code className="text-xs">ext</code> в Django. Переведите
+              Устаревший режим: чертёж и метаданные схемы <code className="text-xs">ext</code> на backend. Переведите
               деплой на <code className="text-xs">PG_APP_DATA_SCHEMA=public</code> и миграцию 0033+, чтобы осталась одна
               схема.
             </p>
@@ -2113,7 +2113,7 @@ export function AdminDbConstructor({
                   </Button>
                 ) : null}
                 {selectedNode.data?.managed === false && (
-                  <p className="text-amber-700 text-xs">managed=False — только просмотр в Django.</p>
+                  <p className="text-amber-700 text-xs">managed=False — только просмотр в админке backend.</p>
                 )}
                 {selectedLayer === "core" ? (
                   <div className="max-h-72 overflow-auto border rounded-md p-2 bg-muted/30">

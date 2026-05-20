@@ -15,12 +15,9 @@ import PumpsList from "@/components/PumpsList";
 import PumpCurveGraph from "@/components/PumpCurveGraph";
 import SecondGraph from "@/components/SecondGraph";
 import StationResults from "@/components/StationResults";
-import PumpTypeSelector from "@/components/PumpTypeSelector";
 import { ProductCategorySelector } from "@/components/selection/ProductCategorySelector";
-import { HydromoduleLineSelector } from "@/components/selection/HydromoduleLineSelector";
-import { PumpUnitLineSelector } from "@/components/selection/PumpUnitLineSelector";
-import { PumpStationSubtypeSelector } from "@/components/selection/PumpStationSubtypeSelector";
 import type { ProductCategory, HydromoduleLineId, PumpUnitLineCode } from "@/lib/selectionRoute";
+import { HYDROMODULE_LINE_ORDER } from "@/lib/selectionRoute";
 import { parametersPageTitle } from "@/lib/selectionRoute";
 import { useApiSiteSlug, useSiteSlug } from "@/lib/site";
 import { useToastNotification } from "@/hooks/use-toast-notification";
@@ -66,7 +63,7 @@ const WORK_BTN_PRIMARY = cn(
 const WORK_DESKTOP_FOCUS_RING =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--funnel-primary)] focus-visible:ring-offset-2";
 
-type FlowStep = "category" | "hm_line" | "pu_line" | "pu_subtype" | "simpel_series" | "work";
+type FlowStep = "category" | "work";
 
 const Home: React.FC = () => {
   const { showNotification } = useToastNotification();
@@ -111,12 +108,12 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     if (authLoading) return;
-    if (flowStep === "simpel_series" && (!user || user.role !== "admin")) {
+    if (productCategory === "simpel_pumps" && (!user || user.role !== "admin")) {
       setProductCategory(null);
       setSelectedPumpTypeCode(null);
       setFlowStep("category");
     }
-  }, [flowStep, user, authLoading]);
+  }, [productCategory, user, authLoading]);
 
   useEffect(() => {
     axiosInstance
@@ -233,23 +230,36 @@ const Home: React.FC = () => {
   const handleProductCategory = (c: ProductCategory) => {
     if (c === "simpel_pumps" && user?.role !== "admin") return;
     setProductCategory(c);
-    setHydromoduleLine(null);
-    setPumpUnitLine(null);
-    setPumpUnitLineLabel(null);
-    setPuStationSubtype(null);
-    setSelectedPumpTypeCode(null);
     setHasSearched(false);
     setSelectedPumpId(null);
-    if (c === "hydromodule") setFlowStep("hm_line");
-    else if (c === "pump_unit") setFlowStep("pu_line");
-    else if (c === "simpel_pumps") setFlowStep("simpel_series");
-  };
 
-  const handlePumpTypeSelect = (code: string) => {
-    setSelectedPumpTypeCode(code);
+    if (c === "hydromodule") {
+      setHydromoduleLine(HYDROMODULE_LINE_ORDER[0]);
+      setPumpUnitLine(null);
+      setPumpUnitLineLabel(null);
+      setPuStationSubtype(null);
+      setSelectedPumpTypeCode(null);
+    } else if (c === "pump_unit") {
+      setHydromoduleLine(null);
+      setPumpUnitLine("bps-w");
+      setPumpUnitLineLabel("BPS-W");
+      setPuStationSubtype("хоз-пит");
+      setSelectedPumpTypeCode(null);
+    } else if (c === "simpel_pumps") {
+      setHydromoduleLine(null);
+      setPumpUnitLine(null);
+      setPumpUnitLineLabel(null);
+      setPuStationSubtype(null);
+      setSelectedPumpTypeCode("CIVOS");
+    } else {
+      setHydromoduleLine(null);
+      setPumpUnitLine(null);
+      setPumpUnitLineLabel(null);
+      setPuStationSubtype(null);
+      setSelectedPumpTypeCode(null);
+    }
+
     setFlowStep("work");
-    setHasSearched(false);
-    setSelectedPumpId(null);
   };
 
   // State for search parameters
@@ -281,19 +291,14 @@ const Home: React.FC = () => {
     setSelectedPumpId(null);
     pumpSearchToastForUpdatedAtRef.current = 0;
     pumpSearchErrorToastForUpdatedAtRef.current = 0;
-    if (productCategory === "hydromodule") {
-      setHydromoduleLine(null);
-      setFlowStep("hm_line");
-    } else if (productCategory === "pump_unit") {
-      setPuStationSubtype(null);
-      setFlowStep("pu_subtype");
-    } else if (productCategory === "simpel_pumps") {
-      setSelectedPumpTypeCode(null);
-      setFlowStep("simpel_series");
-    } else {
-      setFlowStep("category");
-    }
-  }, [productCategory]);
+    setProductCategory(null);
+    setHydromoduleLine(null);
+    setPumpUnitLine(null);
+    setPumpUnitLineLabel(null);
+    setPuStationSubtype(null);
+    setSelectedPumpTypeCode(null);
+    setFlowStep("category");
+  }, []);
 
   const lastStationSuccessToastKeyRef = useRef<string>("");
 
@@ -1051,124 +1056,7 @@ useEffect(() => {
     );
   }
 
-  if (flowStep === "hm_line") {
-    const v = funnelStepVisuals("hm_line");
-    return (
-      <SelectionFlowLayout
-        sidebarWordmarkSrc={sidebarWordmarkSrc}
-        sidebarText={appearance.sidebar_text}
-        cardCaptionLogoSrc={v.cardCaptionLogo}
-        title={v.title}
-        subtitle={v.subtitle}
-        onBack={() => {
-          setProductCategory(null);
-          setFlowStep("category");
-        }}
-        backLabel="← Класс продукции"
-        headerRight={selectionHeaderRight}
-        bodyClassName="overflow-hidden"
-        stageBackgroundSrc={selectionSlidePng(2)}
-        cardUiSettings={appearance.selection_card_settings}
-      >
-        <HydromoduleLineSelector
-          cardImageUrls={appearance.hydromodule_card_urls}
-          onSelect={(id) => {
-            setHydromoduleLine(id);
-            setSelectedPumpTypeCode(null);
-            setFlowStep("work");
-            setHasSearched(false);
-            setSelectedPumpId(null);
-          }}
-        />
-      </SelectionFlowLayout>
-    );
-  }
-
-  if (flowStep === "pu_line") {
-    const v = funnelStepVisuals("pu_line");
-    return (
-      <SelectionFlowLayout
-        sidebarWordmarkSrc={sidebarWordmarkSrc}
-        sidebarText={appearance.sidebar_text}
-        cardCaptionLogoSrc={v.cardCaptionLogo}
-        title={v.title}
-        subtitle={v.subtitle}
-        onBack={() => {
-          setProductCategory(null);
-          setPumpUnitLine(null);
-          setPumpUnitLineLabel(null);
-          setFlowStep("category");
-        }}
-        backLabel="← Класс продукции"
-        headerRight={selectionHeaderRight}
-        bodyClassName="overflow-hidden"
-        stageBackgroundSrc={selectionSlidePng(3)}
-        cardUiSettings={appearance.selection_card_settings}
-      >
-        <PumpUnitLineSelector
-          onSelect={({ code, label }) => {
-            setPumpUnitLine(code);
-            setPumpUnitLineLabel(label);
-            setFlowStep("pu_subtype");
-          }}
-        />
-      </SelectionFlowLayout>
-    );
-  }
-
-  if (flowStep === "pu_subtype") {
-    const v = funnelStepVisuals("pu_subtype");
-    return (
-      <SelectionFlowLayout
-        sidebarWordmarkSrc={sidebarWordmarkSrc}
-        sidebarText={appearance.sidebar_text}
-        cardCaptionLogoSrc={v.cardCaptionLogo}
-        title={v.title}
-        subtitle={v.subtitle}
-        onBack={() => setFlowStep("pu_line")}
-        backLabel="← Назад к линейке"
-        headerRight={selectionHeaderRight}
-        bodyClassName="overflow-hidden"
-        stageBackgroundSrc={selectionSlidePng(3)}
-        cardUiSettings={appearance.selection_card_settings}
-      >
-        <PumpStationSubtypeSelector
-          onSelect={(st) => {
-            setPuStationSubtype(st);
-            setSelectedPumpTypeCode(null);
-            setFlowStep("work");
-            setHasSearched(false);
-            setSelectedPumpId(null);
-          }}
-        />
-      </SelectionFlowLayout>
-    );
-  }
-
-  if (flowStep === "simpel_series") {
-    const v = funnelStepVisuals("simpel_series");
-    return (
-      <SelectionFlowLayout
-        sidebarWordmarkSrc={sidebarWordmarkSrc}
-        sidebarText={appearance.sidebar_text}
-        cardCaptionLogoSrc={v.cardCaptionLogo}
-        title={v.title}
-        subtitle={v.subtitle}
-        onBack={() => {
-          setProductCategory(null);
-          setFlowStep("category");
-        }}
-        backLabel="← Класс продукции"
-        headerRight={selectionHeaderRight}
-        stageBackgroundSrc={selectionSlidePng(4)}
-        cardUiSettings={appearance.selection_card_settings}
-      >
-        <PumpTypeSelector onSelect={handlePumpTypeSelect} />
-      </SelectionFlowLayout>
-    );
-  }
-
-  // ── Экран параметров (work) ───────────────────────────────────────────────
+  // ── Экран параметров (work) — второй этап без изменений ─────────────────────
 
   return (
     <div

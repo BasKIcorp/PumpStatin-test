@@ -1066,7 +1066,7 @@ const AppAdmin: React.FC<AppAdminProps> = ({
                   ) : null}
                   {!publicDataTablesLoading && !publicDataTablesLoadError && extTables.length === 0 ? (
                     <p className="text-xs text-muted-foreground">
-                      В схеме public нет таблиц для этой панели (кроме служебных django_*/auth_*).{" "}
+                      В схеме public нет таблиц для этой панели (кроме служебных auth_* и системных).{" "}
                       <button
                         type="button"
                         className="text-primary underline underline-offset-2 hover:no-underline"

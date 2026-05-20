@@ -9,12 +9,14 @@ import { storage } from "./storage";
 const csrfTokens = new Set<string>();
 
 // Для локальной разработки используем localhost, для продакшена - VPS
-const API_BASE_URL = process.env.DJANGO_API_URL || 
-  (process.env.NODE_ENV === 'production' 
-    ? "http://localhost:8000"  // Django на том же сервере
-    : "http://127.0.0.1:8000"); // Локальная разработка
+const API_BASE_URL =
+  process.env.BACKEND_API_URL ||
+  process.env.DJANGO_API_URL ||
+  (process.env.NODE_ENV === "production"
+    ? "http://localhost:8000"
+    : "http://127.0.0.1:8000");
 
-/** Понятное сообщение вместо сырого «Proxy error», если Django не слушает порт. */
+/** Понятное сообщение вместо сырого «Proxy error», если API не слушает порт. */
 function describeProxyFailure(error: unknown): { status: number; message: string } {
   if (axios.isAxiosError(error)) {
     const code = error.code;
@@ -22,7 +24,7 @@ function describeProxyFailure(error: unknown): { status: number; message: string
       return {
         status: 503,
         message:
-          `Сервер API не отвечает (${API_BASE_URL}). Запустите Django: manage.py runserver 127.0.0.1:8000`,
+          `Сервер API не отвечает (${API_BASE_URL}). Запустите backend на порту 8000.`,
       };
     }
     if (code === "ETIMEDOUT") {
@@ -31,7 +33,7 @@ function describeProxyFailure(error: unknown): { status: number; message: string
     if (code === "ENOTFOUND") {
       return {
         status: 503,
-        message: "Неверный адрес API (проверьте переменную DJANGO_API_URL).",
+        message: "Неверный адрес API (проверьте переменную BACKEND_API_URL).",
       };
     }
     if (!error.response) {
@@ -45,7 +47,7 @@ function describeProxyFailure(error: unknown): { status: number; message: string
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Медиа Django (изображения типов насосов, логотипы): абсолютные URL с 127.0.0.1 не открываются в браузере
+  // Медиа API (изображения типов насосов, логотипы): абсолютные URL с 127.0.0.1 не открываются в браузере
   app.use(
     "/media",
     createProxyMiddleware({
@@ -64,18 +66,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ csrfToken });
   });
 
-  // ✅ Django CSRF endpoint proxy
+  // CSRF endpoint proxy
   app.get("/api/csrf/", async (req, res) => {
     try {
-      console.log(`🔐 Пытаемся получить CSRF токен от Django: ${API_BASE_URL}/api/csrf/`);
+      console.log(`🔐 CSRF от API: ${API_BASE_URL}/api/csrf/`);
       const response = await axios.get(`${API_BASE_URL}/api/csrf/`, {
         withCredentials: true,
         headers: {
-          'Cookie': req.headers.cookie || ''  // Передаем cookies от клиента к Django
+          'Cookie': req.headers.cookie || ''
         }
       });
       
-      console.log('✅ CSRF ответ от Django получен:', {
+      console.log('✅ CSRF ответ от API:', {
         status: response.status,
         headers: Object.keys(response.headers),
         data: response.data
@@ -121,7 +123,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         throw new Error('CSRF token not found in response');
       }
     } catch (error: any) {
-      console.error("❌ Ошибка получения CSRF токена от Django:", error.message || error);
+      console.error("❌ Ошибка получения CSRF токена от API:", error.message || error);
       
       // Fallback: генерируем собственный CSRF токен для локальной разработки
       console.log('🔄 Используем fallback CSRF токен для локальной разработки');
@@ -213,7 +215,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ✅ API proxy route for downloading PDF (POST with JSON body containing graphs_image)
   app.post("/api/download_station_pdf", async (req, res) => {
     try {
-      // Создаем FormData для передачи на Django бекенд (Django ожидает multipart/form-data)
+      // FormData для передачи на API (multipart/form-data)
       const formData = new FormData();
       
       // Добавляем все параметры из req.body (кроме graphs_image)
@@ -231,7 +233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           filename: 'graphs.png',
           contentType: 'image/png'
         });
-        console.log(`📸 Передаем изображение графиков на Django, размер: ${imageBuffer.length} байт`);
+        console.log(`📸 Передаем изображение графиков на API, размер: ${imageBuffer.length} байт`);
       }
 
       const axiosResp = await axios.post(`${API_BASE_URL}/api/download_station_pdf`, formData, {
@@ -402,7 +404,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const csrfToken = req.headers['x-csrf-token'] as string;
       console.log('🔐 CSRF токен из заголовков:', csrfToken);
 
-      // Передаем CSRF токен в запрос к Django
+      // Передаем CSRF токен в запрос к API
       const headers: Record<string, string> = {};
       if (csrfToken) {
         headers['X-CSRFToken'] = csrfToken;
@@ -435,8 +437,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ── Вспомогательная функция для проксирования auth/user/admin запросов к Django ──
-  async function proxyAuth(req: any, res: any, djangoPath: string) {
+  // ── Проксирование auth/user/admin и остальных /api/* на backend ───────────
+  async function proxyAuth(req: any, res: any, apiPath: string) {
     try {
       const headers: Record<string, string> = {};
       if (req.headers.cookie) headers['Cookie'] = req.headers.cookie;
@@ -447,25 +449,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (csrfHdr) headers["X-CSRFToken"] = csrfHdr;
       const siteSlugHdr = req.headers["x-site-slug"] as string | undefined;
       if (siteSlugHdr) headers["X-Site-Slug"] = siteSlugHdr;
-      // Пробрасываем оригинальный Host чтобы Django мог строить правильные абсолютные URL
+      // Пробрасываем оригинальный Host для корректных абсолютных URL в ответе API
       if (req.headers.host) headers['X-Forwarded-Host'] = req.headers.host as string;
       headers['X-Forwarded-Proto'] = 'http';
       // Для multipart не ставим Content-Type — axios сам
       const isMultipart = (req.headers['content-type'] || '').includes('multipart');
       if (!isMultipart) headers['Content-Type'] = 'application/json';
 
-      // Django/Gunicorn часто отвечают 405 на HEAD; axios тогда ловит HPE_CLOSED_CONNECTION
+      // Backend часто отвечает 405 на HEAD; axios тогда ловит HPE_CLOSED_CONNECTION
       const upstreamMethod =
         req.method === 'HEAD' ? 'GET' : req.method;
 
       // Строим URL с query string
       const queryStr = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
-      const targetUrl = `${API_BASE_URL}/api/${djangoPath}${queryStr}`;
+      const targetUrl = `${API_BASE_URL}/api/${apiPath}${queryStr}`;
 
       const wantsBinary =
-        djangoPath.includes("download_pdf") ||
-        djangoPath.includes("download_station_pdf") ||
-        djangoPath.includes("download_tech_sheet_pdf");
+        apiPath.includes("download_pdf") ||
+        apiPath.includes("download_station_pdf") ||
+        apiPath.includes("download_tech_sheet_pdf");
 
       const response = await axios({
         method: upstreamMethod,
@@ -486,7 +488,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         responseType: wantsBinary ? "arraybuffer" : undefined,
       });
 
-      // Пробрасываем Set-Cookie от Django браузеру
+      // Пробрасываем Set-Cookie от API браузеру
       const setCookies = response.headers['set-cookie'];
       if (setCookies) res.setHeader('Set-Cookie', setCookies);
 
@@ -513,16 +515,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       return res.status(response.status).json(response.data);
     } catch (error) {
-      console.error(`Proxy error for ${djangoPath}:`, error);
+      console.error(`Proxy error for ${apiPath}:`, error);
       const { status, message } = describeProxyFailure(error);
       return res.status(status).json({ error: message });
     }
   }
 
-  // ── Admin Panel API (проксируем все /api/admin/* на Django) ─────────────
+  // ── Admin Panel API (проксируем все /api/admin/*) ─────────────────────────
   app.all('/api/admin/*', async (req: any, res: any) => {
-    const djangoPath = req.path.replace('/api/', '');
-    await proxyAuth(req, res, djangoPath + (req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : ''));
+    const apiPath = req.path.replace('/api/', '');
+    await proxyAuth(req, res, apiPath + (req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : ''));
   });
 
   // ── Авторизация ─────────────────────────────────────────────────────────
@@ -551,11 +553,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/user/projects/:id/download_pdf/', (req, res) =>
     proxyAuth(req, res, `user/projects/${req.params.id}/download_pdf/`));
 
-  // ── Fallback: все остальные /api/* → Django ─────────────────────────────
+  // ── Fallback: все остальные /api/* → backend ────────────────────────────
   app.all('/api/*', async (req: any, res: any) => {
-    const djangoPath = req.path.replace('/api/', '');
+    const apiPath = req.path.replace('/api/', '');
     const queryStr = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
-    await proxyAuth(req, res, djangoPath + queryStr);
+    await proxyAuth(req, res, apiPath + queryStr);
   });
 
   const httpServer = createServer(app);

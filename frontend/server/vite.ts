@@ -35,7 +35,7 @@ export async function setupVite(app: Express, server: Server) {
     customLogger: viteLogger,
   });
 
-  // ✅ Прокси на Django API — строго до vite.middlewares
+  // Прокси на backend API — строго до vite.middlewares
   app.use(
     "/api",
     createProxyMiddleware({

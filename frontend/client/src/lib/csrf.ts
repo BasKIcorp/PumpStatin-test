@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { getApiBaseUrl } from './config';
 
-// Настройка axios для работы с Django сервером
+// Настройка axios для работы с API через прокси Node-сервера
 axios.defaults.baseURL = getApiBaseUrl();
 axios.defaults.withCredentials = true;     // cookies туда-обратно
 axios.defaults.xsrfCookieName = 'csrftoken';

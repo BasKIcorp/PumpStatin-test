@@ -45,7 +45,7 @@ export const WEB_CLIENT_STRUCTURE_MERMAID = `flowchart TB
     LG["Login / Register / not-found"]
   end
   subgraph LB["lib"]
-    AP["api.ts — запросы к Django"]
+    AP["api.ts — запросы к API"]
     AU["auth — сессия пользователя"]
     CF["csrf"]
   end

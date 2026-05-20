@@ -8,7 +8,7 @@ function messageFromResponseData(data: unknown): string | null {
     if (!t) return null;
     const head = t.slice(0, 80).trimStart().toLowerCase();
     if (head.startsWith("<!doctype") || head.startsWith("<html")) {
-      return "сервер вернул HTML-страницу вместо JSON (прокси, 500 Django или не тот URL)";
+      return "сервер вернул HTML-страницу вместо JSON (прокси, ошибка API или не тот URL)";
     }
     return t.length > 400 ? `${t.slice(0, 397)}…` : t;
   }

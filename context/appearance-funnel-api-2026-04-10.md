@@ -1,6 +1,6 @@
 # SiteAppearance / API воронки (апрель 2026)
 
-## Django `SiteAppearance`
+## API `SiteAppearance`
 
 - Миграция `0020_siteappearance_funnel_fields`: `funnel_sidebar_logo_1` … `_4` (`ImageField`), `selection_stage_titles`, `selection_category_full_width`
 - Миграция `0021_siteappearance_funnel_sidebar_wordmark`: `funnel_sidebar_wordmark` — `FileField` (`upload_to=appearance/funnel`), SVG/PNG для вертикального знака слева на всех шагах воронки

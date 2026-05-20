@@ -1,45 +1,20 @@
-# SSH, VPS и GitHub (PumpStatin_test)
+# SSH, VPS и GitHub
 
-## VPS production
+## VPS
 
 | | |
 |---|---|
 | IP | `83.222.16.200` |
-| SSH | `ssh pumpstatin` (root, ключ `id_ed25519_pumpstatin`) |
+| SSH | `ssh pumpstatin` |
 | Сайт | http://83.222.16.200/ |
-| Каталог на сервере | `/opt/pumpstatin-test` |
-| systemd | `pumpstatin-frontend` (порт 5000) |
-| nginx | прокси 80 → 5000 |
+| Каталог | `/opt/pumpstatin-test` |
 
-Ручной деплой на сервере:
+## GitHub
 
-```bash
-cd /opt/pumpstatin-test && bash deploy/deploy-app.sh
-```
+https://github.com/BasKIcorp/PumpStatin-test — push в `master` → GitHub Actions → `deploy/deploy-app.sh`.
 
-## SSH-ключ (локальный → сервер)
+Секреты: `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`.
 
-| | |
-|---|---|
-| Приватный | `C:\Users\KonBas\.ssh\id_ed25519_pumpstatin` |
-| Публичный | `C:\Users\KonBas\.ssh\id_ed25519_pumpstatin.pub` |
+## API на сервере
 
-Deploy key на сервере для `git pull` (GitHub): `/root/.ssh/github_pumpstatin_deploy`
-
-## GitHub-репозиторий
-
-| | |
-|---|---|
-| URL | https://github.com/BasKIcorp/PumpStatin-test |
-| Организация | BasKIcorp |
-| Видимость | private |
-| Ветка по умолчанию | `master` |
-| Remote | `origin` → `git@github.com:BasKIcorp/PumpStatin-test.git` (HTTPS push через gh) |
-
-## Автообновление при push
-
-Workflow `.github/workflows/deploy.yml` — при push в `master` выполняется SSH на VPS и `deploy/deploy-app.sh`.
-
-Секреты репозитория: `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`.
-
-Переменные окружения на сервере: `/opt/pumpstatin-test/deploy/production.env` (`DJANGO_API_URL` и т.д.).
+`/opt/pumpstatin-test/deploy/production.env` — `BACKEND_API_URL`.

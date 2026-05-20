@@ -9,7 +9,7 @@
 ## Проверка 159.194.215.53 (картинки, 2026-04-06)
 
 - `GET /api/appearance`: `logo_url` указывает на `http://159.194.215.53/media/appearance/kentatsu_4o83Arp.png`; все `hydromodule_card_urls` — `null`.
-- `HEAD/GET /media/appearance/kentatsu_4o83Arp.png` и несуществующий `/media/nonexistent.png` — **HTTP 500**, тело — стандартная HTML-страница Django «Server Error (500)»; ответ идёт через nginx + Express (`X-Powered-By: Express`).
+- `HEAD/GET /media/appearance/kentatsu_4o83Arp.png` и несуществующий `/media/nonexistent.png` — **HTTP 500**, тело — HTML-страница ошибки backend; ответ идёт через nginx + Express (`X-Powered-By: Express`).
 - `HEAD /assets/pump-types/COMOS.png` — **HTTP 200** (статика из сборки фронта отдаётся).
 - Главная: карточки «Гидромодули» / «Насосные установки» в `ProductCategorySelector.tsx` используют белый плейсхолдер (`<div className="h-full w-full bg-white" />`), а не URL изображений.
 
