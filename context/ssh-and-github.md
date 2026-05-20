@@ -23,4 +23,10 @@ ssh pumpstatin "hostname"
 
 ## GitHub-репозиторий
 
-См. актуальный URL в `git remote -v` после создания (организация BasKIcorp).
+| | |
+|---|---|
+| URL | https://github.com/BasKIcorp/PumpStatin-test |
+| Организация | BasKIcorp |
+| Видимость | private |
+| Ветка по умолчанию | `master` |
+| Remote | `origin` → `git@github.com:BasKIcorp/PumpStatin-test.git` (HTTPS push через gh) |
