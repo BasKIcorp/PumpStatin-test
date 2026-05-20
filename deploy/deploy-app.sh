@@ -31,8 +31,13 @@ if [[ -f "$ENV_FILE" ]]; then
 fi
 export NODE_ENV=production
 
-install -m 0644 "$INSTALL_DIR/deploy/nginx-pumpstatin.conf" /etc/nginx/sites-available/pumpstatin
+NGINX_SITE="$INSTALL_DIR/deploy/nginx-pumpstatin.conf"
+if [[ -f "/etc/letsencrypt/live/83-222-16-200.sslip.io/fullchain.pem" ]] && [[ -f "$INSTALL_DIR/deploy/nginx-pumpstatin-ssl.conf" ]]; then
+  NGINX_SITE="$INSTALL_DIR/deploy/nginx-pumpstatin-ssl.conf"
+fi
+install -m 0644 "$NGINX_SITE" /etc/nginx/sites-available/pumpstatin
 ln -sf /etc/nginx/sites-available/pumpstatin /etc/nginx/sites-enabled/pumpstatin
+rm -f /etc/nginx/sites-enabled/default
 nginx -t && systemctl reload nginx
 
 systemctl restart pumpstatin-frontend
