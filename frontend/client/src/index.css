@@ -1,0 +1,384 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Segoe UI: @font-face в ./styles/segoe-fonts.css (подключается в main.tsx до этого файла). */
+
+/* Вертикальная надпись слева на этапах выбора карточек — только Semibold (тот же файл, что в seui) */
+@font-face {
+  font-family: "SegoeUISelectionSidebar";
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  src:
+    url("/fonts/seui/segoe_ui_semibold.woff2") format("woff2"),
+    url("/fonts/seui/segoe_ui_semibold.ttf") format("truetype");
+}
+
+@layer components {
+  /* ── Заголовки: Segoe UI Semibold ───────────────── */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold;
+    font-family: "Segoe UI", system-ui, sans-serif;
+    font-weight: 600;
+  }
+
+  .selection-flow-heading {
+    font-family: "Segoe UI", system-ui, sans-serif;
+    font-weight: 600;
+    @apply font-semibold;
+  }
+
+  /* ── Обычный текст: Open Sans ────────────────────── */
+  p, span, li, a, label {
+    font-family: "Open Sans", system-ui, sans-serif;
+  }
+
+  .font-body-text {
+    font-family: "Open Sans", system-ui, sans-serif;
+    @apply text-base font-normal;
+  }
+
+  .selection-flow-sidebar-text {
+    font-family: "SegoeUISelectionSidebar", "Segoe UI", system-ui, sans-serif;
+    font-weight: 600;
+  }
+
+  /* Заголовки шапки воронки */
+  .selection-flow-funnel-heading {
+    font-family: var(--funnel-font-heading);
+    font-weight: 600;
+  }
+
+  /* Горизонтальная лента карточек: прокрутка колёсиком/тач, полоса скролла скрыта */
+  .selection-mockup-strip-scroll {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .selection-mockup-strip-scroll::-webkit-scrollbar {
+    display: none;
+    height: 0;
+    width: 0;
+  }
+
+  /* Вертикальная прокрутка этапа воронки без видимого скроллбара */
+  .selection-funnel-content-scroll {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .selection-funnel-content-scroll::-webkit-scrollbar {
+    display: none;
+    width: 0;
+  }
+
+  .selection-flow-funnel-root {
+    font-family: var(--funnel-font-body);
+  }
+
+  .selection-flow-funnel-root .selection-flow-funnel-heading {
+    font-family: var(--funnel-font-heading);
+  }
+}
+
+/* Эталон макета 1440×810: масштабируется по ширине вьюпорта */
+.selection-mockup-canvas {
+  aspect-ratio: 1440 / 810;
+  width: min(100%, 1440px);
+  max-height: min(90dvh, calc(100vw * 810 / 1440));
+}
+
+:root {
+  --funnel-primary: #13347f;
+  --funnel-accent: #0ea5e9;
+  --funnel-page-bg: #ffffff;
+  --funnel-surface: #ffffff;
+  --funnel-card-media-bg: #eff0f9;
+  --funnel-font-heading: "Segoe UI", "SegoeUISelectionSidebar", system-ui, sans-serif;
+  --funnel-font-body: "Open Sans", system-ui, sans-serif;
+  --funnel-text: #18181b;
+  --funnel-text-muted: #71717a;
+  --funnel-panel-header-bg: #f4f4f5;
+  --funnel-panel-header-text: #52525b;
+  --funnel-button-bg: #13347f;
+  --funnel-button-text: #ffffff;
+  --funnel-button-secondary-bg: #ffffff;
+  --funnel-button-secondary-text: #18181b;
+  --funnel-table-row-alt-bg: #f4f4f5;
+  --funnel-table-row-selected-bg: #dbeafe;
+  --funnel-input-bg: #ffffff;
+  --funnel-chart-bg: #ffffff;
+  --background: 210 20% 98%;
+  --foreground: 215 25% 15%;
+  --muted: 215 16% 94%;
+  --muted-foreground: 215 16% 45%;
+  --popover: 210 20% 99%;
+  --popover-foreground: 215 25% 15%;
+  --card: 210 25% 99%;
+  --card-foreground: 215 25% 15%;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --primary: 212 90% 45%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 200 80% 95%;
+  --secondary-foreground: 215 25% 25%;
+  --accent: 199 78% 55%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 60 9.1% 97.8%;
+  --ring: 212 90% 45%;
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: 224 25% 10%;
+  --foreground: 213 31% 91%;
+  --muted: 223 27% 20%;
+  --muted-foreground: 215 20% 65%;
+  --popover: 224 25% 10%;
+  --popover-foreground: 213 31% 91%;
+  --card: 224 25% 11%;
+  --card-foreground: 213 31% 91%;
+  --border: 215 28% 20%;
+  --input: 215 28% 20%;
+  --primary: 210 90% 50%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 215 28% 17%;
+  --secondary-foreground: 213 31% 91%;
+  --accent: 199 78% 45%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --ring: 215 27.9% 16.9%;
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-[hsl(var(--border))];
+  }
+
+  /* Скрыть стрелки у type=number (Chrome, Safari, Firefox) */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  body {
+    @apply font-sans antialiased bg-[hsl(var(--background))] text-[hsl(var(--foreground))];
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading font-semibold;
+  }
+}
+
+@layer components {
+  .card-industrial {
+    @apply bg-white bg-opacity-90 border border-[hsl(var(--border))] shadow-sm rounded-lg overflow-hidden relative;
+    background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.95), rgba(240, 245, 250, 0.9));
+  }
+  
+  .card-industrial-accent {
+    @apply bg-white bg-opacity-90 border border-[hsl(var(--accent)_/_0.2)] shadow-sm rounded-lg overflow-hidden relative;
+    background-image: linear-gradient(to bottom, rgba(250, 253, 255, 0.95), rgba(235, 245, 252, 0.9));
+  }
+  
+  .card-secondary {
+    @apply bg-[hsl(var(--secondary))] bg-opacity-40 border border-[hsl(var(--border))] shadow-sm rounded-lg overflow-hidden relative; 
+  }
+  
+  /* Technical pattern background for the app */
+  .bg-tech-pattern {
+    background-color: hsl(var(--background));
+    background-image: 
+      radial-gradient(circle at 25px 25px, hsl(var(--muted)) 2px, transparent 0),
+      radial-gradient(circle at 75px 75px, hsl(var(--muted)) 2px, transparent 0);
+    background-size: 100px 100px;
+  }
+  
+  /* Industrial border style */
+  .border-industrial {
+    @apply border-2 border-[hsl(var(--accent)_/_0.3)] relative;
+    background-image: linear-gradient(45deg, transparent 48%, hsl(var(--accent)) 48%, hsl(var(--accent)) 52%, transparent 52%);
+    background-size: 10px 10px;
+    background-repeat: repeat-x;
+    background-position: bottom;
+  }
+  
+  /* Button with industrial look */
+  .btn-industrial {
+    @apply bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary)_/_0.9)] text-white font-medium px-4 py-2 rounded shadow;
+    background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), transparent);
+  }
+
+  /* ── Воронка подбора (SelectionFlowLayout): карточки и блоки ───────────── */
+  .selection-flow-card {
+    @apply flex min-h-0 flex-col overflow-hidden text-left border-0 bg-[var(--funnel-surface)] transition hover:opacity-95;
+  }
+
+  .selection-flow-option {
+    @apply flex min-h-0 flex-col overflow-hidden text-left border-0 bg-[var(--funnel-surface)] p-3 transition hover:opacity-95 sm:p-4;
+  }
+
+  .selection-flow-option-lg {
+    @apply min-h-0 overflow-hidden text-left border-0 bg-[var(--funnel-surface)] p-4 transition hover:opacity-95 sm:p-5;
+  }
+
+  .selection-flow-choice {
+    @apply min-h-0 overflow-hidden border-0 bg-[var(--funnel-surface)] p-4 text-left text-[var(--funnel-text)] transition hover:opacity-95 sm:p-5;
+  }
+
+  .selection-flow-thumb {
+    @apply flex max-h-[min(20vh,9.5rem)] shrink-0 items-center justify-center bg-[var(--funnel-card-media-bg)] text-[11px] text-[var(--funnel-text-muted)] sm:text-xs;
+    aspect-ratio: 5 / 3;
+  }
+
+  .selection-flow-thumb-rounded {
+    @apply mb-2 flex max-h-[min(16vh,5.5rem)] shrink-0 items-center justify-center bg-[var(--funnel-card-media-bg)] text-[11px] text-[var(--funnel-text-muted)] sm:mb-3 sm:text-xs;
+    aspect-ratio: 16 / 9;
+  }
+
+  .selection-flow-thumb-video {
+    @apply mb-2 flex max-h-[min(18vh,6.5rem)] shrink-0 items-center justify-center bg-[var(--funnel-card-media-bg)] text-xs text-[var(--funnel-text-muted)] sm:mb-3;
+    aspect-ratio: 16 / 9;
+  }
+
+  .selection-flow-heading {
+    @apply flex items-center gap-2 font-heading font-semibold text-[var(--funnel-text)];
+  }
+
+  .selection-flow-title-row {
+    @apply selection-flow-heading mb-2;
+  }
+
+  .selection-flow-bar-line {
+    @apply flex gap-1.5 leading-snug;
+  }
+
+  .selection-flow-bar-mark {
+    @apply shrink-0 text-slate-300;
+  }
+
+  .selection-flow-bar-mark--tight {
+    @apply mt-0.5 shrink-0 text-slate-300;
+  }
+
+  /* Макс. высота полосы mockup-карточек: больше места под текст буллетов без прокрутки */
+  .selection-flow-funnel-root {
+    --selection-card-area-max-height: min(86dvh, calc(100dvh - 4.75rem));
+  }
+
+  .selection-mockup-strip-outer {
+    max-height: var(--selection-card-area-max-height);
+  }
+
+  .selection-mockup-card-face {
+    max-height: var(--selection-card-area-max-height);
+  }
+
+  .selection-pump-gallery {
+    @apply rounded-none border-0 bg-transparent p-0 sm:p-0;
+  }
+
+  .selection-funnel-stage-top {
+    @apply flex min-h-0 flex-1 flex-col items-stretch justify-start;
+  }
+
+  .selection-work-panel {
+    border: 0;
+    box-shadow: none;
+    background-color: var(--funnel-surface);
+  }
+
+  .selection-work-panel-head {
+    flex-shrink: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--funnel-panel-header-text) 18%, transparent);
+    background-color: var(--funnel-panel-header-bg);
+    padding: 0.375rem 0.75rem;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--funnel-panel-header-text);
+  }
+
+  .selection-work-btn-primary {
+    background-color: var(--funnel-button-bg);
+    color: var(--funnel-button-text);
+  }
+
+  .selection-work-btn-secondary {
+    background-color: var(--funnel-button-secondary-bg);
+    color: var(--funnel-button-secondary-text);
+  }
+
+  .cabinet-root {
+    font-family: var(--funnel-font-body);
+    color: var(--funnel-text);
+    background-color: var(--funnel-page-bg);
+  }
+
+  .cabinet-surface {
+    background-color: var(--funnel-surface);
+  }
+
+  .cabinet-nav-active {
+    background-color: color-mix(in srgb, var(--funnel-primary) 12%, var(--funnel-surface));
+    color: var(--funnel-primary);
+    border-right: 2px solid var(--funnel-primary);
+  }
+
+  .cabinet-table-head {
+    background-color: var(--funnel-panel-header-bg);
+    color: var(--funnel-panel-header-text);
+  }
+
+  .cabinet-table-row-alt {
+    background-color: var(--funnel-table-row-alt-bg);
+  }
+
+  .selection-work-root .text-muted-foreground {
+    color: var(--funnel-text-muted);
+  }
+
+  .selection-work-root [data-radix-select-content],
+  .funnel-select-content {
+    background-color: var(--funnel-surface) !important;
+    color: var(--funnel-text) !important;
+    border: 0 !important;
+  }
+
+  [data-selection-backdrop="true"] .selection-pump-gallery {
+    @apply border-transparent bg-transparent shadow-none;
+  }
+
+  [data-selection-backdrop="true"] .selection-flow-card,
+  [data-selection-backdrop="true"] .selection-flow-option,
+  [data-selection-backdrop="true"] .selection-flow-option-lg,
+  [data-selection-backdrop="true"] .selection-flow-choice {
+    @apply bg-[var(--funnel-surface)]/95 backdrop-blur-[1px];
+  }
+
+  /* ── Убрать стрелки у числовых input (ФАЗА 5) ─────── */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+}
