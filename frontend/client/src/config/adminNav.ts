@@ -1,5 +1,6 @@
 /** Разделы и вкладки админ-панели (полная страница и встроенный режим в кабинете). */
 
+import { OPEN_ADMIN_AND_DB_ACCESS } from "@shared/admin-access-policy";
 import { ADMIN_PRESENTATION } from "./adminPresentation";
 
 export type AdminSectionId = "dashboard" | "users" | "algorithm" | "db" | "design" | "sites";
@@ -72,6 +73,7 @@ const DESIGN_LEAF_IDS = new Set(
 
 /** Секции для бокового меню с учётом презентационных флагов. */
 export function getVisibleAdminSections() {
+  if (OPEN_ADMIN_AND_DB_ACCESS) return ADMIN_SECTIONS;
   return ADMIN_SECTIONS.filter(
     (s) => !(ADMIN_PRESENTATION.hideDesignSection && s.id === "design"),
   );
@@ -83,6 +85,7 @@ export function getVisibleAdminLeaves(): string[] {
 }
 
 export function isAdminLeafVisible(leaf: string): boolean {
+  if (OPEN_ADMIN_AND_DB_ACCESS) return ADMIN_LEAF_TAB_IDS.includes(leaf);
   if (ADMIN_PRESENTATION.hideDesignSection && DESIGN_LEAF_IDS.has(leaf)) {
     return false;
   }

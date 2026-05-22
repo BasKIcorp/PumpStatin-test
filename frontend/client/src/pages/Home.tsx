@@ -37,6 +37,8 @@ import {
   type StageHeadingsFlat,
 } from "@/lib/selectionFlowCopy";
 import "@/lib/serverTest"; // Импортируем утилиту для тестирования серверов
+import { canUseAdminOnlyFeatures } from "@/config/adminAccessPolicy";
+import { canUseAdminOnlyFeatures } from "@/config/adminAccessPolicy";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -1063,7 +1065,7 @@ useEffect(() => {
       >
         <ProductCategorySelector
           onSelect={handleProductCategory}
-          allowSimpelPumps
+          allowSimpelPumps={canUseAdminOnlyFeatures(user)}
           fullWidthLayout={appearance.selection_category_full_width}
         />
       </SelectionFlowLayout>

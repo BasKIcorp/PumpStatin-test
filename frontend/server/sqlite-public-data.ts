@@ -1,5 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { eq } from "drizzle-orm";
+import { defaultNewUserRole } from "@shared/admin-access-policy";
 import { appSettings, pumps, users } from "@shared/schema";
 import { getDb } from "./db";
 import { hashPassword } from "./auth-store";
@@ -184,7 +185,9 @@ export function registerSqlitePublicDataRoutes(app: Express): void {
       if (typeof body.username === "string") patch.username = body.username;
       if (typeof body.first_name === "string") patch.firstName = body.first_name;
       if (typeof body.last_name === "string") patch.lastName = body.last_name;
-      if (body.role === "admin" || body.role === "user") patch.role = body.role;
+      patch.role = defaultNewUserRole(
+        body.role === "admin" || body.role === "user" ? body.role : undefined,
+      );
       if (typeof body.is_active === "boolean") patch.isActive = body.is_active;
       if (typeof body.password === "string" && body.password.length >= 8) {
         patch.passwordHash = hashPassword(body.password);

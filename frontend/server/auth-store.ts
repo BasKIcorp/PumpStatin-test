@@ -2,6 +2,7 @@ import { randomBytes, scryptSync, timingSafeEqual } from "crypto";
 import type { Request, Response } from "express";
 import { eq } from "drizzle-orm";
 import { sessions, users } from "@shared/schema";
+import { defaultNewUserRole, effectiveUserRole } from "@shared/admin-access-policy";
 import { getDb } from "./db";
 
 export const SESSION_COOKIE = "ps_session";
@@ -57,7 +58,7 @@ export function userToAuthPayload(row: typeof users.$inferSelect): AuthUserPaylo
     id: row.id,
     email: row.email,
     name,
-    role: row.role === "admin" ? "admin" : "user",
+    role: effectiveUserRole(row.role),
   };
 }
 
@@ -197,7 +198,7 @@ export function userToAdminList(row: typeof users.$inferSelect): AdminUserRow {
     first_name: row.firstName,
     last_name: row.lastName,
     is_active: row.isActive,
-    role: row.role === "admin" ? "admin" : "user",
+    role: effectiveUserRole(row.role),
     date_joined: row.createdAt,
     last_login: row.lastLogin,
     selections_count: 0,

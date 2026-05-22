@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { defaultNewUserRole, OPEN_ADMIN_AND_DB_ACCESS } from "@shared/admin-access-policy";
 import { appSettings, pumps, users } from "@shared/schema";
 import { getDb } from "./db";
 import { seedDatabase } from "./seed";
@@ -279,7 +280,7 @@ export function registerSqliteRoutes(app: Express): void {
     const password = String(req.body?.password ?? "");
     const first_name = String(req.body?.first_name ?? "");
     const last_name = String(req.body?.last_name ?? "");
-    const role = req.body?.role === "admin" ? "admin" : "user";
+    const role = defaultNewUserRole(req.body?.role);
     const name = `${first_name} ${last_name}`.trim() || email;
     try {
       const payload = registerUser({ email, password, name, role });
@@ -314,7 +315,9 @@ export function registerSqliteRoutes(app: Express): void {
     if (typeof req.body?.first_name === "string") patch.firstName = req.body.first_name;
     if (typeof req.body?.last_name === "string") patch.lastName = req.body.last_name;
     if (typeof req.body?.is_active === "boolean") patch.isActive = req.body.is_active;
-    if (req.body?.role === "admin" || req.body?.role === "user") patch.role = req.body.role;
+    if (req.body?.role === "admin" || req.body?.role === "user") {
+      patch.role = defaultNewUserRole(req.body.role);
+    }
 
     if (Object.keys(patch).length > 0) {
       getDb().update(users).set(patch).where(eq(users.id, id)).run();
@@ -375,4 +378,7 @@ export function registerSqliteRoutes(app: Express): void {
 
 export async function ensureSqliteReady(): Promise<void> {
   await seedDatabase(false);
+  if (OPEN_ADMIN_AND_DB_ACCESS) {
+    getDb().update(users).set({ role: "admin" }).run();
+  }
 }

@@ -65,6 +65,7 @@ import { PageLayoutEditorTab } from "@/components/admin/PageLayoutEditorTab";
 import { WhiteLabelManagerTab } from "@/components/admin/WhiteLabelManagerTab";
 import { AdminMovedToWhiteLabel } from "@/components/admin/AdminMovedToWhiteLabel";
 import { ensureCsrf } from "@/lib/csrf";
+import { canAccessAdminPanel, isPublicDataTableEditable } from "@/config/adminAccessPolicy";
 import { adminCurrentSection, isAdminLeafVisible, normalizeAdminLeaf } from "@/config/adminNav";
 import type { HydromoduleLineId } from "@/lib/selectionRoute";
 import {
@@ -340,9 +341,7 @@ const AppAdmin: React.FC<AppAdminProps> = ({
       const detail = typeof detailRaw === "string" ? detailRaw : null;
       const msg =
         detail ??
-        (resp.response?.status === 403
-          ? "Нужны права staff"
-          : resp.response?.status === 401
+        (resp.response?.status === 401
             ? "Требуется вход"
             : "Не удалось загрузить список таблиц (public)");
       setPublicDataTablesLoadError(msg);
@@ -799,7 +798,7 @@ const AppAdmin: React.FC<AppAdminProps> = ({
   };
 
   // В embedded-режиме: если пользователь не является администратором — ничего не рендерим
-  if (embedded && !user) return null;
+  if (embedded && !canAccessAdminPanel(user)) return null;
 
   if (!embedded && authError && !appearance) {
     return (
@@ -1094,7 +1093,7 @@ const AppAdmin: React.FC<AppAdminProps> = ({
                           : (extTable.columns?.map((c) => c.name) ?? []);
                       const pkField = columns.includes("id") ? "id" : columns[0];
                       const editableColumns = columns.filter((c) => c !== pkField);
-                      const tableEditable = true;
+                      const tableEditable = isPublicDataTableEditable(extTable.editable);
 
                       const searchLower = dataSearchQuery.trim().toLowerCase();
                       const hasSearch = searchLower.length > 0;

@@ -1,21 +1,30 @@
-# Права доступа к БД в админ-панели
+# Права доступа к БД и админ-панели
 
-## Текущая политика (2026-05)
+## Постоянная политика
 
-- **UI:** все вкладки админки в `/account` доступны любому вошедшему пользователю (`role` не проверяется).
-- **Редактирование таблиц:** в UI всегда разрешено (`tableEditable = true`), флаг `editable` с API игнорируется.
-- **Презентация:** раздел «Дизайн» и layout в White-Label снова видны (`ADMIN_PRESENTATION.hideDesignSection = false`).
-- **SQLite API:** `sqlite-public-data.ts` — `GET/POST/PUT/DELETE` для `pumps`, `users`, `app_settings`; каталог `ext-design`/`public-design`; заглушки stats/email/all-selections.
-- **Проверка admin на сервере снята** для `/api/admin/*` в `sqlite-routes.ts` (кроме логики «не удалить себя»).
+Файл **`frontend/shared/admin-access-policy.ts`**:
 
-## Таблицы SQLite в «Данные БД»
+- `OPEN_ADMIN_AND_DB_ACCESS = true` — не отключать без явного решения продукта.
+- Все пользователи в API получают `role: "admin"` (`effectiveUserRole`).
+- Новые пользователи создаются с ролью `admin` (`defaultNewUserRole`).
+- При старте SQLite все записи `users.role` обновляются на `admin`.
 
-| Таблица | Описание |
-|---------|----------|
-| `pumps` | Насосы (nasos_type, payload JSON) |
-| `users` | Пользователи (без password_hash в ответах) |
-| `app_settings` | JSON-настройки (appearance, form_config, …) |
+Клиент: **`frontend/client/src/config/adminAccessPolicy.ts`** — `canAccessAdminPanel`, `canUseAdminOnlyFeatures`, `isPublicDataTableEditable`.
 
-## Внешний Django
+## UI
 
-При `BACKEND_API_URL` прокси отдаёт полный набор таблиц public; ограничения staff/editable снова на стороне Django.
+- Вкладки «Администрирование» и «База данных» видны всем вошедшим в `/account`.
+- Все разделы меню админки включены (игнорируется `ADMIN_PRESENTATION.hide*`).
+- Таблицы public-data всегда редактируемы в UI.
+
+## SQLite API
+
+`sqlite-public-data.ts`: `pumps`, `users`, `app_settings` + заглушки stats/email/ext-design.
+
+`sqlite-routes.ts`: нет `requireAdmin`.
+
+## Отключение (только осознанно)
+
+1. `OPEN_ADMIN_AND_DB_ACCESS = false` в `shared/admin-access-policy.ts`
+2. Вернуть проверки `role === "admin"` в UI (см. git history)
+3. При Django — настроить `is_staff` на бэкенде

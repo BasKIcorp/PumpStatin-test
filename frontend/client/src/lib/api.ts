@@ -400,7 +400,7 @@ export async function generatePdfAndPreview(params: Record<string, any>) {
     throw error;
   }
 }
-/* -------------------- ADMIN API (только для is_staff, с credentials) -------------------- */
+/* -------------------- ADMIN API (OPEN_ADMIN_AND_DB_ACCESS: без ограничений staff/admin) -------------------- */
 
 /** Заголовки этапов воронки (ключ шага → title/subtitle) */
 export type SelectionStageTitles = Partial<
