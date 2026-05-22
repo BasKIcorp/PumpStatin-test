@@ -9,8 +9,8 @@ export const SELECTION_ASSETS_BASE = staticUrl("/selection-assets");
 /** Ширина карточек воронки «Выбор карточек» (mockup strip) */
 export const SELECTION_MOCKUP_CARD_WIDTH_PX = 448;
 
-/** Вертикальный логотип Kentatsu в левой колонке (официальный SVG с kentatsu.global) */
-export const FUNNEL_SIDEBAR_WORDMARK_DEFAULT = staticUrl("/selection-assets/kentatsu-logo.svg");
+/** Вертикальный плакат в левой колонке воронки (советский стиль, «Слава КПСС») */
+export const FUNNEL_SIDEBAR_WORDMARK_DEFAULT = staticUrl("/selection-assets/slava-kpss-poster.svg");
 
 /** Маркер в строке названия карточки (экспорт «Рисунок 3.svg») */
 export const SELECTION_CARD_ARROW_SRC = staticUrl("/selection-assets/selection-card-arrow.svg");

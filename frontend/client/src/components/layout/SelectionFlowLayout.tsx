@@ -47,7 +47,7 @@ function SelectionFlowSidebar({
         >
           <img
             src={wordmarkSrc}
-            alt="Kentatsu"
+            alt="Слава КПСС"
             className="absolute left-0 top-0 max-w-none object-fill"
             style={{
               width: "min(72dvh, 26rem)",
