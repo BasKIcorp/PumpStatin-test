@@ -1,0 +1,24 @@
+{
+  "logo_url": null,
+  "cp_logo_url": null,
+  "tech_specs_logo_url": null,
+  "primary_color": "#13347f",
+  "accent_color": "#0ea5e9",
+  "funnel_page_background_color": "#ffffff",
+  "funnel_surface_color": "#ffffff",
+  "funnel_card_media_background_color": "#eff0f9",
+  "funnel_font_heading": "segoe",
+  "funnel_font_body": "open_sans",
+  "sidebar_text": "",
+  "brand_key": "strela",
+  "hydromodule_card_urls": {},
+  "selection_category_full_width": false,
+  "selection_stage_titles": {
+    "category": {
+      "title": "Подбор насосного оборудования Стрела",
+      "subtitle": "Выберите класс продукции для продолжения подбора"
+    }
+  },
+  "stage_headings": {},
+  "appearance_version": "1"
+}
