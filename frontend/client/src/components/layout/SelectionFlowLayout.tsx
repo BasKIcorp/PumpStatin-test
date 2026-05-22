@@ -61,7 +61,7 @@ function SelectionFlowSidebar({
         </div>
       ) : null}
       {text ? (
-        <p className="max-w-full px-1.5 text-center text-[10px] leading-snug text-slate-600 sm:px-2 sm:text-xs">
+        <p className="max-w-full px-1.5 text-center text-[10px] leading-snug text-[var(--funnel-text-muted)] sm:px-2 sm:text-xs">
           {text}
         </p>
       ) : null}
@@ -225,14 +225,13 @@ export function SelectionMockupCard({
         : "group-hover:scale-[1.08] group-focus-visible:scale-[1.08]";
 
   const cardLiftClass =
-    imageHoverVariant === "lift"
-      ? "group-hover:-translate-y-0.5 group-hover:shadow-[0_12px_28px_rgba(15,23,42,0.14),0_4px_10px_rgba(15,23,42,0.09)] group-focus-visible:-translate-y-0.5 group-focus-visible:shadow-[0_12px_28px_rgba(15,23,42,0.14),0_4px_10px_rgba(15,23,42,0.09)]"
-      : "group-hover:shadow-[0_8px_22px_rgba(15,23,42,0.12),0_2px_6px_rgba(15,23,42,0.08)] group-focus-visible:shadow-[0_8px_22px_rgba(15,23,42,0.12),0_2px_6px_rgba(15,23,42,0.08)]";
+    imageHoverVariant === "lift" ? "group-hover:-translate-y-0.5 group-focus-visible:-translate-y-0.5" : "";
 
   const cardFace = (
     <div
       className={cn(
-        "selection-mockup-card-face flex min-h-0 w-full flex-col overflow-hidden rounded-xl border-0 bg-[var(--funnel-surface)] shadow-[0_2px_8px_rgba(15,23,42,0.08),0_1px_3px_rgba(15,23,42,0.06)] ring-0 transition-[box-shadow,transform] duration-300 ease-out",
+        "selection-mockup-card-face selection-mockup-card-glow flex min-h-0 w-full flex-col overflow-hidden rounded-xl border border-[var(--funnel-border)] bg-[var(--funnel-surface)] ring-1 ring-[color-mix(in_srgb,var(--funnel-accent)_18%,transparent)] transition-[box-shadow,transform] duration-300 ease-out",
+        imageHoverVariant === "lift" && "selection-mockup-card-glow-lift",
         cardLiftClass,
       )}
     >
@@ -254,7 +253,7 @@ export function SelectionMockupCard({
           {image}
         </div>
       </div>
-      <div className="flex shrink-0 flex-col gap-0.5 bg-[var(--funnel-surface)] px-3 pb-1 pt-2 shadow-[inset_0_1px_0_0_rgba(15,23,42,0.07)] sm:px-4 sm:pt-2.5">
+      <div className="flex shrink-0 flex-col gap-0.5 bg-[var(--funnel-surface)] px-3 pb-1 pt-2 shadow-[inset_0_1px_0_0_color-mix(in_srgb,var(--funnel-accent)_22%,transparent)] sm:px-4 sm:pt-2.5">
         <div className="flex min-w-0 items-start gap-2 sm:items-center sm:gap-2.5">
           {showCaptionLogo ? (
             <img src={captionLogoResolved} alt="" className={cardUi.captionLogoClass} decoding="async" />
@@ -357,7 +356,7 @@ export const SelectionFlowLayout: React.FC<SelectionFlowLayoutProps> = ({
         }
       >
         <div
-          className="fixed bottom-0 left-0 top-0 z-30 flex flex-col overflow-x-visible border-r border-neutral-200 bg-[var(--funnel-surface)]"
+          className="fixed bottom-0 left-0 top-0 z-30 flex flex-col overflow-x-visible border-r border-[var(--funnel-border)] bg-[var(--funnel-surface)] shadow-[inset_-1px_0_0_color-mix(in_srgb,var(--funnel-primary)_25%,transparent)]"
           style={
             {
               width: SELECTION_SIDEBAR_WIDTH,

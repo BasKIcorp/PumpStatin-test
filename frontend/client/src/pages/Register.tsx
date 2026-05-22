@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function Register() {
   const { register } = useAuth();
@@ -26,69 +30,74 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="bg-white rounded-xl shadow-md w-full max-w-md p-8">
-        <div className="flex justify-center mb-6">
-          <img src="/assets/logo.png" alt="Logo" className="h-12 object-contain" />
-        </div>
-        <h1 className="text-2xl font-semibold text-center text-gray-800 mb-6">Регистрация</h1>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Имя</label>
-            <input
-              type="text"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Иван Иванов"
-            />
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 text-foreground">
+      <Card className="w-full max-w-md border-border bg-card shadow-lg ring-1 ring-[color-mix(in_srgb,var(--funnel-accent)_20%,transparent)]">
+        <CardContent className="p-8">
+          <div className="flex justify-center mb-6">
+            <img src="/assets/logo.png" alt="Logo" className="h-12 object-contain" />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="you@example.com"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Пароль</label>
-            <input
-              type="password"
-              required
-              minLength={8}
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Минимум 8 символов"
-            />
-          </div>
+          <h1 className="font-display text-2xl font-semibold text-center text-foreground mb-6 tracking-wide uppercase">
+            Регистрация
+          </h1>
 
-          {error && (
-            <p className="text-red-500 text-sm">{error}</p>
-          )}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="reg-name">Имя</Label>
+              <Input
+                id="reg-name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Иван Иванов"
+                className="bg-[var(--funnel-input-bg)]"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="reg-email">Email</Label>
+              <Input
+                id="reg-email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="bg-[var(--funnel-input-bg)]"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="reg-password">Пароль</Label>
+              <Input
+                id="reg-password"
+                type="password"
+                required
+                minLength={8}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Минимум 8 символов"
+                className="bg-[var(--funnel-input-bg)]"
+              />
+            </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition-colors disabled:opacity-50"
-          >
-            {loading ? "Регистрация..." : "Зарегистрироваться"}
-          </button>
-        </form>
+            {error ? <p className="text-destructive text-sm">{error}</p> : null}
 
-        <p className="text-center text-sm text-gray-500 mt-4">
-          Уже есть аккаунт?{" "}
-          <a href="/account" className="text-blue-600 hover:underline">Личный кабинет</a>
-        </p>
-        <p className="text-center text-sm text-gray-500 mt-2">
-          <a href="/" className="text-gray-400 hover:underline">← На главную</a>
-        </p>
-      </div>
+            <Button type="submit" disabled={loading} className="w-full selection-work-btn-primary">
+              {loading ? "Регистрация..." : "Зарегистрироваться"}
+            </Button>
+          </form>
+
+          <p className="text-center text-sm text-muted-foreground mt-4">
+            Уже есть аккаунт?{" "}
+            <a href="/account" className="text-primary hover:underline">
+              Личный кабинет
+            </a>
+          </p>
+          <p className="text-center text-sm text-muted-foreground mt-2">
+            <a href="/" className="text-muted-foreground hover:text-foreground hover:underline">
+              ← На главную
+            </a>
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 }

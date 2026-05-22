@@ -35,6 +35,8 @@ import { SELECTION_MOCKUP_CARD_WIDTH_PX } from "@/lib/selectionAssets";
 import type { FunnelFontKey } from "@/lib/funnelTheme";
 
 const FUNNEL_FONT_OPTIONS: { value: FunnelFontKey; label: string }[] = [
+  { value: "oswald", label: "Oswald (заголовки)" },
+  { value: "jetbrains_mono", label: "JetBrains Mono" },
   { value: "segoe", label: "Segoe UI" },
   { value: "open_sans", label: "Open Sans" },
   { value: "system", label: "Системный" },
@@ -341,7 +343,7 @@ export function AppearanceSiteEditor({ siteSlug }: { siteSlug: string }) {
                 <div className="space-y-1.5">
                   <Label>Шрифт заголовков</Label>
                   <Select
-                    value={app.funnel_font_heading ?? "segoe"}
+                    value={app.funnel_font_heading ?? "oswald"}
                     onValueChange={(v) => setApp((a) => (a ? { ...a, funnel_font_heading: v as FunnelFontKey } : a))}
                   >
                     <SelectTrigger><SelectValue /></SelectTrigger>
@@ -355,7 +357,7 @@ export function AppearanceSiteEditor({ siteSlug }: { siteSlug: string }) {
                 <div className="space-y-1.5">
                   <Label>Шрифт текста</Label>
                   <Select
-                    value={app.funnel_font_body ?? "open_sans"}
+                    value={app.funnel_font_body ?? "jetbrains_mono"}
                     onValueChange={(v) => setApp((a) => (a ? { ...a, funnel_font_body: v as FunnelFontKey } : a))}
                   >
                     <SelectTrigger><SelectValue /></SelectTrigger>

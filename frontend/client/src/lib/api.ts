@@ -424,8 +424,8 @@ export type AdminAppearance = {
   funnel_page_background_color?: string;
   funnel_surface_color?: string;
   funnel_card_media_background_color?: string;
-  funnel_font_heading?: "segoe" | "open_sans" | "system";
-  funnel_font_body?: "segoe" | "open_sans" | "system";
+  funnel_font_heading?: "segoe" | "open_sans" | "system" | "oswald" | "jetbrains_mono";
+  funnel_font_body?: "segoe" | "open_sans" | "system" | "oswald" | "jetbrains_mono";
   funnel_text_color?: string;
   funnel_text_muted_color?: string;
   funnel_panel_header_background_color?: string;
@@ -472,10 +472,13 @@ export async function adminLogout(): Promise<void> {
 }
 
 export type AdminWhoamiResponse = {
-  username: string;
-  ok: boolean;
+  username?: string;
+  email?: string;
+  role?: string;
+  ok?: boolean;
   pg_app_data_schema?: string;
   read_model_data_from_ext?: boolean;
+  storage?: string;
 };
 
 export async function adminWhoami(): Promise<AdminWhoamiResponse> {
@@ -494,8 +497,8 @@ export async function adminPatchAppearance(payload: {
   funnel_page_background_color?: string;
   funnel_surface_color?: string;
   funnel_card_media_background_color?: string;
-  funnel_font_heading?: "segoe" | "open_sans" | "system";
-  funnel_font_body?: "segoe" | "open_sans" | "system";
+  funnel_font_heading?: "segoe" | "open_sans" | "system" | "oswald" | "jetbrains_mono";
+  funnel_font_body?: "segoe" | "open_sans" | "system" | "oswald" | "jetbrains_mono";
   funnel_text_color?: string;
   funnel_text_muted_color?: string;
   funnel_panel_header_background_color?: string;
@@ -1396,7 +1399,10 @@ export async function adminExtDataDelete(table: string, pk: number): Promise<voi
 /* -------------------- ADMIN: данные таблиц public (вариант A) -------------------- */
 
 export async function adminPublicDataListTables(): Promise<PublicDataTableInfo[]> {
-  const { data } = await axios.get<PublicDataTableInfo[]>("/api/admin/public-data/tables");
+  const { data } = await axios.get<PublicDataTableInfo[]>("/api/admin/public-data/tables", {
+    params: { _nc: Date.now() },
+    headers: { "Cache-Control": "no-cache" },
+  });
   return Array.isArray(data) ? data : [];
 }
 
@@ -1404,7 +1410,10 @@ export async function adminPublicDataRows(
   table: string,
   params?: { limit?: number; offset?: number },
 ): Promise<{ rows: Record<string, unknown>[]; total: number }> {
-  const { data } = await axios.get(`/api/admin/public-data/${encodeURIComponent(table)}`, { params });
+  const { data } = await axios.get(`/api/admin/public-data/${encodeURIComponent(table)}`, {
+    params: { ...params, _nc: Date.now() },
+    headers: { "Cache-Control": "no-cache" },
+  });
   return data;
 }
 

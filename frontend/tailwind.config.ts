@@ -7,18 +7,28 @@ export default {
     extend: {
       fontFamily: {
         sans: [
-          '"Open Sans"',
-          "Open Sans",
-          "system-ui",
-          "-apple-system",
-          "sans-serif",
+          "var(--funnel-font-body)",
+          '"JetBrains Mono"',
+          "ui-monospace",
+          "monospace",
         ],
         heading: [
+          "var(--funnel-font-heading)",
+          '"Oswald"',
           '"Segoe UI"',
-          "local('Segoe UI')",
           "system-ui",
-          "-apple-system",
           "sans-serif",
+        ],
+        display: [
+          '"Oswald"',
+          "var(--funnel-font-heading)",
+          "system-ui",
+          "sans-serif",
+        ],
+        mono: [
+          '"JetBrains Mono"',
+          "ui-monospace",
+          "monospace",
         ],
         opensans: [
           '"Open Sans"',

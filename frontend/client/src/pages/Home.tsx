@@ -18,6 +18,8 @@ import SecondGraph from "@/components/SecondGraph";
 import StationResults from "@/components/StationResults";
 import { ProductCategorySelector } from "@/components/selection/ProductCategorySelector";
 import { HydromoduleLineSelector } from "@/components/selection/HydromoduleLineSelector";
+import { PumpUnitLineSelector } from "@/components/selection/PumpUnitLineSelector";
+import { PumpStationSubtypeSelector } from "@/components/selection/PumpStationSubtypeSelector";
 import type { ProductCategory, HydromoduleLineId, PumpUnitLineCode } from "@/lib/selectionRoute";
 import { parametersPageTitle } from "@/lib/selectionRoute";
 import { useApiSiteSlug, useSiteSlug } from "@/lib/site";
@@ -66,7 +68,7 @@ const WORK_BTN_PRIMARY = cn(
 const WORK_DESKTOP_FOCUS_RING =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--funnel-primary)] focus-visible:ring-offset-2";
 
-type FlowStep = "cards" | "hm_line" | "parameters";
+type FlowStep = "cards" | "hm_line" | "pu_line" | "pu_subtype" | "parameters";
 
 const Home: React.FC = () => {
   const { showNotification } = useToastNotification();
@@ -88,13 +90,13 @@ const Home: React.FC = () => {
   const [selectedPumpTypeCode, setSelectedPumpTypeCode] = useState<string | null>(null);
 
   const [appearance, setAppearance] = useState({
-    primary_color: "#13347f",
-    accent_color: "#0ea5e9",
-    funnel_page_background_color: "#ffffff",
-    funnel_surface_color: "#ffffff",
-    funnel_card_media_background_color: "#eff0f9",
-    funnel_font_heading: "segoe" as FunnelFontKey,
-    funnel_font_body: "open_sans" as FunnelFontKey,
+    primary_color: "#e63946",
+    accent_color: "#00f5d4",
+    funnel_page_background_color: "#0a0c12",
+    funnel_surface_color: "#141820",
+    funnel_card_media_background_color: "#1c2230",
+    funnel_font_heading: "oswald" as FunnelFontKey,
+    funnel_font_body: "jetbrains_mono" as FunnelFontKey,
     sidebar_text: "",
     brand_key: "strela" as "strela" | "simpel",
     hydromodule_card_urls: {} as Partial<Record<HydromoduleLineId, string | null>>,
@@ -236,10 +238,12 @@ const Home: React.FC = () => {
       return;
     } else if (c === "pump_unit") {
       setHydromoduleLine(null);
-      setPumpUnitLine("bps-w");
-      setPumpUnitLineLabel("BPS-W");
-      setPuStationSubtype("хоз-пит");
+      setPumpUnitLine(null);
+      setPumpUnitLineLabel(null);
+      setPuStationSubtype(null);
       setSelectedPumpTypeCode(null);
+      setFlowStep("pu_line");
+      return;
     } else if (c === "simpel_pumps") {
       setHydromoduleLine(null);
       setPumpUnitLine(null);
@@ -262,6 +266,27 @@ const Home: React.FC = () => {
     setHasSearched(false);
     setSelectedPumpId(null);
     setFlowStep("parameters");
+  }, []);
+
+  const handlePumpUnitLineSelect = useCallback((line: { code: string; label: string }) => {
+    setPumpUnitLine(line.code);
+    setPumpUnitLineLabel(line.label);
+    setPuStationSubtype(null);
+    setFlowStep("pu_subtype");
+  }, []);
+
+  const handlePumpStationSubtypeSelect = useCallback((st: "хоз-пит" | "пнс") => {
+    setPuStationSubtype(st);
+    setHasSearched(false);
+    setSelectedPumpId(null);
+    pumpSearchToastForUpdatedAtRef.current = 0;
+    pumpSearchErrorToastForUpdatedAtRef.current = 0;
+    setFlowStep("parameters");
+  }, []);
+
+  const goBackFromPuSubtypeToLine = useCallback(() => {
+    setPuStationSubtype(null);
+    setFlowStep("pu_line");
   }, []);
 
   const goBackToCategoryCards = useCallback(() => {
@@ -308,6 +333,10 @@ const Home: React.FC = () => {
       setFlowStep("hm_line");
       return;
     }
+    if (productCategory === "pump_unit") {
+      setFlowStep("pu_subtype");
+      return;
+    }
     setProductCategory(null);
     setHydromoduleLine(null);
     setPumpUnitLine(null);
@@ -318,7 +347,11 @@ const Home: React.FC = () => {
   }, [productCategory]);
 
   const workBackLabel =
-    productCategory === "hydromodule" ? "К сериям" : "К карточкам";
+    productCategory === "hydromodule"
+      ? "К сериям"
+      : productCategory === "pump_unit"
+        ? "К типу сети"
+        : "К карточкам";
 
   const lastStationSuccessToastKeyRef = useRef<string>("");
 
@@ -1097,6 +1130,50 @@ useEffect(() => {
     );
   }
 
+  if (flowStep === "pu_line") {
+    const v = funnelStepVisuals("pu_line");
+    return (
+      <SelectionFlowLayout
+        sidebarWordmarkSrc={sidebarWordmarkSrc}
+        sidebarText={appearance.sidebar_text}
+        cardCaptionLogoSrc={v.cardCaptionLogo}
+        title={v.title}
+        subtitle={v.subtitle}
+        onBack={goBackToCategoryCards}
+        backLabel="← Класс продукции"
+        stageIndicator={<SelectionStageProgress variant="four" current={2} />}
+        headerRight={selectionHeaderRight}
+        bodyClassName="overflow-hidden"
+        stageBackgroundSrc={selectionSlidePng(3)}
+        cardUiSettings={appearance.selection_card_settings}
+      >
+        <PumpUnitLineSelector onSelect={handlePumpUnitLineSelect} />
+      </SelectionFlowLayout>
+    );
+  }
+
+  if (flowStep === "pu_subtype") {
+    const v = funnelStepVisuals("pu_subtype");
+    return (
+      <SelectionFlowLayout
+        sidebarWordmarkSrc={sidebarWordmarkSrc}
+        sidebarText={appearance.sidebar_text}
+        cardCaptionLogoSrc={v.cardCaptionLogo}
+        title={v.title}
+        subtitle={v.subtitle}
+        onBack={goBackFromPuSubtypeToLine}
+        backLabel="← Линейка установки"
+        stageIndicator={<SelectionStageProgress variant="four" current={3} />}
+        headerRight={selectionHeaderRight}
+        bodyClassName="overflow-hidden"
+        stageBackgroundSrc={selectionSlidePng(4)}
+        cardUiSettings={appearance.selection_card_settings}
+      >
+        <PumpStationSubtypeSelector onSelect={handlePumpStationSubtypeSelect} />
+      </SelectionFlowLayout>
+    );
+  }
+
   // ── Экран параметров (work) — второй этап без изменений ─────────────────────
 
   return (
@@ -1105,10 +1182,13 @@ useEffect(() => {
       style={{ fontFamily: "var(--funnel-font-body)" }}
     >
       <div className="mx-auto w-full max-w-[1440px] px-4 pt-2 sm:px-6 lg:px-8">
-        <SelectionStageProgress
-          variant={productCategory === "hydromodule" ? "three" : "two"}
-          current={productCategory === "hydromodule" ? 3 : 2}
-        />
+        {productCategory === "hydromodule" ? (
+          <SelectionStageProgress variant="three" current={3} />
+        ) : productCategory === "pump_unit" ? (
+          <SelectionStageProgress variant="four" current={4} />
+        ) : (
+          <SelectionStageProgress variant="two" current={2} />
+        )}
       </div>
       <Header
         variant="simpel"

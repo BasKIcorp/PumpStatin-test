@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+﻿import React, { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/lib/auth";
@@ -15,7 +15,7 @@ import AppAdmin from "./AppAdmin";
 import { downloadProjectPackagePdf } from "@/lib/api";
 import { hrefResumeSelection, pathForSiteBase, readPreferredSiteSlugFromStorage } from "@/lib/site";
 
-/* ── Типы ─────────────────────────────────────────────────── */
+/* тФАтФА ╨в╨╕╨┐╤Л тФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФА */
 interface Selection {
   id: number;
   name: string;
@@ -36,7 +36,7 @@ interface ProjectSelection extends Pick<
   "id" | "name" | "Q" | "H" | "n1" | "n2" | "pump_types" | "fluid_type" | "temperature" | "pump_name" | "created_at"
 > {
   has_station_pdf_snapshot?: boolean;
-  /** Витрина, на которой делали расчёт (если сохранён снимок). */
+  /** ╨Т╨╕╤В╤А╨╕╨╜╨░, ╨╜╨░ ╨║╨╛╤В╨╛╤А╨╛╨╣ ╨┤╨╡╨╗╨░╨╗╨╕ ╤А╨░╤Б╤З╤С╤В (╨╡╤Б╨╗╨╕ ╤Б╨╛╤Е╤А╨░╨╜╤С╨╜ ╤Б╨╜╨╕╨╝╨╛╨║). */
   selection_site_slug?: string | null;
 }
 
@@ -44,16 +44,16 @@ interface Project {
   id: number;
   name: string;
   address: string;
-  /** Витрина, к которой привязан бренд; null — старые проекты / общий интерфейс. */
+  /** ╨Т╨╕╤В╤А╨╕╨╜╨░, ╨║ ╨║╨╛╤В╨╛╤А╨╛╨╣ ╨┐╤А╨╕╨▓╤П╨╖╨░╨╜ ╨▒╤А╨╡╨╜╨┤; null тАФ ╤Б╤В╨░╤А╤Л╨╡ ╨┐╤А╨╛╨╡╨║╤В╤Л / ╨╛╨▒╤Й╨╕╨╣ ╨╕╨╜╤В╨╡╤А╤Д╨╡╨╣╤Б. */
   site_slug?: string | null;
   created_at: string;
   selections: ProjectSelection[];
 }
 
-/* ── Вкладки ──────────────────────────────────────────────── */
+/* тФАтФА ╨Т╨║╨╗╨░╨┤╨║╨╕ тФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФА */
 const USER_TABS = [
-  { id: "selections", label: "История подборов" },
-  { id: "projects", label: "Мои проекты" },
+  { id: "selections", label: "╨Ш╤Б╤В╨╛╤А╨╕╤П ╨┐╨╛╨┤╨▒╨╛╤А╨╛╨▓" },
+  { id: "projects", label: "╨Ь╨╛╨╕ ╨┐╤А╨╛╨╡╨║╤В╤Л" },
 ] as const;
 
 type AdminTabId = (typeof ADMIN_LEAF_TAB_IDS)[number];
@@ -73,7 +73,7 @@ function readSidebarCollapsedInitial(): boolean {
   }
 }
 
-/* ── Утилиты ─────────────────────────────────────────────── */
+/* тФАтФА ╨г╤В╨╕╨╗╨╕╤В╤Л тФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФА */
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("ru-RU", {
     day: "2-digit", month: "2-digit", year: "numeric",
@@ -81,10 +81,10 @@ function formatDate(iso: string) {
 }
 
 function WorkingPoint({ Q, H }: { Q: number; H: number }) {
-  return <span className="text-[var(--funnel-text-muted)] text-sm">{Q}&nbsp;м³/ч;&nbsp;{H}&nbsp;м</span>;
+  return <span className="text-[var(--funnel-text-muted)] text-sm">{Q}&nbsp;╨╝┬│/╤З;&nbsp;{H}&nbsp;╨╝</span>;
 }
 
-/* ── Главный компонент ───────────────────────────────────── */
+/* тФАтФА ╨У╨╗╨░╨▓╨╜╤Л╨╣ ╨║╨╛╨╝╨┐╨╛╨╜╨╡╨╜╤В тФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФА */
 export default function Cabinet() {
   const { user, loading, logout } = useAuth();
   const [, navigate] = useLocation();
@@ -92,44 +92,44 @@ export default function Cabinet() {
   const [publicDataIntent, setPublicDataIntent] = useState<{ table: string; id: number } | null>(
     null,
   );
-  /** Для администатора: свои подборы или журнал по всем пользователям */
+  /** ╨Ф╨╗╤П ╨░╨┤╨╝╨╕╨╜╨╕╤Б╤В╨░╤В╨╛╤А╨░: ╤Б╨▓╨╛╨╕ ╨┐╨╛╨┤╨▒╨╛╤А╤Л ╨╕╨╗╨╕ ╨╢╤Г╤А╨╜╨░╨╗ ╨┐╨╛ ╨▓╤Б╨╡╨╝ ╨┐╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╨╡╨╗╤П╨╝ */
   const [cabinetSelectionsScope, setCabinetSelectionsScope] = useState<"mine" | "all">("mine");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(readSidebarCollapsedInitial);
   const sidebarRef = useRef<HTMLElement>(null);
 
-  /* Данные пользователя */
+  /* ╨Ф╨░╨╜╨╜╤Л╨╡ ╨┐╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╨╡╨╗╤П */
   const [selections, setSelections] = useState<Selection[]>([]);
   const [projects,   setProjects]   = useState<Project[]>([]);
   const [selFilter,  setSelFilter]  = useState("");
   const [projFilter, setProjFilter] = useState("");
 
-  /* Модалка: новый проект */
+  /* ╨Ь╨╛╨┤╨░╨╗╨║╨░: ╨╜╨╛╨▓╤Л╨╣ ╨┐╤А╨╛╨╡╨║╤В */
   const [showNewProject, setShowNewProject] = useState(false);
   const [newProjName,    setNewProjName]    = useState("");
   const [newProjAddr,    setNewProjAddr]    = useState("");
   const [creating,       setCreating]       = useState(false);
 
-  /* Модалка: добавить подбор в проект */
+  /* ╨Ь╨╛╨┤╨░╨╗╨║╨░: ╨┤╨╛╨▒╨░╨▓╨╕╤В╤М ╨┐╨╛╨┤╨▒╨╛╤А ╨▓ ╨┐╤А╨╛╨╡╨║╤В */
   const [addToProj,    setAddToProj]    = useState<{ selectionId: number } | null>(null);
   const [targetProject, setTargetProject] = useState<number | "">("");
 
-  /* Inline rename для подборов */
+  /* Inline rename ╨┤╨╗╤П ╨┐╨╛╨┤╨▒╨╛╤А╨╛╨▓ */
   const [renamingSelId, setRenamingSelId] = useState<number | null>(null);
   const [renameValue,   setRenameValue]   = useState("");
 
-  /* Inline edit для проектов */
+  /* Inline edit ╨┤╨╗╤П ╨┐╤А╨╛╨╡╨║╤В╨╛╨▓ */
   const [editingProjId,   setEditingProjId]   = useState<number | null>(null);
   const [editProjName,    setEditProjName]    = useState("");
   const [editProjAddress, setEditProjAddress] = useState("");
   const [projectPdfLoadingId, setProjectPdfLoadingId] = useState<number | null>(null);
 
-  /** Модалка: добавить в текущий проект несколько подборов из истории */
+  /** ╨Ь╨╛╨┤╨░╨╗╨║╨░: ╨┤╨╛╨▒╨░╨▓╨╕╤В╤М ╨▓ ╤В╨╡╨║╤Г╤Й╨╕╨╣ ╨┐╤А╨╛╨╡╨║╤В ╨╜╨╡╤Б╨║╨╛╨╗╤М╨║╨╛ ╨┐╨╛╨┤╨▒╨╛╤А╨╛╨▓ ╨╕╨╖ ╨╕╤Б╤В╨╛╤А╨╕╨╕ */
   const [historyPickProjectId, setHistoryPickProjectId] = useState<number | null>(null);
   const [historyPickFilter, setHistoryPickFilter] = useState("");
   const [historyPickIds, setHistoryPickIds] = useState<number[]>([]);
   const [historyPickAdding, setHistoryPickAdding] = useState(false);
 
-  /** Скрытые вкладки (раздел «Дизайн») → White-Label */
+  /** ╨б╨║╤А╤Л╤В╤Л╨╡ ╨▓╨║╨╗╨░╨┤╨║╨╕ (╤А╨░╨╖╨┤╨╡╨╗ ┬л╨Ф╨╕╨╖╨░╨╣╨╜┬╗) тЖТ White-Label */
   useEffect(() => {
     if (!user) return;
     if (ADMIN_LEAF_TAB_IDS.includes(activeTab) && !isAdminLeafVisible(activeTab)) {
@@ -155,19 +155,19 @@ export default function Cabinet() {
     }
   }, [sidebarCollapsed]);
 
-  /* Общая ссылка «к подбору» из ЛК — по последней витрине в URL пользователя */
+  /* ╨Ю╨▒╤Й╨░╤П ╤Б╤Б╤Л╨╗╨║╨░ ┬л╨║ ╨┐╨╛╨┤╨▒╨╛╤А╤Г┬╗ ╨╕╨╖ ╨Ы╨Ъ тАФ ╨┐╨╛ ╨┐╨╛╤Б╨╗╨╡╨┤╨╜╨╡╨╣ ╨▓╨╕╤В╤А╨╕╨╜╨╡ ╨▓ URL ╨┐╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╨╡╨╗╤П */
   function selectionHomeHref() {
     return pathForSiteBase(readPreferredSiteSlugFromStorage());
   }
 
-  /* Загружаем данные пользователя */
+  /* ╨Ч╨░╨│╤А╤Г╨╢╨░╨╡╨╝ ╨┤╨░╨╜╨╜╤Л╨╡ ╨┐╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╨╡╨╗╤П */
   useEffect(() => {
     if (!user) return;
     axios.get("/api/user/selections/").then(r => setSelections(r.data)).catch(() => {});
     axios.get("/api/user/projects/").then(r => setProjects(r.data)).catch(() => {});
   }, [user]);
 
-  /* Создание проекта */
+  /* ╨б╨╛╨╖╨┤╨░╨╜╨╕╨╡ ╨┐╤А╨╛╨╡╨║╤В╨░ */
   async function createProject() {
     if (!newProjName.trim()) return;
     setCreating(true);
@@ -196,7 +196,7 @@ export default function Cabinet() {
   }
 
   async function deleteProject(id: number) {
-    if (!confirm("Удалить проект?")) return;
+    if (!confirm("╨г╨┤╨░╨╗╨╕╤В╤М ╨┐╤А╨╛╨╡╨║╤В?")) return;
     await axios.delete(`/api/user/projects/${id}/`);
     setProjects(p => p.filter(x => x.id !== id));
   }
@@ -278,17 +278,17 @@ export default function Cabinet() {
       a.remove();
       URL.revokeObjectURL(url);
       if (pdfWarnings.length) {
-        console.warn("[PDF предупреждения]", pdfWarnings);
+        console.warn("[PDF ╨┐╤А╨╡╨┤╤Г╨┐╤А╨╡╨╢╨┤╨╡╨╜╨╕╤П]", pdfWarnings);
       }
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Не удалось сформировать PDF проекта";
+      const msg = e instanceof Error ? e.message : "╨Э╨╡ ╤Г╨┤╨░╨╗╨╛╤Б╤М ╤Б╤Д╨╛╤А╨╝╨╕╤А╨╛╨▓╨░╤В╤М PDF ╨┐╤А╨╛╨╡╨║╤В╨░";
       window.alert(msg);
     } finally {
       setProjectPdfLoadingId(null);
     }
   }
 
-  /* Фильтрация */
+  /* ╨д╨╕╨╗╤М╤В╤А╨░╤Ж╨╕╤П */
   const filteredSel  = selections.filter(s => {
     const q = selFilter.toLowerCase();
     const label = (s.name || s.pump_name || "").toLowerCase();
@@ -320,7 +320,7 @@ export default function Cabinet() {
     (p.address || "").toLowerCase().includes(projFilter.toLowerCase())
   );
 
-  /* Флаги */
+  /* ╨д╨╗╨░╨│╨╕ */
   const isAdminTab  = ADMIN_TAB_IDS.includes(activeTab);
 
   const navigateAdminToPublicData = React.useCallback((tableName: string) => {
@@ -330,11 +330,11 @@ export default function Cabinet() {
 
   const clearPublicDataIntent = React.useCallback(() => setPublicDataIntent(null), []);
 
-  /* ── Рендер ─────────────────────────────────────────────── */
+  /* тФАтФА ╨а╨╡╨╜╨┤╨╡╤А тФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФА */
   if (loading) {
     return (
       <div className="cabinet-root min-h-screen flex items-center justify-center text-[var(--funnel-text-muted)]">
-        Загрузка...
+        ╨Ч╨░╨│╤А╤Г╨╖╨║╨░...
       </div>
     );
   }
@@ -343,7 +343,7 @@ export default function Cabinet() {
   return (
     <div className="cabinet-root min-h-screen flex flex-col">
 
-      {/* ── Шапка ─────────────────────────────────────────── */}
+      {/* тФАтФА ╨и╨░╨┐╨║╨░ тФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФА */}
       <header className="cabinet-surface border-b shadow-sm z-10 flex-shrink-0">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14 gap-3">
           <div className="flex items-center gap-2 min-w-0">
@@ -352,8 +352,8 @@ export default function Cabinet() {
               onClick={() => setSidebarCollapsed((c) => !c)}
               aria-expanded={!sidebarCollapsed}
               aria-controls="cabinet-sidebar"
-              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-zinc-300 cabinet-surface text-[var(--funnel-text-muted)] shadow-sm transition-colors hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--funnel-primary)]"
-              title={sidebarCollapsed ? "Показать меню" : "Скрыть меню"}
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border cabinet-surface text-[var(--funnel-text-muted)] shadow-sm transition-colors hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--funnel-primary)]"
+              title={sidebarCollapsed ? "╨Я╨╛╨║╨░╨╖╨░╤В╤М ╨╝╨╡╨╜╤О" : "╨б╨║╤А╤Л╤В╤М ╨╝╨╡╨╜╤О"}
             >
               {sidebarCollapsed ? (
                 <ChevronRight className="h-4 w-4 shrink-0" aria-hidden />
@@ -361,13 +361,13 @@ export default function Cabinet() {
                 <ChevronLeft className="h-4 w-4 shrink-0" aria-hidden />
               )}
               <span className="sr-only">
-                {sidebarCollapsed ? "Показать боковое меню" : "Скрыть боковое меню"}
+                {sidebarCollapsed ? "╨Я╨╛╨║╨░╨╖╨░╤В╤М ╨▒╨╛╨║╨╛╨▓╨╛╨╡ ╨╝╨╡╨╜╤О" : "╨б╨║╤А╤Л╤В╤М ╨▒╨╛╨║╨╛╨▓╨╛╨╡ ╨╝╨╡╨╜╤О"}
               </span>
             </button>
             <a href={selectionHomeHref()} className="flex items-center space-x-3 min-w-0">
               <img src="/assets/logo.png" alt="Logo" className="h-9 object-contain" />
               <span className="font-semibold text-[var(--funnel-text)] hidden md:inline text-sm">
-                Конфигуратор насосных станций
+                ╨Ъ╨╛╨╜╤Д╨╕╨│╤Г╤А╨░╤В╨╛╤А ╨╜╨░╤Б╨╛╤Б╨╜╤Л╤Е ╤Б╤В╨░╨╜╤Ж╨╕╨╣
               </span>
             </a>
           </div>
@@ -378,9 +378,9 @@ export default function Cabinet() {
             <button
               onClick={async () => { await logout(); navigate("/"); }}
               className="text-sm text-[var(--funnel-text-muted)] hover:text-red-500 transition-colors px-2 py-1 rounded"
-              title="Выйти"
+              title="╨Т╤Л╨╣╤В╨╕"
             >
-              Выйти
+              ╨Т╤Л╨╣╤В╨╕
             </button>
           </div>
         </div>
@@ -388,7 +388,7 @@ export default function Cabinet() {
 
       <div className="flex flex-1 overflow-hidden">
 
-        {/* ── Боковое меню ──────────────────────────────── */}
+        {/* тФАтФА ╨С╨╛╨║╨╛╨▓╨╛╨╡ ╨╝╨╡╨╜╤О тФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФА */}
         <aside
           ref={sidebarRef}
           id="cabinet-sidebar"
@@ -398,7 +398,7 @@ export default function Cabinet() {
           }`}
         >
 
-          {/* Профиль */}
+          {/* ╨Я╤А╨╛╤Д╨╕╨╗╤М */}
           <div className="px-4 pt-5 pb-4 border-b">
             <div className="flex items-center space-x-3">
               <div className="w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm flex-shrink-0 bg-[color-mix(in_srgb,var(--funnel-primary)_15%,var(--funnel-surface))] text-[var(--funnel-primary)]">
@@ -406,18 +406,18 @@ export default function Cabinet() {
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-medium text-[var(--funnel-text)] truncate">
-                  {user.name || "Пользователь"}
+                  {user.name || "╨Я╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╨╡╨╗╤М"}
                 </p>
                 <p className="text-xs text-[var(--funnel-text-muted)] truncate">{user.email}</p>
               </div>
             </div>
           </div>
 
-          {/* Навигация: пользователь */}
+          {/* ╨Э╨░╨▓╨╕╨│╨░╤Ж╨╕╤П: ╨┐╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╨╡╨╗╤М */}
           <nav className="flex-1 py-2">
             <div className="px-3 pt-2 pb-1">
               <p className="text-[10px] font-semibold text-[var(--funnel-text-muted)] uppercase tracking-wider">
-                Личный кабинет
+                ╨Ы╨╕╤З╨╜╤Л╨╣ ╨║╨░╨▒╨╕╨╜╨╡╤В
               </p>
             </div>
             {USER_TABS.map(tab => (
@@ -434,11 +434,11 @@ export default function Cabinet() {
               </button>
             ))}
 
-            {/* Навигация: администратор (группы и подразделы) — доступна всем вошедшим */}
+            {/* ╨Э╨░╨▓╨╕╨│╨░╤Ж╨╕╤П: ╨░╨┤╨╝╨╕╨╜╨╕╤Б╤В╤А╨░╤В╨╛╤А (╨│╤А╤Г╨┐╨┐╤Л ╨╕ ╨┐╨╛╨┤╤А╨░╨╖╨┤╨╡╨╗╤Л) тАФ ╨┤╨╛╤Б╤В╤Г╨┐╨╜╨░ ╨▓╤Б╨╡╨╝ ╨▓╨╛╤И╨╡╨┤╤И╨╕╨╝ */}
             <>
               <div className="px-3 pt-5 pb-1">
                 <p className="text-[10px] font-semibold text-[var(--funnel-text-muted)] uppercase tracking-wider">
-                  Администрирование
+                  ╨Р╨┤╨╝╨╕╨╜╨╕╤Б╤В╤А╨╕╤А╨╛╨▓╨░╨╜╨╕╨╡
                 </p>
               </div>
               {getVisibleAdminSections().map((section) => (
@@ -464,21 +464,21 @@ export default function Cabinet() {
             </>
           </nav>
 
-          {/* Кнопка нового подбора */}
+          {/* ╨Ъ╨╜╨╛╨┐╨║╨░ ╨╜╨╛╨▓╨╛╨│╨╛ ╨┐╨╛╨┤╨▒╨╛╤А╨░ */}
           <div className="p-3 border-t flex-shrink-0">
             <a
               href={selectionHomeHref()}
               className="flex items-center justify-center w-full px-3 py-2 text-sm selection-work-btn-primary hover:opacity-90 rounded-lg transition-colors font-medium"
             >
-              + Новый подбор
+              + ╨Э╨╛╨▓╤Л╨╣ ╨┐╨╛╨┤╨▒╨╛╤А
             </a>
           </div>
         </aside>
 
-        {/* ── Основной контент ──────────────────────────── */}
+        {/* тФАтФА ╨Ю╤Б╨╜╨╛╨▓╨╜╨╛╨╣ ╨║╨╛╨╜╤В╨╡╨╜╤В тФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФА */}
         <main className="flex-1 overflow-y-auto">
 
-          {/* Вкладка: История подборов (личный кабинет) */}
+          {/* ╨Т╨║╨╗╨░╨┤╨║╨░: ╨Ш╤Б╤В╨╛╤А╨╕╤П ╨┐╨╛╨┤╨▒╨╛╤А╨╛╨▓ (╨╗╨╕╤З╨╜╤Л╨╣ ╨║╨░╨▒╨╕╨╜╨╡╤В) */}
           {activeTab === "selections" && (
             <div
               className={`p-6 w-full ${
@@ -492,10 +492,10 @@ export default function Cabinet() {
                     className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                       cabinetSelectionsScope === "mine"
                         ? "selection-work-btn-primary"
-                        : "border border-gray-200 cabinet-surface text-[var(--funnel-text-muted)] hover:bg-black/[0.04]"
+                        : "border border-border cabinet-surface text-[var(--funnel-text-muted)] hover:bg-black/[0.04]"
                     }`}
                   >
-                    Мои подборы
+                    ╨Ь╨╛╨╕ ╨┐╨╛╨┤╨▒╨╛╤А╤Л
                   </button>
                   <button
                     type="button"
@@ -503,51 +503,51 @@ export default function Cabinet() {
                     className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                       cabinetSelectionsScope === "all"
                         ? "selection-work-btn-primary"
-                        : "border border-gray-200 cabinet-surface text-[var(--funnel-text-muted)] hover:bg-black/[0.04]"
+                        : "border border-border cabinet-surface text-[var(--funnel-text-muted)] hover:bg-black/[0.04]"
                     }`}
                   >
-                    Все пользователи
+                    ╨Т╤Б╨╡ ╨┐╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╨╡╨╗╨╕
                   </button>
                 </div>
 
               {cabinetSelectionsScope === "mine" && (
                 <>
               <div className="flex items-center justify-between mb-5">
-                <h1 className="text-xl font-semibold text-[var(--funnel-text)]">История подборов</h1>
-                <span className="text-sm text-[var(--funnel-text-muted)]">{selections.length} записей</span>
+                <h1 className="text-xl font-semibold text-[var(--funnel-text)]">╨Ш╤Б╤В╨╛╤А╨╕╤П ╨┐╨╛╨┤╨▒╨╛╤А╨╛╨▓</h1>
+                <span className="text-sm text-[var(--funnel-text-muted)]">{selections.length} ╨╖╨░╨┐╨╕╤Б╨╡╨╣</span>
               </div>
 
-              <div className="cabinet-surface rounded-xl border border-gray-200 shadow-sm">
-                <div className="px-5 py-3 border-b border-gray-100">
+              <div className="cabinet-surface rounded-xl border border-border shadow-sm">
+                <div className="px-5 py-3 border-b border-border">
                   <input
                     value={selFilter}
                     onChange={e => setSelFilter(e.target.value)}
-                    placeholder="Фильтр по названию подбора или насосу..."
-                    className="w-full max-w-sm border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--funnel-primary)]"
+                    placeholder="╨д╨╕╨╗╤М╤В╤А ╨┐╨╛ ╨╜╨░╨╖╨▓╨░╨╜╨╕╤О ╨┐╨╛╨┤╨▒╨╛╤А╨░ ╨╕╨╗╨╕ ╨╜╨░╤Б╨╛╤Б╤Г..."
+                    className="w-full max-w-sm border border-border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--funnel-primary)]"
                   />
                 </div>
 
                 {filteredSel.length === 0 ? (
                   <div className="py-16 text-center">
                     <p className="text-[var(--funnel-text-muted)] text-sm">
-                      {selections.length === 0 ? "Нет сохранённых подборов" : "Ничего не найдено"}
+                      {selections.length === 0 ? "╨Э╨╡╤В ╤Б╨╛╤Е╤А╨░╨╜╤С╨╜╨╜╤Л╤Е ╨┐╨╛╨┤╨▒╨╛╤А╨╛╨▓" : "╨Э╨╕╤З╨╡╨│╨╛ ╨╜╨╡ ╨╜╨░╨╣╨┤╨╡╨╜╨╛"}
                     </p>
                     <a href={selectionHomeHref()} className="inline-block mt-3 text-sm text-[var(--funnel-primary)] hover:underline">
-                      Начать первый подбор →
+                      ╨Э╨░╤З╨░╤В╤М ╨┐╨╡╤А╨▓╤Л╨╣ ╨┐╨╛╨┤╨▒╨╛╤А тЖТ
                     </a>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
-                      <thead className="cabinet-table-head border-b border-gray-100">
+                      <thead className="cabinet-table-head border-b border-border">
                         <tr>
-                          <th className="text-left px-5 py-3 font-medium text-[var(--funnel-text-muted)]">Наименование</th>
-                          <th className="text-left px-4 py-3 font-medium text-[var(--funnel-text-muted)]">Рабочая точка</th>
-                          <th className="text-left px-4 py-3 font-medium text-[var(--funnel-text-muted)]">Дата</th>
+                          <th className="text-left px-5 py-3 font-medium text-[var(--funnel-text-muted)]">╨Э╨░╨╕╨╝╨╡╨╜╨╛╨▓╨░╨╜╨╕╨╡</th>
+                          <th className="text-left px-4 py-3 font-medium text-[var(--funnel-text-muted)]">╨а╨░╨▒╨╛╤З╨░╤П ╤В╨╛╤З╨║╨░</th>
+                          <th className="text-left px-4 py-3 font-medium text-[var(--funnel-text-muted)]">╨Ф╨░╤В╨░</th>
                           <th className="px-4 py-3 w-36"></th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-50">
+                      <tbody className="divide-y divide-border">
                         {filteredSel.map(s => (
                           <tr key={s.id} className="hover:bg-black/[0.04] transition-colors">
                             <td className="px-5 py-3 font-medium text-[var(--funnel-text)]">
@@ -563,16 +563,16 @@ export default function Cabinet() {
                                     }}
                                     className="border border-blue-400 rounded px-1.5 py-0.5 text-sm w-44 focus:outline-none"
                                   />
-                                  <button onClick={() => saveSelectionName(s.id)} className="text-xs text-[var(--funnel-primary)] hover:text-[var(--funnel-primary)]">✓</button>
-                                  <button onClick={() => setRenamingSelId(null)} className="text-xs text-[var(--funnel-text-muted)] hover:text-[var(--funnel-text-muted)]">✕</button>
+                                  <button onClick={() => saveSelectionName(s.id)} className="text-xs text-[var(--funnel-primary)] hover:text-[var(--funnel-primary)]">тЬУ</button>
+                                  <button onClick={() => setRenamingSelId(null)} className="text-xs text-[var(--funnel-text-muted)] hover:text-[var(--funnel-text-muted)]">тЬХ</button>
                                 </div>
                               ) : (
                                 <span
                                   className="cursor-pointer hover:underline"
-                                  title="Нажмите для переименования"
+                                  title="╨Э╨░╨╢╨╝╨╕╤В╨╡ ╨┤╨╗╤П ╨┐╨╡╤А╨╡╨╕╨╝╨╡╨╜╨╛╨▓╨░╨╜╨╕╤П"
                                   onClick={() => { setRenamingSelId(s.id); setRenameValue(s.name || s.pump_name || ""); }}
                                 >
-                                  {s.name || s.pump_name || "—"}
+                                  {s.name || s.pump_name || "тАФ"}
                                 </span>
                               )}
                             </td>
@@ -588,13 +588,13 @@ export default function Cabinet() {
                                   onClick={() => { setAddToProj({ selectionId: s.id }); setTargetProject(""); }}
                                   className="text-xs text-blue-500 hover:text-[var(--funnel-primary)] whitespace-nowrap"
                                 >
-                                  В проект
+                                  ╨Т ╨┐╤А╨╛╨╡╨║╤В
                                 </button>
                                 <a
                                   href={hrefResumeSelection(readPreferredSiteSlugFromStorage(), s)}
                                   className="text-xs selection-work-btn-secondary hover:opacity-90 px-2.5 py-1 rounded transition-colors whitespace-nowrap"
                                 >
-                                  Повторить
+                                  ╨Я╨╛╨▓╤В╨╛╤А╨╕╤В╤М
                                 </a>
                               </div>
                             </td>
@@ -612,16 +612,16 @@ export default function Cabinet() {
             </div>
           )}
 
-          {/* Вкладка: Мои проекты */}
+          {/* ╨Т╨║╨╗╨░╨┤╨║╨░: ╨Ь╨╛╨╕ ╨┐╤А╨╛╨╡╨║╤В╤Л */}
           {activeTab === "projects" && (
             <div className="p-6 max-w-4xl">
               <div className="flex items-center justify-between mb-5">
-                <h1 className="text-xl font-semibold text-[var(--funnel-text)]">Мои проекты</h1>
+                <h1 className="text-xl font-semibold text-[var(--funnel-text)]">╨Ь╨╛╨╕ ╨┐╤А╨╛╨╡╨║╤В╤Л</h1>
                 <button
                   onClick={() => setShowNewProject(true)}
                   className="text-sm selection-work-btn-primary hover:opacity-90 px-4 py-2 rounded-lg transition-colors font-medium"
                 >
-                  + Новый проект
+                  + ╨Э╨╛╨▓╤Л╨╣ ╨┐╤А╨╛╨╡╨║╤В
                 </button>
               </div>
 
@@ -629,21 +629,21 @@ export default function Cabinet() {
                 <input
                   value={projFilter}
                   onChange={e => setProjFilter(e.target.value)}
-                  placeholder="Фильтр по названию или адресу..."
-                  className="w-full max-w-sm border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--funnel-primary)]"
+                  placeholder="╨д╨╕╨╗╤М╤В╤А ╨┐╨╛ ╨╜╨░╨╖╨▓╨░╨╜╨╕╤О ╨╕╨╗╨╕ ╨░╨┤╤А╨╡╤Б╤Г..."
+                  className="w-full max-w-sm border border-border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--funnel-primary)]"
                 />
               </div>
 
               {filteredProj.length === 0 ? (
-                <div className="cabinet-surface rounded-xl border border-gray-200 shadow-sm py-16 text-center">
+                <div className="cabinet-surface rounded-xl border border-border shadow-sm py-16 text-center">
                   <p className="text-[var(--funnel-text-muted)] text-sm">
-                    {projects.length === 0 ? "Нет проектов" : "Ничего не найдено"}
+                    {projects.length === 0 ? "╨Э╨╡╤В ╨┐╤А╨╛╨╡╨║╤В╨╛╨▓" : "╨Э╨╕╤З╨╡╨│╨╛ ╨╜╨╡ ╨╜╨░╨╣╨┤╨╡╨╜╨╛"}
                   </p>
                   <button
                     onClick={() => setShowNewProject(true)}
                     className="inline-block mt-3 text-sm text-[var(--funnel-primary)] hover:underline"
                   >
-                    Создать первый проект →
+                    ╨б╨╛╨╖╨┤╨░╤В╤М ╨┐╨╡╤А╨▓╤Л╨╣ ╨┐╤А╨╛╨╡╨║╤В тЖТ
                   </button>
                 </div>
               ) : (
@@ -651,7 +651,7 @@ export default function Cabinet() {
                   {filteredProj.map(p => (
                     <div
                       key={p.id}
-                      className="cabinet-surface rounded-xl border border-gray-200 shadow-sm overflow-hidden"
+                      className="cabinet-surface rounded-xl border border-border shadow-sm overflow-hidden"
                     >
                       <div className="px-5 py-4 flex items-start justify-between">
                         <div className="flex-1 min-w-0">
@@ -661,18 +661,18 @@ export default function Cabinet() {
                                 autoFocus
                                 value={editProjName}
                                 onChange={e => setEditProjName(e.target.value)}
-                                placeholder="Название проекта"
+                                placeholder="╨Э╨░╨╖╨▓╨░╨╜╨╕╨╡ ╨┐╤А╨╛╨╡╨║╤В╨░"
                                 className="w-full border border-blue-400 rounded px-2 py-1 text-sm focus:outline-none"
                               />
                               <input
                                 value={editProjAddress}
                                 onChange={e => setEditProjAddress(e.target.value)}
-                                placeholder="Адрес объекта"
-                                className="w-full border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none"
+                                placeholder="╨Р╨┤╤А╨╡╤Б ╨╛╨▒╤К╨╡╨║╤В╨░"
+                                className="w-full border border-input rounded px-2 py-1 text-xs focus:outline-none"
                               />
                               <div className="flex gap-2">
-                                <button onClick={() => saveProjectEdit(p.id)} className="text-xs px-3 py-1 rounded selection-work-btn-primary hover:opacity-90">Сохранить</button>
-                                <button onClick={() => setEditingProjId(null)} className="text-xs text-[var(--funnel-text-muted)] hover:text-[var(--funnel-text)] px-2 py-1">Отмена</button>
+                                <button onClick={() => saveProjectEdit(p.id)} className="text-xs px-3 py-1 rounded selection-work-btn-primary hover:opacity-90">╨б╨╛╤Е╤А╨░╨╜╨╕╤В╤М</button>
+                                <button onClick={() => setEditingProjId(null)} className="text-xs text-[var(--funnel-text-muted)] hover:text-[var(--funnel-text)] px-2 py-1">╨Ю╤В╨╝╨╡╨╜╨░</button>
                               </div>
                             </div>
                           ) : (
@@ -682,7 +682,7 @@ export default function Cabinet() {
                                 <p className="text-xs text-[var(--funnel-text-muted)] mt-0.5">{p.address}</p>
                               )}
                               <p className="text-xs text-[var(--funnel-text-muted)] mt-0.5">
-                                {formatDate(p.created_at)} · {p.selections.length} подборов
+                                {formatDate(p.created_at)} ┬╖ {p.selections.length} ╨┐╨╛╨┤╨▒╨╛╤А╨╛╨▓
                               </p>
                             </>
                           )}
@@ -693,18 +693,18 @@ export default function Cabinet() {
                               <button
                                 type="button"
                                 onClick={() => openHistoryPicker(p.id)}
-                                className="text-xs font-medium text-[var(--funnel-primary)] border border-zinc-300 rounded-lg px-2.5 py-1 transition-colors whitespace-nowrap bg-[color-mix(in_srgb,var(--funnel-primary)_10%,var(--funnel-surface))] hover:opacity-90"
-                                title="Добавить записи из вкладки «История подборов»"
+                                className="text-xs font-medium text-[var(--funnel-primary)] border border-border rounded-lg px-2.5 py-1 transition-colors whitespace-nowrap bg-[color-mix(in_srgb,var(--funnel-primary)_10%,var(--funnel-surface))] hover:opacity-90"
+                                title="╨Ф╨╛╨▒╨░╨▓╨╕╤В╤М ╨╖╨░╨┐╨╕╤Б╨╕ ╨╕╨╖ ╨▓╨║╨╗╨░╨┤╨║╨╕ ┬л╨Ш╤Б╤В╨╛╤А╨╕╤П ╨┐╨╛╨┤╨▒╨╛╤А╨╛╨▓┬╗"
                               >
-                                + Из истории
+                                + ╨Ш╨╖ ╨╕╤Б╤В╨╛╤А╨╕╨╕
                               </button>
                               <button
                                 type="button"
                                 onClick={() => { setEditingProjId(p.id); setEditProjName(p.name); setEditProjAddress(p.address || ""); }}
                                 className="text-[var(--funnel-text-muted)] hover:text-blue-500 transition-colors text-xs px-1"
-                                title="Редактировать проект"
+                                title="╨а╨╡╨┤╨░╨║╤В╨╕╤А╨╛╨▓╨░╤В╤М ╨┐╤А╨╛╨╡╨║╤В"
                               >
-                                ✎
+                                тЬО
                               </button>
                             </>
                           )}
@@ -712,42 +712,42 @@ export default function Cabinet() {
                             type="button"
                             onClick={() => deleteProject(p.id)}
                             className="text-[var(--funnel-text-muted)] hover:text-red-500 transition-colors text-sm font-medium px-1"
-                            title="Удалить проект"
-                            aria-label="Удалить проект"
+                            title="╨г╨┤╨░╨╗╨╕╤В╤М ╨┐╤А╨╛╨╡╨║╤В"
+                            aria-label="╨г╨┤╨░╨╗╨╕╤В╤М ╨┐╤А╨╛╨╡╨║╤В"
                           >
-                            ×
+                            ├Ч
                           </button>
                         </div>
                       </div>
 
                       {p.selections.length === 0 ? (
-                        <div className="border-t border-gray-100 px-5 py-8 text-center space-y-2">
+                        <div className="border-t border-border px-5 py-8 text-center space-y-2">
                           <p className="text-sm text-[var(--funnel-text-muted)]">
-                            В проекте пока нет подборов. Добавьте их кнопкой «+ Из истории» или со вкладки «История подборов» — действие «В проект».
+                            ╨Т ╨┐╤А╨╛╨╡╨║╤В╨╡ ╨┐╨╛╨║╨░ ╨╜╨╡╤В ╨┐╨╛╨┤╨▒╨╛╤А╨╛╨▓. ╨Ф╨╛╨▒╨░╨▓╤М╤В╨╡ ╨╕╤Е ╨║╨╜╨╛╨┐╨║╨╛╨╣ ┬л+ ╨Ш╨╖ ╨╕╤Б╤В╨╛╤А╨╕╨╕┬╗ ╨╕╨╗╨╕ ╤Б╨╛ ╨▓╨║╨╗╨░╨┤╨║╨╕ ┬л╨Ш╤Б╤В╨╛╤А╨╕╤П ╨┐╨╛╨┤╨▒╨╛╤А╨╛╨▓┬╗ тАФ ╨┤╨╡╨╣╤Б╤В╨▓╨╕╨╡ ┬л╨Т ╨┐╤А╨╛╨╡╨║╤В┬╗.
                           </p>
                           {selections.length === 0 && (
                             <a href={selectionHomeHref()} className="inline-block text-sm text-[var(--funnel-primary)] hover:underline">
-                              Перейти к первому подбору →
+                              ╨Я╨╡╤А╨╡╨╣╤В╨╕ ╨║ ╨┐╨╡╤А╨▓╨╛╨╝╤Г ╨┐╨╛╨┤╨▒╨╛╤А╤Г тЖТ
                             </a>
                           )}
                         </div>
                       ) : (
                         <>
-                          <div className="border-t border-gray-100">
+                          <div className="border-t border-border">
                             <table className="w-full text-xs">
                             <thead className="cabinet-table-head">
                               <tr>
-                                <th className="text-left px-5 py-2 font-medium text-[var(--funnel-text-muted)]">Наименование</th>
-                                <th className="text-left px-4 py-2 font-medium text-[var(--funnel-text-muted)]">Рабочая точка</th>
-                                <th className="text-left px-4 py-2 font-medium text-[var(--funnel-text-muted)]">Дата</th>
-                                <th className="text-right px-4 py-2 font-medium text-[var(--funnel-text-muted)]">Действия</th>
+                                <th className="text-left px-5 py-2 font-medium text-[var(--funnel-text-muted)]">╨Э╨░╨╕╨╝╨╡╨╜╨╛╨▓╨░╨╜╨╕╨╡</th>
+                                <th className="text-left px-4 py-2 font-medium text-[var(--funnel-text-muted)]">╨а╨░╨▒╨╛╤З╨░╤П ╤В╨╛╤З╨║╨░</th>
+                                <th className="text-left px-4 py-2 font-medium text-[var(--funnel-text-muted)]">╨Ф╨░╤В╨░</th>
+                                <th className="text-right px-4 py-2 font-medium text-[var(--funnel-text-muted)]">╨Ф╨╡╨╣╤Б╤В╨▓╨╕╤П</th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-50">
+                            <tbody className="divide-y divide-border">
                               {p.selections.map(s => (
                                 <tr key={s.id} className="hover:bg-black/[0.04]">
                                   <td className="px-5 py-2 text-[var(--funnel-text)] font-medium">
-                                    {(s.name && s.name.trim()) ? s.name : (s.pump_name || "—")}
+                                    {(s.name && s.name.trim()) ? s.name : (s.pump_name || "тАФ")}
                                   </td>
                                   <td className="px-4 py-2">
                                     <WorkingPoint Q={s.Q} H={s.H} />
@@ -760,15 +760,15 @@ export default function Cabinet() {
                                       href={hrefResumeSelection(s.selection_site_slug ?? p.site_slug, s)}
                                       className="text-[var(--funnel-primary)] hover:text-[var(--funnel-primary)] hover:underline"
                                     >
-                                      Повторить
+                                      ╨Я╨╛╨▓╤В╨╛╤А╨╕╤В╤М
                                     </a>
                                     <button
                                       type="button"
                                       onClick={() => removeSelectionFromProject(p.id, s.id)}
                                       className="text-gray-300 hover:text-red-400 transition-colors align-middle"
-                                      title="Убрать из проекта"
+                                      title="╨г╨▒╤А╨░╤В╤М ╨╕╨╖ ╨┐╤А╨╛╨╡╨║╤В╨░"
                                     >
-                                      ×
+                                      ├Ч
                                     </button>
                                   </td>
                                 </tr>
@@ -776,7 +776,7 @@ export default function Cabinet() {
                             </tbody>
                           </table>
                           </div>
-                          <div className="border-t border-gray-100 px-5 py-3 flex flex-wrap items-center gap-2 bg-[var(--funnel-panel-header-bg)]">
+                          <div className="border-t border-border px-5 py-3 flex flex-wrap items-center gap-2 bg-[var(--funnel-panel-header-bg)]">
                             <button
                               type="button"
                               disabled={
@@ -786,16 +786,16 @@ export default function Cabinet() {
                               onClick={() => void handleDownloadProjectPdf(p.id)}
                               className="text-xs px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed"
                             >
-                              {projectPdfLoadingId === p.id ? "Формируем PDF…" : "Скачать ТКП проекта"}
+                              {projectPdfLoadingId === p.id ? "╨д╨╛╤А╨╝╨╕╤А╤Г╨╡╨╝ PDFтАж" : "╨б╨║╨░╤З╨░╤В╤М ╨в╨Ъ╨Я ╨┐╤А╨╛╨╡╨║╤В╨░"}
                             </button>
                             {p.site_slug && (
                               <span className="text-[11px] text-[var(--funnel-text-muted)]">
-                                Витрина: <span className="font-mono">{p.site_slug}</span>
+                                ╨Т╨╕╤В╤А╨╕╨╜╨░: <span className="font-mono">{p.site_slug}</span>
                               </span>
                             )}
                             {!p.selections.every((s) => s.has_station_pdf_snapshot) && (
                               <span className="text-[11px] text-amber-800 max-w-md leading-snug">
-                                У каждого подбора должна быть сохранена конфигурация: на сайте после выбора насоса нажмите «Рассчитать» (вход в аккаунт обязателен).
+                                ╨г ╨║╨░╨╢╨┤╨╛╨│╨╛ ╨┐╨╛╨┤╨▒╨╛╤А╨░ ╨┤╨╛╨╗╨╢╨╜╨░ ╨▒╤Л╤В╤М ╤Б╨╛╤Е╤А╨░╨╜╨╡╨╜╨░ ╨║╨╛╨╜╤Д╨╕╨│╤Г╤А╨░╤Ж╨╕╤П: ╨╜╨░ ╤Б╨░╨╣╤В╨╡ ╨┐╨╛╤Б╨╗╨╡ ╨▓╤Л╨▒╨╛╤А╨░ ╨╜╨░╤Б╨╛╤Б╨░ ╨╜╨░╨╢╨╝╨╕╤В╨╡ ┬л╨а╨░╤Б╤Б╤З╨╕╤В╨░╤В╤М┬╗ (╨▓╤Е╨╛╨┤ ╨▓ ╨░╨║╨║╨░╤Г╨╜╤В ╨╛╨▒╤П╨╖╨░╤В╨╡╨╗╨╡╨╜).
                               </span>
                             )}
                           </div>
@@ -808,9 +808,9 @@ export default function Cabinet() {
             </div>
           )}
 
-          {/* Вкладки администратора — рендерим AppAdmin во встроенном режиме */}
+          {/* ╨Т╨║╨╗╨░╨┤╨║╨╕ ╨░╨┤╨╝╨╕╨╜╨╕╤Б╤В╤А╨░╤В╨╛╤А╨░ тАФ ╤А╨╡╨╜╨┤╨╡╤А╨╕╨╝ AppAdmin ╨▓╨╛ ╨▓╤Б╤В╤А╨╛╨╡╨╜╨╜╨╛╨╝ ╤А╨╡╨╢╨╕╨╝╨╡ */}
           {isAdminTab && (
-            <div className="p-6">
+            <div className="theme-admin-light p-6 min-h-full rounded-lg">
               <AppAdmin
                 embedded
                 activeTab={activeTab}
@@ -824,62 +824,62 @@ export default function Cabinet() {
         </main>
       </div>
 
-      {/* ── Модалка: создать проект ─────────────────────── */}
+      {/* тФАтФА ╨Ь╨╛╨┤╨░╨╗╨║╨░: ╤Б╨╛╨╖╨┤╨░╤В╤М ╨┐╤А╨╛╨╡╨║╤В тФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФА */}
       {showNewProject && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
           <div className="cabinet-surface rounded-xl shadow-xl w-full max-w-sm p-6">
-            <h3 className="text-lg font-semibold text-[var(--funnel-text)] mb-4">Новый проект</h3>
+            <h3 className="text-lg font-semibold text-[var(--funnel-text)] mb-4">╨Э╨╛╨▓╤Л╨╣ ╨┐╤А╨╛╨╡╨║╤В</h3>
             <div className="space-y-3">
               <input
                 autoFocus
                 value={newProjName}
                 onChange={e => setNewProjName(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && createProject()}
-                placeholder="Название проекта"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--funnel-primary)]"
+                placeholder="╨Э╨░╨╖╨▓╨░╨╜╨╕╨╡ ╨┐╤А╨╛╨╡╨║╤В╨░"
+                className="w-full border border-input rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--funnel-primary)]"
               />
               <input
                 value={newProjAddr}
                 onChange={e => setNewProjAddr(e.target.value)}
-                placeholder="Адрес объекта (необязательно)"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--funnel-primary)]"
+                placeholder="╨Р╨┤╤А╨╡╤Б ╨╛╨▒╤К╨╡╨║╤В╨░ (╨╜╨╡╨╛╨▒╤П╨╖╨░╤В╨╡╨╗╤М╨╜╨╛)"
+                className="w-full border border-input rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--funnel-primary)]"
               />
             </div>
             <div className="flex space-x-2 mt-4">
               <button
                 onClick={() => { setShowNewProject(false); setNewProjName(""); setNewProjAddr(""); }}
-                className="flex-1 border border-zinc-300 py-2 rounded-lg text-sm selection-work-btn-secondary hover:opacity-90"
+                className="flex-1 border border-border py-2 rounded-lg text-sm selection-work-btn-secondary hover:opacity-90"
               >
-                Отмена
+                ╨Ю╤В╨╝╨╡╨╜╨░
               </button>
               <button
                 onClick={createProject}
                 disabled={creating || !newProjName.trim()}
                 className="flex-1 selection-work-btn-primary hover:opacity-90 py-2 rounded-lg text-sm disabled:opacity-50"
               >
-                {creating ? "Создание..." : "Создать"}
+                {creating ? "╨б╨╛╨╖╨┤╨░╨╜╨╕╨╡..." : "╨б╨╛╨╖╨┤╨░╤В╤М"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── Модалка: добавить в проект ──────────────────── */}
+      {/* тФАтФА ╨Ь╨╛╨┤╨░╨╗╨║╨░: ╨┤╨╛╨▒╨░╨▓╨╕╤В╤М ╨▓ ╨┐╤А╨╛╨╡╨║╤В тФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФА */}
       {addToProj && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
           <div className="cabinet-surface rounded-xl shadow-xl w-full max-w-sm p-6">
-            <h3 className="text-lg font-semibold text-[var(--funnel-text)] mb-4">Добавить в проект</h3>
+            <h3 className="text-lg font-semibold text-[var(--funnel-text)] mb-4">╨Ф╨╛╨▒╨░╨▓╨╕╤В╤М ╨▓ ╨┐╤А╨╛╨╡╨║╤В</h3>
             {projects.length === 0 ? (
               <p className="text-sm text-[var(--funnel-text-muted)]">
-                Нет проектов. Сначала создайте проект.
+                ╨Э╨╡╤В ╨┐╤А╨╛╨╡╨║╤В╨╛╨▓. ╨б╨╜╨░╤З╨░╨╗╨░ ╤Б╨╛╨╖╨┤╨░╨╣╤В╨╡ ╨┐╤А╨╛╨╡╨║╤В.
               </p>
             ) : (
               <select
                 value={targetProject}
                 onChange={e => setTargetProject(Number(e.target.value))}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--funnel-primary)]"
+                className="w-full border border-input rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--funnel-primary)]"
               >
-                <option value="">— Выберите проект —</option>
+                <option value="">тАФ ╨Т╤Л╨▒╨╡╤А╨╕╤В╨╡ ╨┐╤А╨╛╨╡╨║╤В тАФ</option>
                 {projects.map(p => (
                   <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
@@ -888,16 +888,16 @@ export default function Cabinet() {
             <div className="flex space-x-2 mt-4">
               <button
                 onClick={() => setAddToProj(null)}
-                className="flex-1 border border-zinc-300 py-2 rounded-lg text-sm selection-work-btn-secondary hover:opacity-90"
+                className="flex-1 border border-border py-2 rounded-lg text-sm selection-work-btn-secondary hover:opacity-90"
               >
-                Отмена
+                ╨Ю╤В╨╝╨╡╨╜╨░
               </button>
               <button
                 onClick={addSelectionToProject}
                 disabled={!targetProject}
                 className="flex-1 selection-work-btn-primary hover:opacity-90 py-2 rounded-lg text-sm disabled:opacity-50"
               >
-                Добавить
+                ╨Ф╨╛╨▒╨░╨▓╨╕╤В╤М
               </button>
             </div>
           </div>
@@ -907,24 +907,24 @@ export default function Cabinet() {
       {historyPickProjectId != null && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
           <div className="cabinet-surface rounded-xl shadow-xl w-full max-w-md p-6 flex flex-col max-h-[min(560px,85vh)]">
-            <h3 className="text-lg font-semibold text-[var(--funnel-text)]">Добавить подборы в проект</h3>
+            <h3 className="text-lg font-semibold text-[var(--funnel-text)]">╨Ф╨╛╨▒╨░╨▓╨╕╤В╤М ╨┐╨╛╨┤╨▒╨╛╤А╤Л ╨▓ ╨┐╤А╨╛╨╡╨║╤В</h3>
             <p className="text-sm text-[var(--funnel-text-muted)] mt-1 truncate" title={historyPickProject?.name}>
-              «{historyPickProject?.name ?? ""}»
+              ┬л{historyPickProject?.name ?? ""}┬╗
             </p>
             {historyPickCandidates.length === 0 ? (
               <p className="text-sm text-[var(--funnel-text-muted)] mt-4">
-                Все подборы из истории уже в этом проекте или история пуста.
+                ╨Т╤Б╨╡ ╨┐╨╛╨┤╨▒╨╛╤А╤Л ╨╕╨╖ ╨╕╤Б╤В╨╛╤А╨╕╨╕ ╤Г╨╢╨╡ ╨▓ ╤Н╤В╨╛╨╝ ╨┐╤А╨╛╨╡╨║╤В╨╡ ╨╕╨╗╨╕ ╨╕╤Б╤В╨╛╤А╨╕╤П ╨┐╤Г╤Б╤В╨░.
               </p>
             ) : (
               <>
                 <input
                   value={historyPickFilter}
                   onChange={e => setHistoryPickFilter(e.target.value)}
-                  placeholder="Поиск по названию, Q, H…"
-                  className="mt-4 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--funnel-primary)]"
+                  placeholder="╨Я╨╛╨╕╤Б╨║ ╨┐╨╛ ╨╜╨░╨╖╨▓╨░╨╜╨╕╤О, Q, HтАж"
+                  className="mt-4 w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--funnel-primary)]"
                 />
                 <div className="flex justify-between items-center mt-2 mb-1 gap-2">
-                  <span className="text-xs text-[var(--funnel-text-muted)]">{historyPickFiltered.length} доступно</span>
+                  <span className="text-xs text-[var(--funnel-text-muted)]">{historyPickFiltered.length} ╨┤╨╛╤Б╤В╤Г╨┐╨╜╨╛</span>
                   <button
                     type="button"
                     className="text-xs text-[var(--funnel-primary)] hover:text-[var(--funnel-primary)] shrink-0"
@@ -939,25 +939,25 @@ export default function Cabinet() {
                   >
                     {historyPickFiltered.length > 0 &&
                     historyPickFiltered.every(s => historyPickIds.includes(s.id))
-                      ? "Снять выделение"
-                      : "Выделить все"}
+                      ? "╨б╨╜╤П╤В╤М ╨▓╤Л╨┤╨╡╨╗╨╡╨╜╨╕╨╡"
+                      : "╨Т╤Л╨┤╨╡╨╗╨╕╤В╤М ╨▓╤Б╨╡"}
                   </button>
                 </div>
-                <ul className="mt-1 overflow-y-auto flex-1 min-h-[120px] max-h-[280px] border border-gray-100 rounded-lg divide-y divide-gray-50">
+                <ul className="mt-1 overflow-y-auto flex-1 min-h-[120px] max-h-[280px] border border-border rounded-lg divide-y divide-border">
                   {historyPickFiltered.map(s => (
                     <li key={s.id} className="flex items-start gap-3 px-3 py-2 hover:bg-black/[0.04]">
                       <input
                         type="checkbox"
-                        className="mt-1 rounded border-gray-300"
+                        className="mt-1 rounded border-input"
                         checked={historyPickIds.includes(s.id)}
                         onChange={() => toggleHistoryPickId(s.id)}
                       />
                       <div className="min-w-0 flex-1">
                         <p className="text-sm text-[var(--funnel-text)] font-medium truncate">
-                          {(s.name && s.name.trim()) ? s.name : (s.pump_name || `Подбор #${s.id}`)}
+                          {(s.name && s.name.trim()) ? s.name : (s.pump_name || `╨Я╨╛╨┤╨▒╨╛╤А #${s.id}`)}
                         </p>
                         <p className="text-xs text-[var(--funnel-text-muted)]">
-                          <WorkingPoint Q={s.Q} H={s.H} /> · {formatDate(s.created_at)}
+                          <WorkingPoint Q={s.Q} H={s.H} /> ┬╖ {formatDate(s.created_at)}
                         </p>
                       </div>
                     </li>
@@ -969,9 +969,9 @@ export default function Cabinet() {
               <button
                 type="button"
                 onClick={() => { setHistoryPickProjectId(null); setHistoryPickIds([]); }}
-                className="flex-1 border border-zinc-300 py-2 rounded-lg text-sm selection-work-btn-secondary hover:opacity-90"
+                className="flex-1 border border-border py-2 rounded-lg text-sm selection-work-btn-secondary hover:opacity-90"
               >
-                Отмена
+                ╨Ю╤В╨╝╨╡╨╜╨░
               </button>
               <button
                 type="button"
@@ -987,8 +987,8 @@ export default function Cabinet() {
                 className="flex-1 selection-work-btn-primary hover:opacity-90 py-2 rounded-lg text-sm disabled:opacity-50"
               >
                 {historyPickAdding
-                  ? "Добавление…"
-                  : `Добавить${historyPickIds.length ? ` (${historyPickIds.length})` : ""}`}
+                  ? "╨Ф╨╛╨▒╨░╨▓╨╗╨╡╨╜╨╕╨╡тАж"
+                  : `╨Ф╨╛╨▒╨░╨▓╨╕╤В╤М${historyPickIds.length ? ` (${historyPickIds.length})` : ""}`}
               </button>
             </div>
           </div>

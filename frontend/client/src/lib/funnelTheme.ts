@@ -9,6 +9,8 @@ export const FUNNEL_THEME_CSS_VARS = [
   "--funnel-page-bg",
   "--funnel-surface",
   "--funnel-card-media-bg",
+  "--funnel-card-title",
+  "--funnel-border",
   "--funnel-font-heading",
   "--funnel-font-body",
   "--funnel-text",
@@ -25,7 +27,12 @@ export const FUNNEL_THEME_CSS_VARS = [
   "--funnel-chart-bg",
 ] as const;
 
-export type FunnelFontKey = "segoe" | "open_sans" | "system";
+export type FunnelFontKey =
+  | "segoe"
+  | "open_sans"
+  | "system"
+  | "oswald"
+  | "jetbrains_mono";
 
 export type FunnelThemeAppearance = {
   primary_color?: string | null;
@@ -48,26 +55,28 @@ export type FunnelThemeAppearance = {
 };
 
 const DEFAULTS = {
-  primary: "#13347f",
-  accent: "#0ea5e9",
-  pageBg: "#ffffff",
-  surface: "#ffffff",
-  cardMediaBg: "#eff0f9",
-  fontHeading: "segoe" as FunnelFontKey,
-  fontBody: "open_sans" as FunnelFontKey,
-  text: "#18181b",
-  textMuted: "#71717a",
-  panelHeaderBg: "#f4f4f5",
-  panelHeaderText: "#52525b",
-  buttonText: "#ffffff",
-  tableRowAlt: "#f4f4f5",
-  tableRowSelected: "#dbeafe",
+  primary: "#e63946",
+  accent: "#00f5d4",
+  pageBg: "#0a0c12",
+  surface: "#141820",
+  cardMediaBg: "#1c2230",
+  fontHeading: "oswald" as FunnelFontKey,
+  fontBody: "jetbrains_mono" as FunnelFontKey,
+  text: "#e8eaef",
+  textMuted: "#8b93a8",
+  panelHeaderBg: "#1a1f2e",
+  panelHeaderText: "#a8b0c4",
+  buttonText: "#0a0c12",
+  tableRowAlt: "#161b26",
+  tableRowSelected: "#1e2a3a",
 };
 
 const FONT_STACKS: Record<FunnelFontKey, string> = {
   segoe: '"Segoe UI", "SegoeUISelectionSidebar", system-ui, sans-serif',
   open_sans: '"Open Sans", system-ui, sans-serif',
   system: "system-ui, -apple-system, sans-serif",
+  oswald: '"Oswald", "Segoe UI", system-ui, sans-serif',
+  jetbrains_mono: '"JetBrains Mono", ui-monospace, monospace',
 };
 
 export function hexToHsl(hex: string): string | null {
@@ -122,7 +131,15 @@ function normalizeHexOptional(hex: string | null | undefined, computed: string):
 
 function normalizeFontKey(key: string | null | undefined, fallback: FunnelFontKey): FunnelFontKey {
   const k = (key || "").trim().toLowerCase();
-  if (k === "segoe" || k === "open_sans" || k === "system") return k;
+  if (
+    k === "segoe" ||
+    k === "open_sans" ||
+    k === "system" ||
+    k === "oswald" ||
+    k === "jetbrains_mono"
+  ) {
+    return k;
+  }
   return fallback;
 }
 
@@ -158,6 +175,11 @@ export function applyFunnelTheme(data: FunnelThemeAppearance | null | undefined)
   root.style.setProperty("--funnel-page-bg", pageBg);
   root.style.setProperty("--funnel-surface", surface);
   root.style.setProperty("--funnel-card-media-bg", cardMediaBg);
+  root.style.setProperty("--funnel-card-title", primary);
+  root.style.setProperty(
+    "--funnel-border",
+    `color-mix(in srgb, ${textMuted} 28%, transparent)`,
+  );
   root.style.setProperty("--funnel-font-heading", FONT_STACKS[fontHeading]);
   root.style.setProperty("--funnel-font-body", FONT_STACKS[fontBody]);
   root.style.setProperty("--funnel-text", text);
@@ -175,6 +197,16 @@ export function applyFunnelTheme(data: FunnelThemeAppearance | null | undefined)
 
   const textHsl = hexToHsl(text);
   const surfaceHsl = hexToHsl(surface);
+  const pageBgHsl = hexToHsl(pageBg);
+  const mutedHsl = hexToHsl(textMuted);
+  const borderHsl = hexToHsl("#2a3142");
+
+  if (pageBgHsl) {
+    root.style.setProperty("--background", pageBgHsl);
+  }
+  if (textHsl) {
+    root.style.setProperty("--foreground", textHsl);
+  }
   if (surfaceHsl) {
     root.style.setProperty("--popover", surfaceHsl);
     root.style.setProperty("--card", surfaceHsl);
@@ -183,14 +215,30 @@ export function applyFunnelTheme(data: FunnelThemeAppearance | null | undefined)
     root.style.setProperty("--popover-foreground", textHsl);
     root.style.setProperty("--card-foreground", textHsl);
   }
+  if (mutedHsl) {
+    root.style.setProperty("--muted", mutedHsl);
+    root.style.setProperty("--muted-foreground", mutedHsl);
+  }
+  if (borderHsl) {
+    root.style.setProperty("--border", borderHsl);
+    root.style.setProperty("--input", borderHsl);
+  }
 
   const primaryHsl = hexToHsl(primary);
   if (primaryHsl) {
     root.style.setProperty("--primary", primaryHsl);
     root.style.setProperty("--ring", primaryHsl);
+    root.style.setProperty("--primary-foreground", hexToHsl(DEFAULTS.buttonText) ?? "228 18% 6%");
   }
   const accentHsl = hexToHsl(accent);
   if (accentHsl) {
     root.style.setProperty("--accent", accentHsl);
+    root.style.setProperty("--accent-foreground", hexToHsl(DEFAULTS.buttonText) ?? "228 18% 6%");
+  }
+
+  const secondaryHsl = hexToHsl(surface);
+  if (secondaryHsl) {
+    root.style.setProperty("--secondary", secondaryHsl);
+    if (textHsl) root.style.setProperty("--secondary-foreground", textHsl);
   }
 }

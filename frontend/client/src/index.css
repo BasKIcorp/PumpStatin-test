@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Open+Sans:wght@400;500;600;700&family=Oswald:wght@500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -18,26 +18,24 @@
 }
 
 @layer components {
-  /* ── Заголовки: Segoe UI Semibold ───────────────── */
   h1, h2, h3, h4, h5, h6 {
     @apply font-semibold;
-    font-family: "Segoe UI", system-ui, sans-serif;
+    font-family: var(--funnel-font-heading);
     font-weight: 600;
   }
 
   .selection-flow-heading {
-    font-family: "Segoe UI", system-ui, sans-serif;
+    font-family: var(--funnel-font-heading);
     font-weight: 600;
     @apply font-semibold;
   }
 
-  /* ── Обычный текст: Open Sans ────────────────────── */
   p, span, li, a, label {
-    font-family: "Open Sans", system-ui, sans-serif;
+    font-family: var(--funnel-font-body);
   }
 
   .font-body-text {
-    font-family: "Open Sans", system-ui, sans-serif;
+    font-family: var(--funnel-font-body);
     @apply text-base font-normal;
   }
 
@@ -90,45 +88,47 @@
 }
 
 :root {
-  --funnel-primary: #13347f;
-  --funnel-accent: #0ea5e9;
-  --funnel-page-bg: #ffffff;
-  --funnel-surface: #ffffff;
-  --funnel-card-media-bg: #eff0f9;
-  --funnel-font-heading: "Segoe UI", "SegoeUISelectionSidebar", system-ui, sans-serif;
-  --funnel-font-body: "Open Sans", system-ui, sans-serif;
-  --funnel-text: #18181b;
-  --funnel-text-muted: #71717a;
-  --funnel-panel-header-bg: #f4f4f5;
-  --funnel-panel-header-text: #52525b;
-  --funnel-button-bg: #13347f;
-  --funnel-button-text: #ffffff;
-  --funnel-button-secondary-bg: #ffffff;
-  --funnel-button-secondary-text: #18181b;
-  --funnel-table-row-alt-bg: #f4f4f5;
-  --funnel-table-row-selected-bg: #dbeafe;
-  --funnel-input-bg: #ffffff;
-  --funnel-chart-bg: #ffffff;
-  --background: 210 20% 98%;
-  --foreground: 215 25% 15%;
-  --muted: 215 16% 94%;
-  --muted-foreground: 215 16% 45%;
-  --popover: 210 20% 99%;
-  --popover-foreground: 215 25% 15%;
-  --card: 210 25% 99%;
-  --card-foreground: 215 25% 15%;
-  --border: 214 32% 91%;
-  --input: 214 32% 91%;
-  --primary: 212 90% 45%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 200 80% 95%;
-  --secondary-foreground: 215 25% 25%;
-  --accent: 199 78% 55%;
-  --accent-foreground: 0 0% 100%;
+  --funnel-primary: #e63946;
+  --funnel-accent: #00f5d4;
+  --funnel-page-bg: #0a0c12;
+  --funnel-surface: #141820;
+  --funnel-card-media-bg: #1c2230;
+  --funnel-card-title: #e63946;
+  --funnel-border: color-mix(in srgb, #8b93a8 28%, transparent);
+  --funnel-font-heading: "Oswald", "Segoe UI", system-ui, sans-serif;
+  --funnel-font-body: "JetBrains Mono", ui-monospace, monospace;
+  --funnel-text: #e8eaef;
+  --funnel-text-muted: #8b93a8;
+  --funnel-panel-header-bg: #1a1f2e;
+  --funnel-panel-header-text: #a8b0c4;
+  --funnel-button-bg: #e63946;
+  --funnel-button-text: #0a0c12;
+  --funnel-button-secondary-bg: #1c2230;
+  --funnel-button-secondary-text: #e8eaef;
+  --funnel-table-row-alt-bg: #161b26;
+  --funnel-table-row-selected-bg: #1e2a3a;
+  --funnel-input-bg: #141820;
+  --funnel-chart-bg: #141820;
+  --background: 228 18% 6%;
+  --foreground: 220 14% 92%;
+  --muted: 225 14% 18%;
+  --muted-foreground: 222 12% 58%;
+  --popover: 225 18% 10%;
+  --popover-foreground: 220 14% 92%;
+  --card: 225 18% 10%;
+  --card-foreground: 220 14% 92%;
+  --border: 225 14% 22%;
+  --input: 225 14% 22%;
+  --primary: 355 78% 56%;
+  --primary-foreground: 228 18% 6%;
+  --secondary: 225 18% 14%;
+  --secondary-foreground: 220 14% 92%;
+  --accent: 168 96% 48%;
+  --accent-foreground: 228 18% 6%;
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 60 9.1% 97.8%;
-  --ring: 212 90% 45%;
-  --radius: 0.5rem;
+  --ring: 355 78% 56%;
+  --radius: 0.375rem;
 }
 
 .dark {
@@ -172,6 +172,45 @@
 
   body {
     @apply font-sans antialiased bg-[hsl(var(--background))] text-[hsl(var(--foreground))];
+    font-family: var(--funnel-font-body);
+    background-color: var(--funnel-page-bg);
+    background-image:
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--funnel-accent) 4%, transparent) 0%,
+        transparent 45%
+      ),
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        color-mix(in srgb, var(--funnel-text-muted) 6%, transparent) 2px,
+        color-mix(in srgb, var(--funnel-text-muted) 6%, transparent) 3px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 24px,
+        color-mix(in srgb, var(--funnel-primary) 5%, transparent) 24px,
+        color-mix(in srgb, var(--funnel-primary) 5%, transparent) 25px
+      );
+    background-size: 100% 100%, 100% 4px, 25px 25px;
+  }
+
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.04;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      transparent 2px,
+      rgba(0, 0, 0, 0.35) 2px,
+      rgba(0, 0, 0, 0.35) 4px
+    );
   }
 
   h1,
@@ -268,11 +307,43 @@
   }
 
   .selection-flow-bar-mark {
-    @apply shrink-0 text-slate-300;
+    @apply shrink-0 text-[var(--funnel-text-muted)] opacity-60;
   }
 
   .selection-flow-bar-mark--tight {
-    @apply mt-0.5 shrink-0 text-slate-300;
+    @apply mt-0.5 shrink-0 text-[var(--funnel-text-muted)] opacity-60;
+  }
+
+  .selection-mockup-card-glow {
+    box-shadow:
+      0 2px 8px color-mix(in srgb, var(--funnel-primary) 22%, transparent),
+      0 1px 3px color-mix(in srgb, var(--funnel-accent) 12%, transparent);
+  }
+
+  .selection-mockup-card-glow-hover {
+    box-shadow:
+      0 12px 28px color-mix(in srgb, var(--funnel-primary) 32%, transparent),
+      0 4px 10px color-mix(in srgb, var(--funnel-accent) 18%, transparent);
+  }
+
+  .selection-mockup-card-glow-hover-subtle {
+    box-shadow:
+      0 8px 22px color-mix(in srgb, var(--funnel-primary) 26%, transparent),
+      0 2px 6px color-mix(in srgb, var(--funnel-accent) 14%, transparent);
+  }
+
+  .group:hover .selection-mockup-card-glow,
+  .group:focus-visible .selection-mockup-card-glow {
+    box-shadow:
+      0 8px 22px color-mix(in srgb, var(--funnel-primary) 26%, transparent),
+      0 2px 6px color-mix(in srgb, var(--funnel-accent) 14%, transparent);
+  }
+
+  .group:hover .selection-mockup-card-glow-lift,
+  .group:focus-visible .selection-mockup-card-glow-lift {
+    box-shadow:
+      0 12px 28px color-mix(in srgb, var(--funnel-primary) 32%, transparent),
+      0 4px 10px color-mix(in srgb, var(--funnel-accent) 18%, transparent);
   }
 
   /* Макс. высота полосы mockup-карточек: больше места под текст буллетов без прокрутки */
@@ -380,5 +451,50 @@
 
   input[type="number"] {
     -moz-appearance: textfield;
+  }
+
+  /* Светлая тема для встроенной админки в кабинете */
+  .theme-admin-light {
+    --funnel-primary: #13347f;
+    --funnel-accent: #0ea5e9;
+    --funnel-page-bg: #ffffff;
+    --funnel-surface: #ffffff;
+    --funnel-card-media-bg: #eff0f9;
+    --funnel-card-title: #13347f;
+    --funnel-border: color-mix(in srgb, #71717a 28%, transparent);
+    --funnel-font-heading: "Segoe UI", "SegoeUISelectionSidebar", system-ui, sans-serif;
+    --funnel-font-body: "Open Sans", system-ui, sans-serif;
+    --funnel-text: #18181b;
+    --funnel-text-muted: #71717a;
+    --funnel-panel-header-bg: #f4f4f5;
+    --funnel-panel-header-text: #52525b;
+    --funnel-button-bg: #13347f;
+    --funnel-button-text: #ffffff;
+    --funnel-button-secondary-bg: #ffffff;
+    --funnel-button-secondary-text: #18181b;
+    --funnel-table-row-alt-bg: #f4f4f5;
+    --funnel-table-row-selected-bg: #dbeafe;
+    --funnel-input-bg: #ffffff;
+    --funnel-chart-bg: #ffffff;
+    --background: 210 20% 98%;
+    --foreground: 215 25% 15%;
+    --muted: 215 16% 94%;
+    --muted-foreground: 215 16% 45%;
+    --popover: 210 20% 99%;
+    --popover-foreground: 215 25% 15%;
+    --card: 210 25% 99%;
+    --card-foreground: 215 25% 15%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --primary: 212 90% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 200 80% 95%;
+    --secondary-foreground: 215 25% 25%;
+    --accent: 199 78% 55%;
+    --accent-foreground: 0 0% 100%;
+    --ring: 212 90% 45%;
+    color: #18181b;
+    background-color: #ffffff;
+    font-family: "Open Sans", system-ui, sans-serif;
   }
 }
