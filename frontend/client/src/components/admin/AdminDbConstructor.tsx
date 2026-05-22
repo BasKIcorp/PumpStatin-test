@@ -823,7 +823,7 @@ function mergeCatalogIntoBlueprintExt(
       name: c.name,
       pg_type: normalizePgTypeForSelect(String(c.udt_name || c.data_type || "text")),
       nullable: c.nullable,
-      primary_key: c.name === "id",
+      primary_key: isCatalogColumnPrimaryKey(c as { name: string; pk?: boolean }),
     })),
   }));
   const extEdges = (cat.foreign_keys || []).map((fk) => ({
@@ -841,6 +841,11 @@ function mergeCatalogIntoBlueprintExt(
   return applyFkGraphLayoutToBlueprint(next, extIds, cat.foreign_keys || []);
 }
 
+function isCatalogColumnPrimaryKey(c: { name: string; pk?: boolean }): boolean {
+  if (c.pk) return true;
+  return c.name === "id" || c.name === "key" || c.name === "token";
+}
+
 /** Слой public из каталога схемы public (вариант A). */
 function mergeCatalogIntoBlueprintPublic(
   cat: ExtDesignCatalog,
@@ -854,7 +859,7 @@ function mergeCatalogIntoBlueprintPublic(
       name: c.name,
       pg_type: normalizePgTypeForSelect(String(c.udt_name || c.data_type || "text")),
       nullable: c.nullable,
-      primary_key: c.name === "id",
+      primary_key: isCatalogColumnPrimaryKey(c as { name: string; pk?: boolean }),
     })),
   }));
   const pubEdges = (cat.foreign_keys || []).map((fk) => ({
@@ -1213,17 +1218,25 @@ export function AdminDbConstructor({
         return;
       }
 
+      setLoading(true);
       try {
         const list = await adminExtDesignProjectsList();
         if (cancelled) return;
         const first = list[0];
-        if (first) await loadProject(first.id);
-        else
-          showNotification({
-            title: "Нет чертежа",
-            description: "Сервер не вернул рабочий проект схемы ext.",
-            variant: "destructive",
+        if (first) {
+          await loadProject(first.id);
+        } else {
+          const cat = await adminExtDesignCatalog();
+          if (cancelled) return;
+          setExtCatalog(cat);
+          setExtCatalogByTable(catalogToTableMap(cat));
+          setDetail(null);
+          setBlueprintDraft(mergeCatalogIntoBlueprintExt(cat, emptyBlueprint()));
+          setDirty(false);
+          requestAnimationFrame(() => {
+            rfInstanceRef.current?.fitView({ padding: 0.2, maxZoom: 1.25, duration: 200 });
           });
+        }
       } catch (e: unknown) {
         if (!cancelled) {
           showNotification({
@@ -1232,6 +1245,8 @@ export function AdminDbConstructor({
             variant: "destructive",
           });
         }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     })();
     return () => {

@@ -4,135 +4,89 @@ import { defaultNewUserRole } from "@shared/admin-access-policy";
 import { appSettings, pumps, users } from "@shared/schema";
 import { getDb } from "./db";
 import { hashPassword } from "./auth-store";
+import {
+  introspectSqliteCatalog,
+  listSqliteTableRows,
+  primaryKeyColumn,
+  type SqliteCatalog,
+} from "./sqlite-schema-introspect";
 
-type ColumnMeta = {
-  name: string;
-  data_type: string;
-  udt_name: string;
-  nullable: boolean;
-  default: string | null;
-};
-
-type TableMeta = {
-  name: string;
-  columns: ColumnMeta[];
-  editable: boolean;
-};
-
-const SQLITE_PUBLIC_TABLES: TableMeta[] = [
-  {
-    name: "pumps",
-    editable: true,
-    columns: [
-      { name: "id", data_type: "integer", udt_name: "int4", nullable: false, default: null },
-      { name: "nasos_type", data_type: "text", udt_name: "text", nullable: false, default: null },
-      { name: "payload", data_type: "text", udt_name: "text", nullable: false, default: null },
-    ],
-  },
-  {
-    name: "users",
-    editable: true,
-    columns: [
-      { name: "id", data_type: "integer", udt_name: "int4", nullable: false, default: null },
-      { name: "email", data_type: "text", udt_name: "text", nullable: false, default: null },
-      { name: "username", data_type: "text", udt_name: "text", nullable: false, default: null },
-      { name: "first_name", data_type: "text", udt_name: "text", nullable: true, default: null },
-      { name: "last_name", data_type: "text", udt_name: "text", nullable: true, default: null },
-      { name: "role", data_type: "text", udt_name: "text", nullable: false, default: "'user'" },
-      { name: "is_active", data_type: "boolean", udt_name: "bool", nullable: false, default: "true" },
-      { name: "created_at", data_type: "text", udt_name: "text", nullable: false, default: null },
-      { name: "last_login", data_type: "text", udt_name: "text", nullable: true, default: null },
-    ],
-  },
-  {
-    name: "app_settings",
-    editable: true,
-    columns: [
-      { name: "key", data_type: "text", udt_name: "text", nullable: false, default: null },
-      { name: "value", data_type: "text", udt_name: "text", nullable: false, default: null },
-    ],
-  },
-];
-
-const TABLE_NAMES = new Set(SQLITE_PUBLIC_TABLES.map((t) => t.name));
-
-function tableMeta(name: string): TableMeta | undefined {
-  return SQLITE_PUBLIC_TABLES.find((t) => t.name === name);
-}
-
-function pumpRow(row: typeof pumps.$inferSelect): Record<string, unknown> {
-  let payload: unknown = row.payload;
-  try {
-    payload = JSON.parse(row.payload);
-  } catch {
-    /* keep string */
-  }
-  return { id: row.id, nasos_type: row.nasosType, payload };
-}
-
-function userRow(row: typeof users.$inferSelect): Record<string, unknown> {
+function catalogForApi(schema: string): SqliteCatalog & {
+  catalog_hash: string;
+  indexes: [];
+  unique_constraints: [];
+} {
+  const live = introspectSqliteCatalog(schema);
+  const hash = live.tables
+    .map((t) => `${t.name}:${t.columns.map((c) => c.name).join(",")}`)
+    .join("|");
   return {
-    id: row.id,
-    email: row.email,
-    username: row.username,
-    first_name: row.firstName,
-    last_name: row.lastName,
-    role: row.role,
-    is_active: row.isActive,
-    created_at: row.createdAt,
-    last_login: row.lastLogin,
-  };
-}
-
-function settingRow(row: typeof appSettings.$inferSelect): Record<string, unknown> {
-  return { key: row.key, value: row.value };
-}
-
-function listRows(table: string): { rows: Record<string, unknown>[]; total: number } {
-  const db = getDb();
-  if (table === "pumps") {
-    const all = db.select().from(pumps).all();
-    const rows = all.map(pumpRow);
-    return { rows, total: rows.length };
-  }
-  if (table === "users") {
-    const all = db.select().from(users).all();
-    const rows = all.map(userRow);
-    return { rows, total: rows.length };
-  }
-  if (table === "app_settings") {
-    const all = db.select().from(appSettings).all();
-    const rows = all.map(settingRow);
-    return { rows, total: rows.length };
-  }
-  return { rows: [], total: 0 };
-}
-
-function extDesignCatalog(schema: string) {
-  return {
-    schema,
-    tables: SQLITE_PUBLIC_TABLES.map((t) => ({
-      name: t.name,
-      columns: t.columns,
-    })),
-    foreign_keys: [],
+    ...live,
+    catalog_hash: hash,
     indexes: [],
     unique_constraints: [],
+    tables: live.tables.map((t) => ({
+      name: t.name,
+      editable: t.editable,
+      columns: t.columns.map((c) => ({
+        name: c.name,
+        data_type: c.data_type,
+        udt_name: c.udt_name,
+        nullable: c.nullable,
+        default: c.default,
+        pk: c.pk,
+      })),
+    })),
   };
 }
+
+function blueprintFromCatalog(cat: ReturnType<typeof catalogForApi>, layer: "public" | "ext") {
+  const nodes = cat.tables.map((t) => ({
+    id: t.name,
+    layer,
+    label: t.name,
+    columns: t.columns.map((c) => ({
+      name: c.name,
+      pg_type: c.udt_name || c.data_type,
+      nullable: c.nullable,
+      primary_key: Boolean((c as { pk?: boolean }).pk),
+    })),
+  }));
+  const edges = cat.foreign_keys.map((fk) => ({
+    from: fk.from_table,
+    to: fk.to_table,
+    field: fk.from_column,
+    layer,
+    constraint_name: fk.constraint_name,
+  }));
+  return {
+    version: 1,
+    layers: {
+      [layer]: { nodes, edges },
+    },
+  };
+}
+
+const SQLITE_VIRTUAL_PROJECT_ID = 1;
 
 export function registerSqlitePublicDataRoutes(app: Express): void {
   app.get("/api/admin/public-data/tables", (_req: Request, res: Response) => {
-    res.json(SQLITE_PUBLIC_TABLES);
+    const cat = introspectSqliteCatalog("main");
+    res.json(cat.tables);
   });
 
   app.get("/api/admin/public-data/:table", (req: Request, res: Response) => {
     const table = String(req.params.table);
-    if (!TABLE_NAMES.has(table)) return res.status(404).json({ error: "Unknown table" });
+    if (table === "tables") {
+      return res.status(400).json({ error: "Use GET /api/admin/public-data/tables" });
+    }
     const limit = Math.min(Number(req.query.limit) || 50, 500);
     const offset = Math.max(Number(req.query.offset) || 0, 0);
-    const { rows, total } = listRows(table);
-    res.json({ rows: rows.slice(offset, offset + limit), total });
+    const { rows, total } = listSqliteTableRows(table, limit, offset);
+    if (total === 0 && !introspectSqliteCatalog().tables.some((t) => t.name === table)) {
+      return res.status(404).json({ error: "Unknown table" });
+    }
+    res.json({ rows, total });
   });
 
   app.post("/api/admin/public-data/:table/create", (req: Request, res: Response) => {
@@ -144,7 +98,14 @@ export function registerSqlitePublicDataRoutes(app: Express): void {
       const payload =
         typeof body.payload === "string" ? body.payload : JSON.stringify(body.payload ?? {});
       const inserted = db.insert(pumps).values({ nasosType: nasos_type, payload }).returning().get();
-      return res.status(201).json(pumpRow(inserted!));
+      const row = inserted!;
+      let parsed: unknown = row.payload;
+      try {
+        parsed = JSON.parse(row.payload);
+      } catch {
+        /* keep */
+      }
+      return res.status(201).json({ id: row.id, nasos_type: row.nasosType, payload: parsed });
     }
     if (table === "users") {
       return res.status(400).json({ error: "Создание users — через /api/admin/users/create" });
@@ -176,7 +137,13 @@ export function registerSqlitePublicDataRoutes(app: Express): void {
       }
       const row = db.select().from(pumps).where(eq(pumps.id, id)).get();
       if (!row) return res.status(404).json({ error: "Not found" });
-      return res.json(pumpRow(row));
+      let parsed: unknown = row.payload;
+      try {
+        parsed = JSON.parse(row.payload);
+      } catch {
+        /* keep */
+      }
+      return res.json({ id: row.id, nasos_type: row.nasosType, payload: parsed });
     }
     if (table === "users") {
       const id = Number(pk);
@@ -197,7 +164,17 @@ export function registerSqlitePublicDataRoutes(app: Express): void {
       }
       const row = db.select().from(users).where(eq(users.id, id)).get();
       if (!row) return res.status(404).json({ error: "Not found" });
-      return res.json(userRow(row));
+      return res.json({
+        id: row.id,
+        email: row.email,
+        username: row.username,
+        first_name: row.firstName,
+        last_name: row.lastName,
+        role: row.role,
+        is_active: row.isActive,
+        created_at: row.createdAt,
+        last_login: row.lastLogin,
+      });
     }
     if (table === "app_settings") {
       const key = pk;
@@ -212,6 +189,9 @@ export function registerSqlitePublicDataRoutes(app: Express): void {
     const table = String(req.params.table);
     const pk = req.params.pk;
     const db = getDb();
+    const pkCol = primaryKeyColumn(table);
+    if (!pkCol) return res.status(404).json({ error: "Unknown table" });
+
     if (table === "pumps") {
       db.delete(pumps).where(eq(pumps.id, Number(pk))).run();
       return res.status(204).send();
@@ -228,19 +208,50 @@ export function registerSqlitePublicDataRoutes(app: Express): void {
   });
 
   app.get("/api/admin/public-design/catalog", (_req, res) => {
-    res.json(extDesignCatalog("public"));
+    res.json(catalogForApi("public"));
   });
 
   app.get("/api/admin/ext-design/catalog", (_req, res) => {
-    res.json(extDesignCatalog("ext"));
-  });
-
-  app.get("/api/admin/ext-design/projects", (_req, res) => {
-    res.json([]);
+    res.json(catalogForApi("main"));
   });
 
   app.get("/api/admin/ext-design/core-snapshot", (_req, res) => {
-    res.json({ tables: [], foreign_keys: [] });
+    const cat = introspectSqliteCatalog("main");
+    res.json({
+      tables: cat.tables.map((t) => t.name),
+      foreign_keys: cat.foreign_keys,
+    });
+  });
+
+  app.get("/api/admin/ext-design/projects", (_req, res) => {
+    const now = new Date().toISOString();
+    res.json([
+      {
+        id: SQLITE_VIRTUAL_PROJECT_ID,
+        name: "SQLite (актуальная схема)",
+        description: "Живая схема из app.sqlite",
+        updated_at: now,
+        revision: 1,
+      },
+    ]);
+  });
+
+  app.get("/api/admin/ext-design/projects/:id", (req, res) => {
+    const id = Number(req.params.id);
+    if (id !== SQLITE_VIRTUAL_PROJECT_ID) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+    const cat = catalogForApi("main");
+    const now = new Date().toISOString();
+    res.json({
+      id: SQLITE_VIRTUAL_PROJECT_ID,
+      name: "SQLite (актуальная схема)",
+      description: "Живая схема из app.sqlite",
+      updated_at: now,
+      created_at: now,
+      revision: 1,
+      blueprint: blueprintFromCatalog(cat, "ext"),
+    });
   });
 
   app.get("/api/admin/stats", (_req, res) => {

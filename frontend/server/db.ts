@@ -32,6 +32,14 @@ export function getDb() {
   return db;
 }
 
+export function getSqlite(): Database.Database {
+  initDatabase();
+  if (!sqlite) {
+    throw new Error("SQLite database is not initialized. Call initDatabase() first.");
+  }
+  return sqlite;
+}
+
 export function initDatabase(): void {
   if (db) return;
 

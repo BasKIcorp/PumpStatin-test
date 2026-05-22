@@ -17,9 +17,11 @@
 - Все разделы меню админки включены (игнорируется `ADMIN_PRESENTATION.hide*`).
 - Таблицы public-data всегда редактируемы в UI.
 
-## SQLite API
+## SQLite API — актуальная схема
 
-`sqlite-public-data.ts`: `pumps`, `users`, `app_settings` + заглушки stats/email/ext-design.
+- `sqlite-schema-introspect.ts` — живой список таблиц/колонок/FK из `app.sqlite`.
+- `sqlite-public-data.ts` — public-data, public-design/catalog, ext-design/catalog и виртуальный проект схемы.
+- Таблицы в админке (в т.ч. `sessions`) подтягиваются автоматически, без захардкоженного списка.
 
 `sqlite-routes.ts`: нет `requireAdmin`.
 
