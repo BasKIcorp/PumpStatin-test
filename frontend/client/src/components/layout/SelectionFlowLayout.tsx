@@ -48,15 +48,7 @@ function SelectionFlowSidebar({
           <img
             src={wordmarkSrc}
             alt="Слава КПСС"
-            className="absolute left-0 top-0 max-h-full max-w-none object-cover object-center"
-            style={{
-              width: "min(72dvh, 26rem)",
-              height: "var(--selection-sidebar-width, clamp(4.25rem, 11vw, 13.5rem))",
-              maxHeight: "100%",
-              transform:
-                "translateX(var(--selection-sidebar-width, clamp(4.25rem, 11vw, 13.5rem))) rotate(90deg) scale(-1, -1)",
-              transformOrigin: "top left",
-            }}
+            className="selection-sidebar-wordmark-img absolute left-1/2 top-1/2 max-w-none object-cover object-center"
             decoding="async"
           />
         </div>

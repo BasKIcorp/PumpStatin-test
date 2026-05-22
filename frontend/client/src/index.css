@@ -78,6 +78,24 @@
   .selection-flow-funnel-root .selection-flow-funnel-heading {
     font-family: var(--funnel-font-heading);
   }
+
+  /* Вертикальный плакат в левой колонке: по ширине сайдбара, без ухода за экран */
+  .selection-sidebar-wordmark-img {
+    width: min(72dvh, 26rem);
+    height: var(--selection-sidebar-width, clamp(4.25rem, 11vw, 13.5rem));
+    transform: translate(-50%, -50%) rotate(270deg);
+    transform-origin: center center;
+  }
+
+  @supports (width: 100cqh) {
+    .selection-sidebar-wordmark {
+      container-type: size;
+    }
+    .selection-sidebar-wordmark-img {
+      width: 100cqh;
+      height: 100cqw;
+    }
+  }
 }
 
 /* Эталон макета 1440×810: масштабируется по ширине вьюпорта */
