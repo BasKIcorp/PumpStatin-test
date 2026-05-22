@@ -18,8 +18,8 @@ import {
   setSessionCookie,
   userToAdminList,
   userToAuthPayload,
-  verifyPassword,
 } from "./auth-store";
+import { registerSqlitePublicDataRoutes } from "./sqlite-public-data";
 
 const SERVER_DIR = path.dirname(fileURLToPath(import.meta.url));
 const FRONTEND_ROOT = path.resolve(SERVER_DIR, "..");
@@ -84,14 +84,6 @@ function parseNasosTypes(raw: unknown): string[] {
   return ["CIVOS"];
 }
 
-function requireAdmin(req: Request, res: Response): typeof users.$inferSelect | null {
-  const user = getUserFromRequest(req);
-  if (!user || user.role !== "admin") {
-    res.status(403).json({ error: "Admin access required" });
-    return null;
-  }
-  return user;
-}
 
 export function registerSqliteRoutes(app: Express): void {
   app.get("/api/appearance", (_req: Request, res: Response) => {
@@ -102,8 +94,7 @@ export function registerSqliteRoutes(app: Express): void {
     res.json(data);
   });
 
-  app.get("/api/admin/appearance", (req: Request, res: Response) => {
-    if (!requireAdmin(req, res)) return;
+  app.get("/api/admin/appearance", (_req: Request, res: Response) => {
     const data = getSetting("appearance");
     if (!data) {
       return res.status(503).json({ error: "appearance not seeded" });
@@ -112,7 +103,6 @@ export function registerSqliteRoutes(app: Express): void {
   });
 
   app.post("/api/admin/appearance", async (req: Request, res: Response) => {
-    if (!requireAdmin(req, res)) return;
     const contentType = req.headers["content-type"] ?? "";
     if (!contentType.includes("multipart/form-data")) {
       return res.status(400).json({ error: "Expected multipart/form-data" });
@@ -254,9 +244,6 @@ export function registerSqliteRoutes(app: Express): void {
     const password = String(req.body?.password ?? "");
     try {
       const payload = loginUser(email, password);
-      if (payload.role !== "admin") {
-        return res.status(403).json({ error: "Требуются права администратора" });
-      }
       const row = getDb().select().from(users).where(eq(users.id, payload.id)).get();
       if (!row) return res.status(401).json({ error: "Invalid credentials" });
       const token = createSessionForUser(row.id);
@@ -275,21 +262,19 @@ export function registerSqliteRoutes(app: Express): void {
 
   app.get("/api/admin/whoami/", (req: Request, res: Response) => {
     const user = getUserFromRequest(req);
-    if (!user || user.role !== "admin") {
-      return res.status(401).json({ error: "Not authenticated" });
-    }
-    res.json({ email: user.email });
+    res.json({
+      email: user?.email ?? "guest",
+      pg_app_data_schema: "public",
+    });
   });
 
   // ── Admin: пользователи ────────────────────────────────────────────────────
-  app.get("/api/admin/users", (req: Request, res: Response) => {
-    if (!requireAdmin(req, res)) return;
+  app.get("/api/admin/users", (_req: Request, res: Response) => {
     const rows = getDb().select().from(users).all();
     res.json(rows.map(userToAdminList));
   });
 
   app.post("/api/admin/users/create", (req: Request, res: Response) => {
-    if (!requireAdmin(req, res)) return;
     const email = String(req.body?.email ?? "");
     const password = String(req.body?.password ?? "");
     const first_name = String(req.body?.first_name ?? "");
@@ -309,7 +294,6 @@ export function registerSqliteRoutes(app: Express): void {
   });
 
   app.get("/api/admin/users/:id", (req: Request, res: Response) => {
-    if (!requireAdmin(req, res)) return;
     const id = Number(req.params.id);
     const row = getDb().select().from(users).where(eq(users.id, id)).get();
     if (!row) return res.status(404).json({ error: "Not found" });
@@ -321,7 +305,6 @@ export function registerSqliteRoutes(app: Express): void {
   });
 
   app.patch("/api/admin/users/:id", (req: Request, res: Response) => {
-    if (!requireAdmin(req, res)) return;
     const id = Number(req.params.id);
     const row = getDb().select().from(users).where(eq(users.id, id)).get();
     if (!row) return res.status(404).json({ error: "Not found" });
@@ -341,7 +324,6 @@ export function registerSqliteRoutes(app: Express): void {
   });
 
   app.delete("/api/admin/users/:id", (req: Request, res: Response) => {
-    if (!requireAdmin(req, res)) return;
     const id = Number(req.params.id);
     const me = getUserFromRequest(req);
     if (me?.id === id) {
@@ -352,7 +334,6 @@ export function registerSqliteRoutes(app: Express): void {
   });
 
   app.post("/api/admin/users/:id/set-password", (req: Request, res: Response) => {
-    if (!requireAdmin(req, res)) return;
     const id = Number(req.params.id);
     const password = String(req.body?.password ?? "");
     if (password.length < 8) {
@@ -388,6 +369,8 @@ export function registerSqliteRoutes(app: Express): void {
     if (!getUserFromRequest(req)) return res.status(401).json({ detail: "Unauthorized" });
     res.status(501).json({ error: "Проекты в SQLite MVP пока не реализованы" });
   });
+
+  registerSqlitePublicDataRoutes(app);
 }
 
 export async function ensureSqliteReady(): Promise<void> {

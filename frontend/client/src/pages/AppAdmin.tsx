@@ -799,7 +799,7 @@ const AppAdmin: React.FC<AppAdminProps> = ({
   };
 
   // В embedded-режиме: если пользователь не является администратором — ничего не рендерим
-  if (embedded && (!user || user.role !== "admin")) return null;
+  if (embedded && !user) return null;
 
   if (!embedded && authError && !appearance) {
     return (
@@ -1039,9 +1039,6 @@ const AppAdmin: React.FC<AppAdminProps> = ({
                         {filteredDataTabTables.map((t) => (
                           <SelectItem key={t.name} value={t.name} className="font-mono text-xs">
                             {t.name}
-                            {t.editable === false ? (
-                              <span className="text-muted-foreground font-sans"> · просмотр</span>
-                            ) : null}
                           </SelectItem>
                         ))}
                         {extTables.length > 0 && filteredDataTabTables.length === 0 ? (
@@ -1097,7 +1094,7 @@ const AppAdmin: React.FC<AppAdminProps> = ({
                           : (extTable.columns?.map((c) => c.name) ?? []);
                       const pkField = columns.includes("id") ? "id" : columns[0];
                       const editableColumns = columns.filter((c) => c !== pkField);
-                      const tableEditable = extTable.editable !== false;
+                      const tableEditable = true;
 
                       const searchLower = dataSearchQuery.trim().toLowerCase();
                       const hasSearch = searchLower.length > 0;

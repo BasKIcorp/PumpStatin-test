@@ -108,15 +108,6 @@ const Home: React.FC = () => {
   });
 
   useEffect(() => {
-    if (authLoading) return;
-    if (productCategory === "simpel_pumps" && (!user || user.role !== "admin")) {
-      setProductCategory(null);
-      setSelectedPumpTypeCode(null);
-      setFlowStep("cards");
-    }
-  }, [productCategory, user, authLoading]);
-
-  useEffect(() => {
     axiosInstance
       .get<{
         primary_color?: string;
@@ -229,7 +220,6 @@ const Home: React.FC = () => {
         : "Конфигурация станции";
 
   const handleProductCategory = (c: ProductCategory) => {
-    if (c === "simpel_pumps" && user?.role !== "admin") return;
     setProductCategory(c);
     setHasSearched(false);
     setSelectedPumpId(null);
@@ -758,11 +748,6 @@ useEffect(() => {
   const selectionHeaderRight =
     user ? (
       <>
-        {user.role === "admin" && (
-          <span className="text-xs bg-blue-100 text-blue-700 px-2.5 py-0.5 rounded-full font-medium hidden sm:inline">
-            Администратор
-          </span>
-        )}
         <a
           href="/account"
           className="flex items-center justify-center w-9 h-9 rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors shrink-0"
@@ -1078,7 +1063,7 @@ useEffect(() => {
       >
         <ProductCategorySelector
           onSelect={handleProductCategory}
-          allowSimpelPumps={user?.role === "admin"}
+          allowSimpelPumps
           fullWidthLayout={appearance.selection_category_full_width}
         />
       </SelectionFlowLayout>

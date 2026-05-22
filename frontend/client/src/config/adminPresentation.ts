@@ -6,7 +6,7 @@
  */
 export const ADMIN_PRESENTATION = {
   /** Весь раздел «Дизайн» в боковом меню (содержимое перенесено в White-Label). */
-  hideDesignSection: true,
+  hideDesignSection: false,
   /** Вкладка «Страница подбора» в White-Label (редактор layout). */
-  hideWhiteLabelLayoutTab: true,
+  hideWhiteLabelLayoutTab: false,
 } as const;

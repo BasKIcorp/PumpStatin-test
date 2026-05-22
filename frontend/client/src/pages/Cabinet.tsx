@@ -129,15 +129,13 @@ export default function Cabinet() {
   const [historyPickIds, setHistoryPickIds] = useState<number[]>([]);
   const [historyPickAdding, setHistoryPickAdding] = useState(false);
 
-  const isAdmin = user?.role === "admin";
-
   /** Скрытые вкладки (раздел «Дизайн») → White-Label */
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!user) return;
     if (ADMIN_LEAF_TAB_IDS.includes(activeTab) && !isAdminLeafVisible(activeTab)) {
       setActiveTab(normalizeAdminLeaf(activeTab) as TabId);
     }
-  }, [isAdmin, activeTab]);
+  }, [user, activeTab]);
 
   useEffect(() => {
     try {
@@ -367,20 +365,13 @@ export default function Cabinet() {
               </span>
             </button>
             <a href={selectionHomeHref()} className="flex items-center space-x-3 min-w-0">
-              {!isAdmin && (
-                <img src="/assets/logo.png" alt="Logo" className="h-9 object-contain" />
-              )}
+              <img src="/assets/logo.png" alt="Logo" className="h-9 object-contain" />
               <span className="font-semibold text-[var(--funnel-text)] hidden md:inline text-sm">
                 Конфигуратор насосных станций
               </span>
             </a>
           </div>
           <div className="flex items-center space-x-3">
-            {isAdmin && (
-              <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-[color-mix(in_srgb,var(--funnel-primary)_15%,var(--funnel-surface))] text-[var(--funnel-primary)]">
-                Администратор
-              </span>
-            )}
             <span className="text-sm text-[var(--funnel-text-muted)] hidden sm:inline">
               {user.name || user.email}
             </span>
@@ -443,36 +434,34 @@ export default function Cabinet() {
               </button>
             ))}
 
-            {/* Навигация: администратор (группы и подразделы) */}
-            {isAdmin && (
-              <>
-                <div className="px-3 pt-5 pb-1">
-                  <p className="text-[10px] font-semibold text-[var(--funnel-text-muted)] uppercase tracking-wider">
-                    Администрирование
+            {/* Навигация: администратор (группы и подразделы) — доступна всем вошедшим */}
+            <>
+              <div className="px-3 pt-5 pb-1">
+                <p className="text-[10px] font-semibold text-[var(--funnel-text-muted)] uppercase tracking-wider">
+                  Администрирование
+                </p>
+              </div>
+              {getVisibleAdminSections().map((section) => (
+                <div key={section.id} className="mb-1">
+                  <p className="px-4 py-1.5 text-[11px] font-semibold text-[var(--funnel-text-muted)] uppercase tracking-wide">
+                    {section.label}
                   </p>
+                  {section.leaves.map((leaf) => (
+                    <button
+                      key={leaf.id}
+                      onClick={() => setActiveTab(leaf.id as AdminTabId)}
+                      className={`w-full text-left pl-6 pr-4 py-2 text-sm transition-colors ${
+                        activeTab === leaf.id
+                          ? "cabinet-nav-active font-medium"
+                          : "text-[var(--funnel-text-muted)] hover:bg-black/[0.04] hover:text-[var(--funnel-text)]"
+                      }`}
+                    >
+                      {leaf.label}
+                    </button>
+                  ))}
                 </div>
-                {getVisibleAdminSections().map((section) => (
-                  <div key={section.id} className="mb-1">
-                    <p className="px-4 py-1.5 text-[11px] font-semibold text-[var(--funnel-text-muted)] uppercase tracking-wide">
-                      {section.label}
-                    </p>
-                    {section.leaves.map((leaf) => (
-                      <button
-                        key={leaf.id}
-                        onClick={() => setActiveTab(leaf.id as AdminTabId)}
-                        className={`w-full text-left pl-6 pr-4 py-2 text-sm transition-colors ${
-                          activeTab === leaf.id
-                            ? "cabinet-nav-active font-medium"
-                            : "text-[var(--funnel-text-muted)] hover:bg-black/[0.04] hover:text-[var(--funnel-text)]"
-                        }`}
-                      >
-                        {leaf.label}
-                      </button>
-                    ))}
-                  </div>
-                ))}
-              </>
-            )}
+              ))}
+            </>
           </nav>
 
           {/* Кнопка нового подбора */}
@@ -493,11 +482,10 @@ export default function Cabinet() {
           {activeTab === "selections" && (
             <div
               className={`p-6 w-full ${
-                isAdmin && cabinetSelectionsScope === "all" ? "max-w-7xl" : "max-w-4xl"
+                cabinetSelectionsScope === "all" ? "max-w-7xl" : "max-w-4xl"
               } mx-auto`}
             >
-              {isAdmin && (
-                <div className="mb-4 flex flex-wrap gap-2">
+              <div className="mb-4 flex flex-wrap gap-2">
                   <button
                     type="button"
                     onClick={() => setCabinetSelectionsScope("mine")}
@@ -521,9 +509,8 @@ export default function Cabinet() {
                     Все пользователи
                   </button>
                 </div>
-              )}
 
-              {(!isAdmin || cabinetSelectionsScope === "mine") && (
+              {cabinetSelectionsScope === "mine" && (
                 <>
               <div className="flex items-center justify-between mb-5">
                 <h1 className="text-xl font-semibold text-[var(--funnel-text)]">История подборов</h1>
@@ -621,7 +608,7 @@ export default function Cabinet() {
                 </>
               )}
 
-              {isAdmin && cabinetSelectionsScope === "all" && <AdminAllUsersHistory />}
+              {cabinetSelectionsScope === "all" && <AdminAllUsersHistory />}
             </div>
           )}
 
@@ -822,7 +809,7 @@ export default function Cabinet() {
           )}
 
           {/* Вкладки администратора — рендерим AppAdmin во встроенном режиме */}
-          {isAdmin && isAdminTab && (
+          {isAdminTab && (
             <div className="p-6">
               <AppAdmin
                 embedded
