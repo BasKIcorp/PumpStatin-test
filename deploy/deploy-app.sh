@@ -67,7 +67,14 @@ install_node_modules() {
 
 install_node_modules
 
-npm run db:seed
+# Не перезаписываем существующую БД: seed только если файла ещё нет
+SQLITE_FILE="${SQLITE_PATH:-$INSTALL_DIR/data/app.sqlite}"
+if [[ ! -f "$SQLITE_FILE" ]]; then
+  echo "SQLite DB missing — running initial seed..."
+  npm run db:seed
+else
+  echo "SQLite DB exists — skipping db:seed (user data preserved)"
+fi
 NODE_ENV=production npm run build
 
 if [[ -f "$ENV_FILE" ]]; then

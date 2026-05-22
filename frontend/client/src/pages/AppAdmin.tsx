@@ -85,6 +85,16 @@ import type { SelectionCardSettings } from "@/lib/selectionCardSettings";
 
 const DATA_TAB_TABLE_NONE = "__none__";
 
+/** PK строки: id (число) или key (строка, напр. app_settings). */
+function rowPrimaryKey(row: Record<string, unknown>, pkField: string): number | string {
+  const raw = row[pkField];
+  if (typeof raw === "number" && !Number.isNaN(raw)) return raw;
+  if (typeof raw === "string" && raw.length > 0) return raw;
+  const asNum = Number(raw);
+  if (!Number.isNaN(asNum) && String(raw) === String(asNum)) return asNum;
+  return String(raw ?? "");
+}
+
 function normalizeAdminAppearance(a: AdminAppearance): AdminAppearance {
   return {
     ...a,
@@ -1355,8 +1365,8 @@ const AppAdmin: React.FC<AppAdminProps> = ({
                                                 if (!tableEditable) return;
                                                 const v = e.target.value;
                                                 if (String(row[col] ?? "") === v) return;
-                                                const pk = Number(row[pkField]);
-                                                if (Number.isNaN(pk)) return;
+                                                const pk = rowPrimaryKey(row, pkField);
+                                                if (pk === "" || pk === null || pk === undefined) return;
                                                 const doReload = () =>
                                                   loadExtRecords(selectedModel!, recordOffset);
                                                 const p = adminPublicDataUpdate(selectedModel!, pk, { [col]: v });
@@ -1375,8 +1385,14 @@ const AppAdmin: React.FC<AppAdminProps> = ({
                                           className="text-destructive hover:bg-destructive/10"
                                           disabled={!tableEditable || savingRecord}
                                           onClick={() => {
-                                            const pk = Number(row[pkField]);
-                                            if (Number.isNaN(pk) || !confirm("Удалить запись?")) return;
+                                            const pk = rowPrimaryKey(row, pkField);
+                                            if (
+                                              pk === "" ||
+                                              pk === null ||
+                                              pk === undefined ||
+                                              !confirm("Удалить запись?")
+                                            )
+                                              return;
                                             setSavingRecord(true);
                                             const doReload = () =>
                                               loadExtRecords(selectedModel!, recordOffset);

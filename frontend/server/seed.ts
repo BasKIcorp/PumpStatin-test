@@ -131,11 +131,28 @@ export async function seedDatabase(force = false): Promise<void> {
   initDatabase();
   const db = getDb();
 
-  const existing = db.select().from(appSettings).where(eq(appSettings.key, "appearance")).get();
-  if (existing && !force) {
+  const existingAppearance = db
+    .select()
+    .from(appSettings)
+    .where(eq(appSettings.key, "appearance"))
+    .get();
+
+  seedDefaultUsers(force);
+
+  if (existingAppearance && !force) {
     const pumpCount = db.select().from(pumps).all().length;
-    seedDefaultUsers(false);
-    if (pumpCount > 0) return;
+    if (pumpCount === 0) {
+      for (const p of DEMO_PUMPS) {
+        db.insert(pumps)
+          .values({
+            nasosType: p.nasos_type,
+            payload: JSON.stringify(p.payload),
+          })
+          .run();
+      }
+      console.log(`SQLite: demo pumps added (${getSqlitePath()}), settings kept`);
+    }
+    return;
   }
 
   const appearance = readDefault<Record<string, unknown>>("appearance.json");
@@ -160,7 +177,6 @@ export async function seedDatabase(force = false): Promise<void> {
       .run();
   }
 
-  seedDefaultUsers(force);
   console.log(`SQLite seeded: ${getSqlitePath()}`);
 }
 

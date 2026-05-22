@@ -23,6 +23,12 @@
 
 `sqlite-routes.ts`: нет `requireAdmin`.
 
+## Деплой и сохранение данных
+
+- `deploy-app.sh` **не** запускает `db:seed`, если `data/app.sqlite` уже есть — правки в БД не сбрасываются при пуше.
+- `seed.ts` при существующей `appearance` **не** перезаписывает `app_settings`, только добавляет демо-насосы, если таблица `pumps` пуста.
+- Таблица `app_settings` (ключ `appearance`, `form_config`): PK — строка `key`; сохранение через blur в админке.
+
 ## Отключение (только осознанно)
 
 1. `OPEN_ADMIN_AND_DB_ACCESS = false` в `shared/admin-access-policy.ts`

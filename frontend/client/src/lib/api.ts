@@ -1420,17 +1420,22 @@ export async function adminPublicDataCreate(
 
 export async function adminPublicDataUpdate(
   table: string,
-  pk: number,
+  pk: number | string,
   payload: Record<string, unknown>,
   fileRefColumns?: string[],
 ): Promise<Record<string, unknown>> {
   const body = { ...payload, ...(fileRefColumns?.length ? { _file_ref_columns: fileRefColumns } : {}) };
-  const { data } = await axios.put(`/api/admin/public-data/${encodeURIComponent(table)}/${pk}`, body);
+  const { data } = await axios.put(
+    `/api/admin/public-data/${encodeURIComponent(table)}/${encodeURIComponent(String(pk))}`,
+    body,
+  );
   return data;
 }
 
-export async function adminPublicDataDelete(table: string, pk: number): Promise<void> {
-  await axios.delete(`/api/admin/public-data/${encodeURIComponent(table)}/${pk}`);
+export async function adminPublicDataDelete(table: string, pk: number | string): Promise<void> {
+  await axios.delete(
+    `/api/admin/public-data/${encodeURIComponent(table)}/${encodeURIComponent(String(pk))}`,
+  );
 }
 
 /* -------------------- ADMIN: пороги подбора насосов -------------------- */
