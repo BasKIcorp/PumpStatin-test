@@ -13,7 +13,7 @@ interface PumpCandidate {
 }
 
 export function SelectionFormStep() {
-  const { wizard } = useProfile();
+  const { wizard, branding } = useProfile();
   const flowId = useWizardStore((s) => s.flowId) ?? "bps-w-domestic";
   const productLine = useWizardStore((s) => s.productLine);
   const formValues = useWizardStore((s) => s.formValues);
@@ -123,6 +123,21 @@ export function SelectionFormStep() {
   const selectedPump = pumps.find((p) => p.id === selectedPumpId);
   const working = Number(formValues.workingPumps ?? 1);
   const reserve = Number(formValues.reservePumps ?? 1);
+  const variant = branding.layoutVariant ?? "sidebar-brand";
+  const panelClass =
+    variant === "topbar-dark"
+      ? "rounded-lg border border-[color:color-mix(in_srgb,var(--color-accent)_45%,transparent)] bg-[var(--color-surface)] p-4 shadow-sm"
+      : variant === "minimal-light"
+        ? "rounded-lg border border-neutral-200 bg-white p-4 shadow-sm"
+        : "rounded-lg border border-[color:color-mix(in_srgb,var(--color-primary)_25%,#d4d4d8)] bg-[var(--color-surface,white)] p-4 shadow-sm";
+  const titleClass =
+    variant === "topbar-dark"
+      ? "text-2xl font-bold text-[var(--color-accent)]"
+      : "text-2xl font-bold text-[var(--color-primary)]";
+  const actionPrimaryClass =
+    "rounded px-4 py-2 text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed";
+  const actionSecondaryClass =
+    "rounded border px-4 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed";
 
   return (
     <div>
@@ -133,7 +148,7 @@ export function SelectionFormStep() {
       >
         Назад
       </button>
-      <h1 className="mb-6 text-2xl font-bold">
+      <h1 className={titleClass + " mb-6"}>
         Подбор насосной установки {productLine?.toUpperCase()}
       </h1>
 
@@ -148,7 +163,7 @@ export function SelectionFormStep() {
           {flow.sections.map((section) => (
             <section
               key={section.id}
-              className="rounded-lg border border-neutral-200 bg-[var(--color-surface,white)] p-4"
+              className={panelClass}
             >
               <h3 className="mb-3 font-semibold">{section.title}</h3>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -165,7 +180,7 @@ export function SelectionFormStep() {
           ))}
 
           {flow.options && (
-            <section className="rounded-lg border border-neutral-200 bg-[var(--color-surface,white)] p-4">
+            <section className={panelClass}>
               <h3 className="mb-3 font-semibold">{flow.options.title}</h3>
               <div className="grid gap-2 sm:grid-cols-2">
                 {flow.options.fields.map((field) =>
@@ -208,7 +223,8 @@ export function SelectionFormStep() {
               type="button"
               onClick={handleMatch}
               disabled={busy}
-              className="rounded bg-[var(--color-primary)] px-4 py-2 text-sm text-white disabled:opacity-50"
+              className={actionPrimaryClass}
+              style={{ backgroundColor: "var(--color-primary)" }}
             >
               {busy ? "…" : flow.actions.match?.label}
             </button>
@@ -216,7 +232,8 @@ export function SelectionFormStep() {
               type="button"
               onClick={handleBuild}
               disabled={busy || !selectedPumpId}
-              className="rounded bg-[var(--color-accent)] px-4 py-2 text-sm text-white disabled:opacity-50"
+              className={actionPrimaryClass}
+              style={{ backgroundColor: "var(--color-accent)" }}
             >
               {flow.actions.build?.label}
             </button>
@@ -225,7 +242,12 @@ export function SelectionFormStep() {
                 type="button"
                 onClick={() => void handlePdf("selection", "selection.pdf")}
                 disabled={busy}
-                className="rounded border border-[var(--color-primary)] px-4 py-2 text-sm text-[var(--color-primary)]"
+                className={actionSecondaryClass}
+                style={{
+                  borderColor: "var(--color-primary)",
+                  color: "var(--color-primary)",
+                  backgroundColor: "transparent",
+                }}
               >
                 {flow.pdf.label}
               </button>
@@ -234,7 +256,12 @@ export function SelectionFormStep() {
               type="button"
               onClick={() => void handlePdf("tkp", "tkp.pdf")}
               disabled={busy || stationResult == null}
-              className="rounded border border-[var(--color-primary)] px-4 py-2 text-sm text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
+              className={actionSecondaryClass}
+              style={{
+                borderColor: "var(--color-primary)",
+                color: "var(--color-primary)",
+                backgroundColor: "transparent",
+              }}
             >
               В ТКП
             </button>
@@ -242,7 +269,12 @@ export function SelectionFormStep() {
               type="button"
               onClick={() => void handlePdf("techsheet", "techsheet.pdf")}
               disabled={busy || stationResult == null}
-              className="rounded border border-[var(--color-primary)] px-4 py-2 text-sm text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
+              className={actionSecondaryClass}
+              style={{
+                borderColor: "var(--color-primary)",
+                color: "var(--color-primary)",
+                backgroundColor: "transparent",
+              }}
             >
               Тех. лист
             </button>
@@ -255,7 +287,8 @@ export function SelectionFormStep() {
               <ul className="space-y-2">
                 {pumps.map((p) => (
                   <li key={p.id}>
-                    <label className="flex cursor-pointer items-start gap-2 rounded border border-neutral-200 p-2 text-sm hover:border-[var(--color-primary)]">
+                    <label className="flex cursor-pointer items-start gap-2 rounded border p-2 text-sm transition-colors hover:border-[var(--color-primary)]"
+                      style={{ borderColor: "color-mix(in srgb, var(--color-primary) 25%, #d4d4d8)" }}>
                       <input
                         type="radio"
                         name="selectedPump"
@@ -285,7 +318,8 @@ export function SelectionFormStep() {
             {summary ? (
               <div className="space-y-2 text-sm">
                 <p className="font-medium">{summary}</p>
-                <pre className="max-h-64 overflow-auto rounded bg-neutral-50 p-2 text-xs">
+                <pre className="max-h-64 overflow-auto rounded p-2 text-xs"
+                  style={{ backgroundColor: "color-mix(in srgb, var(--color-surface) 75%, #f8fafc)" }}>
                   {JSON.stringify(stationResult, null, 2)}
                 </pre>
               </div>
@@ -312,13 +346,15 @@ function ResultPanel({
   title,
   empty,
   children,
+  className,
 }: {
   title: string;
   empty: string;
   children: React.ReactNode;
+  className?: string;
 }) {
   return (
-    <section className="rounded-lg border border-neutral-200 bg-[var(--color-surface,white)] p-4">
+    <section className={className ?? "rounded-lg border border-neutral-200 bg-[var(--color-surface,white)] p-4"}>
       <h2 className="mb-2 font-semibold">{title}</h2>
       {children || <p className="text-sm text-neutral-500">{empty}</p>}
     </section>
