@@ -25,7 +25,7 @@ export function FunnelHeaderRight({ loginLabel = "Войти" }: { loginLabel?: 
           </Link>
         ) : null}
         <Link
-          href="/login"
+          href="/cabinet"
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-black/20 text-gray-700 transition-colors hover:bg-gray-50"
           title={user.displayName}
         >
