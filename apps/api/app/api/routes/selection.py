@@ -2,7 +2,7 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.api.deps_profile import get_profile_bundle, resolve_plugins
 
@@ -12,17 +12,21 @@ _selection_cache: dict[str, dict[str, Any]] = {}
 
 
 class MatchPumpsBody(BaseModel):
-    product_line: str
-    flow_id: str
+    model_config = ConfigDict(populate_by_name=True)
+
+    product_line: str = Field(validation_alias="productLine")
+    flow_id: str = Field(validation_alias="flowId")
     parameters: dict[str, Any] = Field(default_factory=dict)
 
 
 class BuildStationBody(MatchPumpsBody):
-    selected_pump_id: str
+    selected_pump_id: str = Field(validation_alias="selectedPumpId")
 
 
 class GeneratePdfBody(BaseModel):
-    selection_id: str
+    model_config = ConfigDict(populate_by_name=True)
+
+    selection_id: str = Field(validation_alias="selectionId")
 
 
 @router.post("/match-pumps")
