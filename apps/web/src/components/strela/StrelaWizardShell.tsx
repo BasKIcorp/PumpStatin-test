@@ -51,7 +51,7 @@ export function StrelaWizardShell({ children }: { children: ReactNode }) {
 
         }
 
-        sidebarText={null}
+        sidebarText={undefined}
 
         title={meta.title}
 
