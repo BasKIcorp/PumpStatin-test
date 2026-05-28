@@ -1,4 +1,5 @@
 import { apiFetch } from "@/api/client";
+import { getAuthHeader } from "@/stores/authStore";
 
 export interface AdminMeta {
   algorithms: string[];
@@ -57,6 +58,18 @@ export interface CatalogRow {
   source_key: string;
   value: string;
   label: string;
+}
+
+export interface SchemaColumn {
+  name: string;
+  type: string;
+  nullable: boolean;
+  primary_key: boolean;
+}
+
+export interface SchemaTable {
+  name: string;
+  columns: SchemaColumn[];
 }
 
 export function fetchAdminMeta() {
@@ -185,4 +198,51 @@ export function createAdminCatalogItem(body: {
 
 export function deleteAdminCatalogItem(id: number) {
   return apiFetch(`/api/v1/admin/database/catalog/${id}`, { method: "DELETE" });
+}
+
+export function fetchAdminSchema() {
+  return apiFetch<{ tables: SchemaTable[] }>("/api/v1/admin/database/schema");
+}
+
+export function createAdminTable(body: {
+  table_name: string;
+  columns: Array<{ name: string; type: string; nullable: boolean; primary_key: boolean }>;
+}) {
+  return apiFetch<{ ok: boolean }>("/api/v1/admin/database/schema/create-table", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export function alterAdminTable(body: {
+  table_name: string;
+  action: "add_column" | "rename_column" | "drop_column";
+  column_name?: string;
+  new_column_name?: string;
+  column_type?: string;
+  nullable?: boolean;
+}) {
+  return apiFetch<{ ok: boolean }>("/api/v1/admin/database/schema/alter-table", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function importAdminExcel(tableName: string, file: File) {
+  const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
+  const form = new FormData();
+  form.append("table_name", tableName);
+  form.append("file", file);
+  const res = await fetch(`${API_BASE}/api/v1/admin/database/import/excel`, {
+    method: "POST",
+    headers: {
+      ...getAuthHeader(),
+    },
+    body: form,
+  });
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(detail || "Excel import failed");
+  }
+  return res.json() as Promise<{ inserted: number; skipped: number; errors: string[] }>;
 }

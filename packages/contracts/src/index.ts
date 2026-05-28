@@ -67,3 +67,8 @@ export interface SelectionProjectItem {
   created_at: string;
   selections_count: number;
 }
+
+export interface GenerateProjectPdfRequest {
+  docType: "tkp" | "techsheet";
+  selectionIds?: string[];
+}

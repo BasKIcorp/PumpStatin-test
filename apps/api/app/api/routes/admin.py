@@ -1,10 +1,14 @@
 """Админ API: пользователи, профили/фронт, PDF, БД, плагины."""
 
+import io
+import re
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from openpyxl import load_workbook
 from pydantic import BaseModel
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, text
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.deps import require_admin
 from app.core.config import settings
@@ -244,6 +248,54 @@ class CatalogItemBody(BaseModel):
     label: str
 
 
+class TableColumnBody(BaseModel):
+    name: str
+    type: str
+    nullable: bool = True
+    primary_key: bool = False
+
+
+class CreateTableBody(BaseModel):
+    table_name: str
+    columns: list[TableColumnBody]
+
+
+class AlterTableBody(BaseModel):
+    table_name: str
+    action: str
+    column_name: str | None = None
+    new_column_name: str | None = None
+    column_type: str | None = None
+    nullable: bool | None = None
+
+
+_IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+_TYPE_ALLOWED = {
+    "text": "TEXT",
+    "varchar": "VARCHAR(255)",
+    "integer": "INTEGER",
+    "bigint": "BIGINT",
+    "numeric": "NUMERIC",
+    "double": "DOUBLE PRECISION",
+    "boolean": "BOOLEAN",
+    "timestamp": "TIMESTAMP",
+    "jsonb": "JSONB",
+}
+
+
+def _safe_ident(value: str, field_name: str) -> str:
+    if not value or not _IDENT_RE.match(value):
+        raise HTTPException(400, f"Invalid {field_name}")
+    return value
+
+
+def _safe_type(value: str) -> str:
+    key = (value or "").strip().lower()
+    if key not in _TYPE_ALLOWED:
+        raise HTTPException(400, f"Unsupported column type: {value}")
+    return _TYPE_ALLOWED[key]
+
+
 @router.get("/database/status")
 async def admin_db_status(_: Annotated[dict, Depends(require_admin)]):
     if settings.use_mock_db:
@@ -257,6 +309,189 @@ async def admin_db_status(_: Annotated[dict, Depends(require_admin)]):
             "pumpCount": len(pumps.scalars().all()),
             "catalogItemCount": len(catalog.scalars().all()),
         }
+
+
+@router.get("/database/schema")
+async def admin_db_schema(_: Annotated[dict, Depends(require_admin)]):
+    _require_postgres_admin()
+    async with SessionLocal() as session:
+        table_rows = await session.execute(
+            text(
+                """
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = 'public'
+                ORDER BY table_name
+                """
+            )
+        )
+        tables: list[dict[str, Any]] = []
+        for (table_name,) in table_rows.all():
+            columns_rows = await session.execute(
+                text(
+                    """
+                    SELECT column_name, data_type, is_nullable
+                    FROM information_schema.columns
+                    WHERE table_schema = 'public' AND table_name = :table_name
+                    ORDER BY ordinal_position
+                    """
+                ),
+                {"table_name": table_name},
+            )
+            pk_rows = await session.execute(
+                text(
+                    """
+                    SELECT kcu.column_name
+                    FROM information_schema.table_constraints tc
+                    JOIN information_schema.key_column_usage kcu
+                      ON tc.constraint_name = kcu.constraint_name
+                     AND tc.table_schema = kcu.table_schema
+                    WHERE tc.table_schema='public'
+                      AND tc.table_name=:table_name
+                      AND tc.constraint_type='PRIMARY KEY'
+                    """
+                ),
+                {"table_name": table_name},
+            )
+            pk_cols = {name for (name,) in pk_rows.all()}
+            tables.append(
+                {
+                    "name": table_name,
+                    "columns": [
+                        {
+                            "name": c_name,
+                            "type": c_type,
+                            "nullable": is_nullable == "YES",
+                            "primary_key": c_name in pk_cols,
+                        }
+                        for (c_name, c_type, is_nullable) in columns_rows.all()
+                    ],
+                }
+            )
+    return {"tables": tables}
+
+
+@router.post("/database/schema/create-table")
+async def admin_db_create_table(
+    body: CreateTableBody, _: Annotated[dict, Depends(require_admin)]
+):
+    _require_postgres_admin()
+    table_name = _safe_ident(body.table_name, "table_name")
+    if not body.columns:
+        raise HTTPException(400, "At least one column is required")
+    column_defs: list[str] = []
+    pk_cols: list[str] = []
+    for column in body.columns:
+        name = _safe_ident(column.name, "column.name")
+        sql_type = _safe_type(column.type)
+        nullable_sql = "" if column.nullable else " NOT NULL"
+        column_defs.append(f'"{name}" {sql_type}{nullable_sql}')
+        if column.primary_key:
+            pk_cols.append(name)
+    if pk_cols:
+        quoted_pk = ", ".join(f'"{c}"' for c in pk_cols)
+        column_defs.append(f"PRIMARY KEY ({quoted_pk})")
+    sql = f'CREATE TABLE "{table_name}" ({", ".join(column_defs)})'
+    async with SessionLocal() as session:
+        try:
+            await session.execute(text(sql))
+            await session.commit()
+        except SQLAlchemyError as e:
+            await session.rollback()
+            raise HTTPException(400, f"Create table failed: {e}") from e
+    return {"ok": True}
+
+
+@router.post("/database/schema/alter-table")
+async def admin_db_alter_table(
+    body: AlterTableBody, _: Annotated[dict, Depends(require_admin)]
+):
+    _require_postgres_admin()
+    table_name = _safe_ident(body.table_name, "table_name")
+    action = (body.action or "").strip().lower()
+    if action == "add_column":
+        if not body.column_name or not body.column_type:
+            raise HTTPException(400, "column_name and column_type are required")
+        col_name = _safe_ident(body.column_name, "column_name")
+        col_type = _safe_type(body.column_type)
+        nullable_sql = "" if (body.nullable is not False) else " NOT NULL"
+        sql = f'ALTER TABLE "{table_name}" ADD COLUMN "{col_name}" {col_type}{nullable_sql}'
+    elif action == "rename_column":
+        if not body.column_name or not body.new_column_name:
+            raise HTTPException(400, "column_name and new_column_name are required")
+        old_name = _safe_ident(body.column_name, "column_name")
+        new_name = _safe_ident(body.new_column_name, "new_column_name")
+        sql = f'ALTER TABLE "{table_name}" RENAME COLUMN "{old_name}" TO "{new_name}"'
+    elif action == "drop_column":
+        if not body.column_name:
+            raise HTTPException(400, "column_name is required")
+        col_name = _safe_ident(body.column_name, "column_name")
+        sql = f'ALTER TABLE "{table_name}" DROP COLUMN "{col_name}"'
+    else:
+        raise HTTPException(400, "Unsupported action")
+    async with SessionLocal() as session:
+        try:
+            await session.execute(text(sql))
+            await session.commit()
+        except SQLAlchemyError as e:
+            await session.rollback()
+            raise HTTPException(400, f"Alter table failed: {e}") from e
+    return {"ok": True}
+
+
+@router.post("/database/import/excel")
+async def admin_db_import_excel(
+    table_name: Annotated[str, Form(...)],
+    file: Annotated[UploadFile, File(...)],
+    _: Annotated[dict, Depends(require_admin)],
+):
+    _require_postgres_admin()
+    safe_table = _safe_ident(table_name, "table_name")
+    if not file.filename or not file.filename.lower().endswith((".xlsx", ".xlsm")):
+        raise HTTPException(400, "Only .xlsx/.xlsm files are supported")
+    content = await file.read()
+    try:
+        wb = load_workbook(io.BytesIO(content), data_only=True, read_only=True)
+    except Exception as e:
+        raise HTTPException(400, f"Invalid Excel file: {e}") from e
+    ws = wb.active
+    rows_iter = ws.iter_rows(values_only=True)
+    try:
+        header_raw = next(rows_iter)
+    except StopIteration:
+        raise HTTPException(400, "Excel is empty") from None
+    headers = [str(h).strip() if h is not None else "" for h in header_raw]
+    if not headers or any(not h for h in headers):
+        raise HTTPException(400, "Header row must contain non-empty column names")
+    headers = [_safe_ident(h, "header column") for h in headers]
+    inserted = 0
+    skipped = 0
+    errors: list[str] = []
+    col_sql = ", ".join(f'"{h}"' for h in headers)
+    values_sql = ", ".join(f":{h}" for h in headers)
+    sql = text(f'INSERT INTO "{safe_table}" ({col_sql}) VALUES ({values_sql})')
+    async with SessionLocal() as session:
+        for row_idx, row_values in enumerate(rows_iter, start=2):
+            if row_values is None:
+                continue
+            row_list = list(row_values)
+            if all(v is None or str(v).strip() == "" for v in row_list):
+                skipped += 1
+                continue
+            try:
+                params = {
+                    headers[i]: (row_list[i] if i < len(row_list) else None)
+                    for i in range(len(headers))
+                }
+                await session.execute(sql, params)
+                inserted += 1
+            except SQLAlchemyError as e:
+                errors.append(f"Row {row_idx}: {e}")
+        if inserted > 0:
+            await session.commit()
+        else:
+            await session.rollback()
+    return {"inserted": inserted, "skipped": skipped, "errors": errors[:50]}
 
 
 @router.get("/database/pumps")

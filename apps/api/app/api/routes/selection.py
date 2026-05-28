@@ -10,6 +10,7 @@ from app.api.deps import get_current_user, require_user
 from app.api.deps_profile import get_profile_bundle, resolve_plugins
 from app.db.models import SelectionHistoryModel, SelectionProjectModel
 from app.db.session import SessionLocal
+from app.pdf.reportlab_build import build_project_pdf
 
 router = APIRouter()
 
@@ -41,6 +42,12 @@ class SelectionProjectBody(BaseModel):
 
 class AttachSelectionsBody(BaseModel):
     selection_ids: list[str] = Field(validation_alias="selectionIds", min_length=1)
+
+
+class ProjectGeneratePdfBody(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    doc_type: str = Field(default="tkp", validation_alias="docType")
+    selection_ids: list[str] | None = Field(default=None, validation_alias="selectionIds")
 
 
 class SelectionHistoryItem(BaseModel):
@@ -259,3 +266,80 @@ async def attach_selections_to_project(
             row.project_id = project_id
         await session.commit()
     return {"attached": len(rows)}
+
+
+@router.get("/projects/{project_id}/selections")
+async def get_project_selections(
+    project_id: int,
+    current_user: Annotated[dict, Depends(require_user)],
+):
+    async with SessionLocal() as session:
+        project = (
+            await session.execute(
+                select(SelectionProjectModel).where(
+                    SelectionProjectModel.id == project_id,
+                    SelectionProjectModel.owner_username == current_user["username"],
+                )
+            )
+        ).scalar_one_or_none()
+        if not project:
+            raise HTTPException(404, "Project not found")
+        stmt = (
+            select(SelectionHistoryModel)
+            .where(
+                SelectionHistoryModel.owner_username == current_user["username"],
+                SelectionHistoryModel.project_id == project_id,
+            )
+            .order_by(SelectionHistoryModel.created_at.desc())
+        )
+        rows = (await session.execute(stmt)).scalars().all()
+    return {"items": [SelectionHistoryItem.model_validate(row).model_dump(by_alias=True) for row in rows]}
+
+
+@router.post("/projects/{project_id}/generate-pdf")
+async def generate_project_pdf(
+    project_id: int,
+    body: ProjectGeneratePdfBody,
+    bundle: Annotated[dict, Depends(get_profile_bundle)],
+    current_user: Annotated[dict, Depends(require_user)],
+):
+    _, _, pdf, branding, profile_id = resolve_plugins(bundle)
+    doc_type = body.doc_type if body.doc_type in ("tkp", "techsheet") else "tkp"
+    async with SessionLocal() as session:
+        project = (
+            await session.execute(
+                select(SelectionProjectModel).where(
+                    SelectionProjectModel.id == project_id,
+                    SelectionProjectModel.owner_username == current_user["username"],
+                )
+            )
+        ).scalar_one_or_none()
+        if not project:
+            raise HTTPException(404, "Project not found")
+        stmt = (
+            select(SelectionHistoryModel)
+            .where(
+                SelectionHistoryModel.owner_username == current_user["username"],
+                SelectionHistoryModel.project_id == project_id,
+                SelectionHistoryModel.profile_id == profile_id,
+            )
+            .order_by(SelectionHistoryModel.created_at.asc())
+        )
+        rows = (await session.execute(stmt)).scalars().all()
+    if body.selection_ids:
+        allowed = set(body.selection_ids)
+        rows = [row for row in rows if row.selection_id in allowed]
+    if not rows:
+        raise HTTPException(404, "No selections in project")
+    selections = [row.station_payload for row in rows if isinstance(row.station_payload, dict)]
+    if not selections:
+        raise HTTPException(404, "No selections in project")
+    content = build_project_pdf(selections, branding, pdf.template_id, doc_type, project.name)
+    filename_suffix = "tkp" if doc_type == "tkp" else "techsheets"
+    return Response(
+        content=content,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{profile_id}-project-{project_id}-{filename_suffix}.pdf"'
+        },
+    )

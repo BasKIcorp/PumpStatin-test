@@ -1,6 +1,7 @@
 import type {
   BuildStationRequest,
   BuildStationResponse,
+  GenerateProjectPdfRequest,
   MatchPumpsRequest,
   MatchPumpsResponse,
   SelectionHistoryItem,
@@ -101,4 +102,37 @@ export async function attachSelectionsToProject(projectId: number, selectionIds:
   }
   const data = (await res.json()) as { attached: number };
   return data.attached;
+}
+
+export async function getProjectSelections(projectId: number): Promise<SelectionHistoryItem[]> {
+  const res = await fetch(`${API_BASE}/api/v1/selection/projects/${projectId}/selections`, {
+    headers: {
+      ...getAuthHeader(),
+    },
+  });
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(detail || "Failed to load project selections");
+  }
+  const data = (await res.json()) as { items: SelectionHistoryItem[] };
+  return data.items;
+}
+
+export async function generateProjectPdf(
+  projectId: number,
+  request: GenerateProjectPdfRequest,
+): Promise<Blob> {
+  const res = await fetch(`${API_BASE}/api/v1/selection/projects/${projectId}/generate-pdf`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAuthHeader(),
+    },
+    body: JSON.stringify(request),
+  });
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(detail || "Failed to generate project PDF");
+  }
+  return res.blob();
 }

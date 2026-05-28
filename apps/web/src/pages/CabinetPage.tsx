@@ -4,7 +4,9 @@ import type { SelectionHistoryItem, SelectionProjectItem } from "@pumpstation/co
 import {
   attachSelectionsToProject,
   createSelectionProject,
+  generateProjectPdf,
   getSelectionHistory,
+  getProjectSelections,
   getSelectionProjects,
 } from "@/api/selection";
 import { AppShell } from "@/components/layout/AppShell";
@@ -24,6 +26,8 @@ export function CabinetPage() {
   const [newProjectName, setNewProjectName] = useState("");
   const [selectedProject, setSelectedProject] = useState<number | "">("");
   const [selectedHistory, setSelectedHistory] = useState<Record<string, boolean>>({});
+  const [projectSelections, setProjectSelections] = useState<SelectionHistoryItem[]>([]);
+  const [selectedProjectSelections, setSelectedProjectSelections] = useState<Record<string, boolean>>({});
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -31,6 +35,10 @@ export function CabinetPage() {
   const selectedIds = useMemo(
     () => Object.keys(selectedHistory).filter((id) => selectedHistory[id]),
     [selectedHistory],
+  );
+  const selectedProjectSelectionIds = useMemo(
+    () => Object.keys(selectedProjectSelections).filter((id) => selectedProjectSelections[id]),
+    [selectedProjectSelections],
   );
 
   const refresh = async () => {
@@ -53,10 +61,31 @@ export function CabinetPage() {
     }
   };
 
+  const refreshProjectSelections = async (projectId: number) => {
+    try {
+      const items = await getProjectSelections(projectId);
+      setProjectSelections(items);
+      setSelectedProjectSelections({});
+    } catch (e) {
+      setProjectSelections([]);
+      setError(e instanceof Error ? e.message : "Не удалось загрузить подборы проекта");
+    }
+  };
+
   useEffect(() => {
     void refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (selectedProject) {
+      void refreshProjectSelections(selectedProject);
+    } else {
+      setProjectSelections([]);
+      setSelectedProjectSelections({});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProject]);
 
   const createProject = async () => {
     const name = newProjectName.trim();
@@ -93,6 +122,9 @@ export function CabinetPage() {
       await attachSelectionsToProject(selectedProject, selectedIds);
       setSelectedHistory({});
       await refresh();
+      if (selectedProject) {
+        await refreshProjectSelections(selectedProject);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Не удалось добавить подборы в проект");
     } finally {
@@ -103,6 +135,36 @@ export function CabinetPage() {
   const handleLogout = () => {
     logout();
     navigate("/login");
+  };
+
+  const downloadBlob = (blob: Blob, fileName: string) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const buildProjectPdf = async (docType: "tkp" | "techsheet") => {
+    if (!selectedProject) {
+      setError("Выберите проект");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      const blob = await generateProjectPdf(selectedProject, {
+        docType,
+        selectionIds: selectedProjectSelectionIds.length ? selectedProjectSelectionIds : undefined,
+      });
+      const suffix = docType === "tkp" ? "tkp" : "techsheets";
+      downloadBlob(blob, `project-${selectedProject}-${suffix}.pdf`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Не удалось сформировать PDF проекта");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -208,6 +270,57 @@ export function CabinetPage() {
           </section>
         </div>
       )}
+      <section className="mt-6 rounded-lg border border-neutral-200 bg-white p-4">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold">Подборы выбранного проекта</h2>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => void buildProjectPdf("tkp")}
+              disabled={busy || !selectedProject || projectSelections.length === 0}
+              className="rounded bg-[var(--color-primary)] px-3 py-1.5 text-sm text-white disabled:opacity-50"
+            >
+              ТКП проекта
+            </button>
+            <button
+              type="button"
+              onClick={() => void buildProjectPdf("techsheet")}
+              disabled={busy || !selectedProject || projectSelections.length === 0}
+              className="rounded bg-[var(--color-accent)] px-3 py-1.5 text-sm text-white disabled:opacity-50"
+            >
+              Техлисты проекта
+            </button>
+          </div>
+        </div>
+        <ul className="space-y-2">
+          {projectSelections.map((item) => (
+            <li key={`project-${item.selection_id}`} className="rounded border border-neutral-200 px-3 py-2">
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={Boolean(selectedProjectSelections[item.selection_id])}
+                  onChange={(e) =>
+                    setSelectedProjectSelections((prev) => ({
+                      ...prev,
+                      [item.selection_id]: e.target.checked,
+                    }))
+                  }
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{item.summary}</p>
+                  <p className="text-xs text-neutral-500">
+                    {item.product_line.toUpperCase()} · {item.flow_id} · {formatDate(item.created_at)}
+                  </p>
+                </div>
+              </div>
+            </li>
+          ))}
+          {selectedProject && projectSelections.length === 0 ? (
+            <li className="text-sm text-neutral-500">В проекте пока нет подборов</li>
+          ) : null}
+          {!selectedProject ? <li className="text-sm text-neutral-500">Выберите проект слева</li> : null}
+        </ul>
+      </section>
     </AppShell>
   );
 }

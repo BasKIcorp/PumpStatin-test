@@ -10,12 +10,23 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from reportlab.platypus import (
+    PageBreak,
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
+    Table,
+    TableStyle,
+)
 
 _FONT_NAME = "AppSans"
 _FONT_REGISTERED = False
 
 _FONT_CANDIDATES = [
+    Path(__file__).resolve().parent / "fonts" / "DejaVuSans.ttf",
+    Path(__file__).resolve().parent / "fonts" / "open-sans.regular.ttf",
+    Path(__file__).resolve().parent / "fonts" / "OpenSans-Bold.ttf",
+    Path(__file__).resolve().parent / "fonts" / "Inter-SemiBold.ttf",
     Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
     Path("/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"),
     Path("C:/Windows/Fonts/arial.ttf"),
@@ -228,6 +239,194 @@ def build_themed_pdf(
         hr.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, -1), accent)]))
         story.insert(2, hr)
 
+    doc.build(story)
+    return buf.getvalue()
+
+
+def build_project_pdf(
+    selections: list[dict[str, Any]],
+    branding: dict[str, Any],
+    template_id: str,
+    document_type: str,
+    project_name: str,
+) -> bytes:
+    if not selections:
+        return build_themed_pdf(
+            {"summary": f"Проект «{project_name}» пуст", "configuration": {}, "commercial": {}},
+            branding,
+            template_id,
+            "selection",
+        )
+    if document_type == "tkp":
+        return _build_project_tkp_pdf(selections, branding, template_id, project_name)
+    return _build_project_techsheet_pdf(selections, branding, template_id, project_name)
+
+
+def _build_project_tkp_pdf(
+    selections: list[dict[str, Any]],
+    branding: dict[str, Any],
+    template_id: str,
+    project_name: str,
+) -> bytes:
+    buf = BytesIO()
+    doc = SimpleDocTemplate(
+        buf,
+        pagesize=A4,
+        leftMargin=20 * mm,
+        rightMargin=20 * mm,
+        topMargin=18 * mm,
+        bottomMargin=18 * mm,
+    )
+    palette = branding.get("colors", {})
+    primary = _hex(palette.get("primary", "#1e4a8c"))
+    pdf_meta = branding.get("pdf", {})
+    font = _ensure_font()
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        "Title",
+        parent=styles["Heading1"],
+        fontName=font,
+        textColor=primary,
+        fontSize=16,
+        spaceAfter=6,
+    )
+    sub_style = ParagraphStyle(
+        "Sub",
+        parent=styles["Normal"],
+        fontName=font,
+        textColor=colors.grey,
+        fontSize=9,
+    )
+    body = ParagraphStyle("Body", parent=styles["Normal"], fontName=font, fontSize=10)
+
+    story: list[Any] = []
+    story.append(Paragraph(branding.get("appTitle", "Подбор"), title_style))
+    tagline = pdf_meta.get("headerTagline", "")
+    if tagline:
+        story.append(Paragraph(tagline, sub_style))
+    story.append(Spacer(1, 8))
+    story.append(Paragraph("<b>КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ ПО ПРОЕКТУ</b>", body))
+    story.append(Paragraph(f"<b>Проект:</b> {project_name}", body))
+    story.append(Spacer(1, 8))
+
+    offer_rows = [["№", "Описание", "Кол-во, шт", "Цена, руб", "Сумма, руб"]]
+    total_sum = 0.0
+    for idx, selection in enumerate(selections, start=1):
+        config = selection.get("configuration", {}) if isinstance(selection, dict) else {}
+        pump = config.get("pump", {}) if isinstance(config, dict) else {}
+        pump_name = str(pump.get("name", f"Насос #{idx}"))
+        pump_count_raw = str(config.get("pumpCount", "1"))
+        count = 1
+        for part in pump_count_raw.replace("рез.", "").replace("раб.", "").split("+"):
+            part = part.strip()
+            if not part:
+                continue
+            try:
+                count += int(part) if "+" in pump_count_raw else int(part) - 1
+            except ValueError:
+                continue
+        commercial = selection.get("commercial", {}) if isinstance(selection, dict) else {}
+        unit_price_num = float(commercial.get("unitPriceRub") or 0)
+        total_price_num = float(commercial.get("totalPriceRub") or 0)
+        total_sum += total_price_num
+        offer_rows.append(
+            [
+                str(idx),
+                pump_name,
+                str(max(count, 1)),
+                _format_rub(unit_price_num),
+                _format_rub(total_price_num),
+            ]
+        )
+
+    offer_table = Table(offer_rows, colWidths=[10 * mm, 87 * mm, 22 * mm, 28 * mm, 28 * mm])
+    offer_table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.whitesmoke),
+                ("FONTNAME", (0, 0), (-1, -1), font),
+                ("GRID", (0, 0), (-1, -1), 0.6, colors.black),
+                ("ALIGN", (0, 0), (0, -1), "CENTER"),
+                ("ALIGN", (2, 0), (-1, -1), "CENTER"),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("FONTSIZE", (0, 0), (-1, -1), 9),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+            ]
+        )
+    )
+    story.append(offer_table)
+    story.append(Spacer(1, 8))
+    story.append(Paragraph(f"<b>Итого, с НДС:</b> {_format_rub(total_sum)} руб", body))
+    footer = pdf_meta.get("footerLegal", "")
+    if footer:
+        story.append(Spacer(1, 10))
+        story.append(Paragraph(footer, sub_style))
+    doc.build(story)
+    return buf.getvalue()
+
+
+def _build_project_techsheet_pdf(
+    selections: list[dict[str, Any]],
+    branding: dict[str, Any],
+    template_id: str,
+    project_name: str,
+) -> bytes:
+    buf = BytesIO()
+    doc = SimpleDocTemplate(
+        buf,
+        pagesize=A4,
+        leftMargin=20 * mm,
+        rightMargin=20 * mm,
+        topMargin=18 * mm,
+        bottomMargin=18 * mm,
+    )
+    story: list[Any] = []
+    for idx, selection in enumerate(selections):
+        section_pdf = build_themed_pdf(selection, branding, template_id, "techsheet")
+        # Пересобираем контент техлиста в текущем документе в упрощенном виде
+        config = selection.get("configuration", {}) if isinstance(selection, dict) else {}
+        pump = config.get("pump", {}) if isinstance(config, dict) else {}
+        commercial = selection.get("commercial", {}) if isinstance(selection, dict) else {}
+        font = _ensure_font()
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            "TechTitle",
+            parent=styles["Heading2"],
+            fontName=font,
+            fontSize=13,
+            textColor=_hex(branding.get("colors", {}).get("primary", "#1e4a8c")),
+        )
+        body = ParagraphStyle("TechBody", parent=styles["Normal"], fontName=font, fontSize=10)
+        story.append(Paragraph(f"Проект «{project_name}» — техлист {idx + 1}", title_style))
+        story.append(Paragraph(f"<b>{selection.get('summary', '')}</b>", body))
+        story.append(Spacer(1, 6))
+        rows = [
+            ["Параметр", "Значение"],
+            ["Наименование", str(pump.get("name", "—"))],
+            ["ID насоса", str(pump.get("id", "—"))],
+            ["Номинальная подача, м3/ч", str(pump.get("nominal_flow", "—"))],
+            ["Номинальный напор, м", str(pump.get("nominal_head", "—"))],
+            ["Номинальная мощность, кВт", str(pump.get("power_kw", "—"))],
+            ["Цена за насос, руб", _format_rub(commercial.get("unitPriceRub"))],
+            ["Итоговая стоимость, руб", _format_rub(commercial.get("totalPriceRub"))],
+        ]
+        table = Table(rows, colWidths=[70 * mm, 95 * mm])
+        table.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, 0), _hex(branding.get("colors", {}).get("primary", "#1e4a8c"))),
+                    ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                    ("FONTNAME", (0, 0), (-1, -1), font),
+                    ("GRID", (0, 0), (-1, -1), 0.5, colors.lightgrey),
+                    ("FONTSIZE", (0, 0), (-1, -1), 9),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ]
+            )
+        )
+        story.append(table)
+        if idx < len(selections) - 1:
+            story.append(PageBreak())
+        _ = section_pdf
     doc.build(story)
     return buf.getvalue()
 
