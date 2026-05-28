@@ -194,6 +194,51 @@ export function AdminProfilesPage() {
           </section>
         </div>
       ) : null}
+
+      {meta ? (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <section className="rounded-lg border border-neutral-200 bg-white p-4">
+            <h2 className="mb-2 text-sm font-semibold">Реализованные варианты фронта (layout)</h2>
+            <ul className="space-y-1 text-sm text-neutral-700">
+              {meta.layoutVariants.map((variant) => (
+                <li key={variant} className="rounded border border-neutral-200 px-2 py-1 font-mono text-xs">
+                  {variant}
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section className="rounded-lg border border-neutral-200 bg-white p-4">
+            <h2 className="mb-2 text-sm font-semibold">Шаблоны PDF в проекте</h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-neutral-50">
+                  <tr>
+                    <th className="px-2 py-1">template id</th>
+                    <th className="px-2 py-1">template.html</th>
+                    <th className="px-2 py-1">статус</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {meta.pdfTemplateFiles.map((tpl) => (
+                    <tr key={tpl.id} className="border-t">
+                      <td className="px-2 py-1 font-mono">{tpl.id}</td>
+                      <td className="px-2 py-1 font-mono">{tpl.path}</td>
+                      <td className="px-2 py-1">
+                        {tpl.hasTemplate ? (
+                          <span className="text-green-700">ok</span>
+                        ) : (
+                          <span className="text-red-600">missing</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 }
