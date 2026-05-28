@@ -3,7 +3,7 @@ import { useWizardStore } from "@/stores/wizardStore";
 import type { WizardStepId } from "@/stores/wizardStore";
 import type { WizardCard } from "@/types/wizard";
 import { CARD_HOVER_VARIANTS } from "@/lib/strela/cardUi";
-import { CARD_CAPTION_MARK_DEFAULT_SRC } from "@/lib/strela/selectionAssets";
+import { CARD_CAPTION_MARK_DEFAULT_SRC, selectionSlidePng } from "@/lib/strela/selectionAssets";
 import { MockupCard } from "./MockupCard";
 import { MockupCardStrip } from "./MockupCardStrip";
 
@@ -18,6 +18,13 @@ interface Props {
 
 function cardMediaPlaceholder() {
   return <div className="h-full w-full bg-[var(--funnel-card-media-bg)]" aria-hidden />;
+}
+
+function cardImageNode(card: WizardCard, index: number) {
+  const slideIndex = (index + 1) as 1 | 2 | 3 | 4;
+  const src = card.image ?? selectionSlidePng(slideIndex);
+  if (!src) return cardMediaPlaceholder();
+  return <img src={src} alt="" className="h-full w-full object-contain" decoding="async" />;
 }
 
 export function StrelaCardGridStep({
@@ -57,7 +64,7 @@ export function StrelaCardGridStep({
               identifier={card.title}
               boxTitle={null}
               bullets={bullets.length ? bullets : ["—"]}
-              image={cardMediaPlaceholder()}
+              image={cardImageNode(card, index)}
               captionLogoSrc={captionLogo}
               imageHoverVariant={CARD_HOVER_VARIANTS[index % CARD_HOVER_VARIANTS.length]}
               disabled={disabled}

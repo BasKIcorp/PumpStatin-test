@@ -2,6 +2,8 @@ export interface WizardCard {
   id: string;
   title: string;
   description: string;
+  /** URL изображения на карточке (например /selection-assets/podbor-001.png) */
+  image?: string;
   enabled?: boolean;
   next?: string;
   flow?: string;
