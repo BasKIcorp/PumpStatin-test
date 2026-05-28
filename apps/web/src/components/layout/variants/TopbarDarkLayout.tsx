@@ -6,7 +6,7 @@ import { useAuthStore } from "@/stores/authStore";
 
 /** ACME: тёмный topbar, без боковой панели */
 export function TopbarDarkLayout({ children }: { children: ReactNode }) {
-  const { branding } = useProfile();
+  const { branding, user } = useProfile();
   const logout = useAuthStore((s) => s.logout);
 
   return (
@@ -20,8 +20,8 @@ export function TopbarDarkLayout({ children }: { children: ReactNode }) {
             {branding.sidebar.logoText}
           </h1>
           <div className="flex items-center gap-3 text-sm">
-            <Link href="/login" className="opacity-90 hover:opacity-100">
-              {branding.copy.loginLabel}
+            <Link href={user ? "/cabinet" : "/login"} className="opacity-90 hover:opacity-100">
+              {user ? "Кабинет" : branding.copy.loginLabel}
             </Link>
             <button
               type="button"

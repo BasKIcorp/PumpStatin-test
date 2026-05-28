@@ -4,13 +4,13 @@ import { useProfile } from "@/providers/ProfileProvider";
 import { useAuthStore } from "@/stores/authStore";
 
 export function ShellHeader() {
-  const { branding } = useProfile();
+  const { branding, user } = useProfile();
   const logout = useAuthStore((s) => s.logout);
 
   return (
     <header className="flex items-center justify-end gap-4 border-b border-neutral-200/20 px-6 py-3">
       <Link
-        href="/login"
+        href={user ? "/cabinet" : "/login"}
         className="flex items-center gap-2 text-sm opacity-90 hover:opacity-100"
       >
         <User size={18} />
