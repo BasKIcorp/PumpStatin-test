@@ -52,7 +52,6 @@ export const useWizardStore = create<WizardState>((set, get) => ({
       patch.productLine = cardId;
     }
     if (step === "simpel-line") patch.simpelLine = cardId;
-    if (step === "product-line") patch.productLine = cardId;
     if (step === "installation-type") {
       patch.installationType = cardId;
       if (meta.flow) patch.flowId = String(meta.flow);
