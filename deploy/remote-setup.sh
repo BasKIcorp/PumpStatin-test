@@ -38,18 +38,19 @@ if systemctl is-active --quiet pumpstatin-frontend 2>/dev/null; then
   systemctl disable pumpstatin-frontend
 fi
 
-echo "==> Smoke test"
+echo "==> Smoke test (wait for API after restart)"
+sleep 5
 attempt=1
-max_attempts=5
+max_attempts=12
 while ! python3 deploy/smoke_test.py; do
   if [ "$attempt" -ge "$max_attempts" ]; then
     echo "Smoke test failed after ${max_attempts} attempts"
+    systemctl status pumpstation-api --no-pager || true
     exit 1
   fi
-  echo "Smoke test attempt ${attempt} failed, waiting for API..."
+  echo "Smoke test attempt ${attempt} failed, retrying in 3s..."
   attempt=$((attempt + 1))
-  sleep 4
-  systemctl restart pumpstation-api || true
+  sleep 3
 done
 
 echo "==> Done"
