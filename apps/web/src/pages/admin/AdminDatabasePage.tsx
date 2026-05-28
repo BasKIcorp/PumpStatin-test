@@ -4,33 +4,17 @@ import {
   createAdminTable,
   createAdminCatalogItem,
   deleteAdminCatalogItem,
-  deleteAdminPump,
   fetchAdminSchema,
   fetchAdminCatalog,
-  fetchAdminPumps,
   fetchDbStatus,
   importAdminExcel,
-  saveAdminPump,
   type CatalogRow,
-  type PumpRow,
   type SchemaTable,
 } from "@/api/admin";
 
-const emptyPump: PumpRow = {
-  id: "",
-  product_line: "bps-w",
-  name: "",
-  nominal_flow: 0,
-  nominal_head: 0,
-  power_kw: null,
-};
-
 export function AdminDatabasePage() {
   const [status, setStatus] = useState<{ mode: string; editable: boolean } | null>(null);
-  const [pumps, setPumps] = useState<PumpRow[]>([]);
   const [catalog, setCatalog] = useState<CatalogRow[]>([]);
-  const [pumpForm, setPumpForm] = useState<PumpRow>(emptyPump);
-  const [isNewPump, setIsNewPump] = useState(true);
   const [catalogForm, setCatalogForm] = useState({
     source_key: "catalog.pumpTypes",
     value: "",
@@ -56,9 +40,6 @@ export function AdminDatabasePage() {
 
   const loadData = useCallback((editable: boolean, source?: string) => {
     if (!editable) return;
-    fetchAdminPumps()
-      .then((r) => setPumps(r.pumps))
-      .catch(() => {});
     fetchAdminCatalog(source || undefined)
       .then((r) => setCatalog(r.items))
       .catch(() => {});
@@ -98,19 +79,6 @@ export function AdminDatabasePage() {
       </div>
     );
   }
-
-  const savePump = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await saveAdminPump(pumpForm, isNewPump);
-      setMessage("Насос сохранён");
-      setPumpForm(emptyPump);
-      setIsNewPump(true);
-      reload();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка");
-    }
-  };
 
   const addCatalog = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -179,120 +147,6 @@ export function AdminDatabasePage() {
       <h1 className="text-xl font-semibold">База данных (PostgreSQL)</h1>
       {message ? <p className="text-sm text-green-700">{message}</p> : null}
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
-
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold">Насосы</h2>
-        <form
-          onSubmit={savePump}
-          className="grid max-w-2xl gap-2 rounded-lg border bg-white p-4 sm:grid-cols-3"
-        >
-          <input
-            className="field"
-            placeholder="id"
-            value={pumpForm.id}
-            disabled={!isNewPump}
-            required
-            onChange={(e) => setPumpForm({ ...pumpForm, id: e.target.value })}
-          />
-          <input
-            className="field"
-            placeholder="product_line"
-            value={pumpForm.product_line}
-            onChange={(e) => setPumpForm({ ...pumpForm, product_line: e.target.value })}
-          />
-          <input
-            className="field"
-            placeholder="name"
-            value={pumpForm.name}
-            onChange={(e) => setPumpForm({ ...pumpForm, name: e.target.value })}
-          />
-          <input
-            className="field"
-            type="number"
-            step="any"
-            placeholder="Q"
-            value={pumpForm.nominal_flow}
-            onChange={(e) =>
-              setPumpForm({ ...pumpForm, nominal_flow: Number(e.target.value) })
-            }
-          />
-          <input
-            className="field"
-            type="number"
-            step="any"
-            placeholder="H"
-            value={pumpForm.nominal_head}
-            onChange={(e) =>
-              setPumpForm({ ...pumpForm, nominal_head: Number(e.target.value) })
-            }
-          />
-          <input
-            className="field"
-            type="number"
-            step="any"
-            placeholder="kW"
-            value={pumpForm.power_kw ?? ""}
-            onChange={(e) =>
-              setPumpForm({
-                ...pumpForm,
-                power_kw: e.target.value ? Number(e.target.value) : null,
-              })
-            }
-          />
-          <button type="submit" className="btn-primary sm:col-span-3">
-            {isNewPump ? "Добавить насос" : "Обновить насос"}
-          </button>
-        </form>
-        <div className="overflow-x-auto rounded-lg border bg-white">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-neutral-50">
-              <tr>
-                <th className="px-2 py-1">id</th>
-                <th className="px-2 py-1">line</th>
-                <th className="px-2 py-1">name</th>
-                <th className="px-2 py-1">Q</th>
-                <th className="px-2 py-1">H</th>
-                <th className="px-2 py-1" />
-              </tr>
-            </thead>
-            <tbody>
-              {pumps.map((p) => (
-                <tr key={p.id} className="border-t">
-                  <td className="px-2 py-1 font-mono">{p.id}</td>
-                  <td className="px-2 py-1">{p.product_line}</td>
-                  <td className="px-2 py-1">{p.name}</td>
-                  <td className="px-2 py-1">{p.nominal_flow}</td>
-                  <td className="px-2 py-1">{p.nominal_head}</td>
-                  <td className="px-2 py-1 text-right">
-                    <button
-                      type="button"
-                      className="text-[#13347f] hover:underline"
-                      onClick={() => {
-                        setPumpForm(p);
-                        setIsNewPump(false);
-                      }}
-                    >
-                      Изм.
-                    </button>
-                    <button
-                      type="button"
-                      className="ml-1 text-red-600 hover:underline"
-                      onClick={() =>
-                        void deleteAdminPump(p.id).then(() => {
-                          reload();
-                          setMessage("Удалено");
-                        })
-                      }
-                    >
-                      ×
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
 
       <section className="space-y-3">
         <h2 className="text-sm font-semibold">Справочники (catalog_items)</h2>
