@@ -10,7 +10,14 @@ export interface WizardCard {
 }
 
 export interface NavigationConfig {
-  steps: Array<{ id: string; type: string; title?: string }>;
+  steps: Array<{
+    id: string;
+    type: string;
+    title?: string;
+    subtitle?: string;
+    titleKey?: string;
+    subtitleKey?: string;
+  }>;
   cards: Record<string, WizardCard[]>;
 }
 

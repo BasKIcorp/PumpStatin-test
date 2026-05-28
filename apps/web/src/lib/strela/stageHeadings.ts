@@ -5,7 +5,9 @@ export type StrelaStageKey = "category" | "hm_line" | "pu_line" | "pu_subtype";
 
 const STEP_TO_STAGE: Partial<Record<WizardStepId, StrelaStageKey>> = {
   "product-class": "category",
-  "product-line": "pu_line",
+  "hm-line": "hm_line",
+  "pu-line": "pu_line",
+  "simpel-line": "category",
   "installation-type": "pu_subtype",
 };
 
@@ -42,10 +44,20 @@ export function resolveStrelaStageHeading(
         title: branding.appTitle,
         subtitle: branding.copy?.homeSubtitle,
       };
-    case "product-line":
+    case "hm-line":
+      return {
+        title: "Линейка гидромодулей BPS–C",
+        subtitle: "Выберите исполнение",
+      };
+    case "pu-line":
       return {
         title: "Линейка насосных установок",
         subtitle: "Далее уточните тип сети — хоз-пит или ПНС",
+      };
+    case "simpel-line":
+      return {
+        title: "Насосы Simpel",
+        subtitle: "Выберите серию",
       };
     case "installation-type":
       return {

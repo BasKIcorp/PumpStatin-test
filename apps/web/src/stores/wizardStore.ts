@@ -2,13 +2,18 @@ import { create } from "zustand";
 
 export type WizardStepId =
   | "product-class"
-  | "product-line"
+  | "hm-line"
+  | "pu-line"
+  | "simpel-line"
   | "installation-type"
   | "selection-form";
 
 interface WizardState {
   step: WizardStepId;
   productClass?: string;
+  hmLine?: string;
+  puLine?: string;
+  simpelLine?: string;
   productLine?: string;
   installationType?: string;
   flowId?: string;
@@ -25,8 +30,10 @@ interface WizardState {
 }
 
 const BACK_MAP: Partial<Record<WizardStepId, WizardStepId>> = {
-  "product-line": "product-class",
-  "installation-type": "product-line",
+  "hm-line": "product-class",
+  "pu-line": "product-class",
+  "simpel-line": "product-class",
+  "installation-type": "pu-line",
   "selection-form": "installation-type",
 };
 
@@ -39,10 +46,19 @@ export const useWizardStore = create<WizardState>((set, get) => ({
   selectCard: (step, cardId, meta = {}) => {
     const patch: Partial<WizardState> = { ...meta };
     if (step === "product-class") patch.productClass = cardId;
+    if (step === "hm-line") patch.hmLine = cardId;
+    if (step === "pu-line") {
+      patch.puLine = cardId;
+      patch.productLine = cardId;
+    }
+    if (step === "simpel-line") patch.simpelLine = cardId;
     if (step === "product-line") patch.productLine = cardId;
     if (step === "installation-type") {
       patch.installationType = cardId;
       if (meta.flow) patch.flowId = String(meta.flow);
+    }
+    if ((step === "hm-line" || step === "simpel-line") && meta.flow) {
+      patch.flowId = String(meta.flow);
     }
     const next = meta.next as WizardStepId | undefined;
     if (next) patch.step = next;
@@ -55,7 +71,18 @@ export const useWizardStore = create<WizardState>((set, get) => ({
   setMatchResult: (pumps) => set({ matchedPumps: pumps }),
   setStationResult: (result) => set({ stationResult: result }),
   goBack: () => {
-    const prev = BACK_MAP[get().step];
+    const { step, productClass } = get();
+    if (step === "selection-form") {
+      if (productClass === "hydromodules") {
+        set({ step: "hm-line" });
+        return;
+      }
+      if (productClass === "simpel") {
+        set({ step: "simpel-line" });
+        return;
+      }
+    }
+    const prev = BACK_MAP[step];
     if (prev) set({ step: prev });
   },
 }));

@@ -105,6 +105,6 @@ export function applyStrelaAppearance(appearance: StrelaAppearance | undefined):
 }
 
 export function stageBackdropUrl(stage: number): string {
-  const n = stage <= 3 ? String(stage).padStart(3, "0") : "003";
-  return `/selection-assets/podbor-${n}.png`;
+  const n = Math.min(Math.max(stage, 1), 4);
+  return `/selection-assets/podbor-${String(n).padStart(3, "0")}.png`;
 }

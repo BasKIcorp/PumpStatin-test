@@ -3,7 +3,10 @@ import { useWizardStore } from "@/stores/wizardStore";
 import type { WizardStepId } from "@/stores/wizardStore";
 import type { WizardCard } from "@/types/wizard";
 import { CARD_HOVER_VARIANTS } from "@/lib/strela/cardUi";
-import { CARD_CAPTION_MARK_DEFAULT_SRC, selectionSlidePng } from "@/lib/strela/selectionAssets";
+import {
+  CARD_CAPTION_MARK_DEFAULT_SRC,
+  selectionSlidePng,
+} from "@/lib/strela/selectionAssets";
 import { MockupCard } from "./MockupCard";
 import { MockupCardStrip } from "./MockupCardStrip";
 
@@ -16,15 +19,27 @@ interface Props {
   cards: WizardCard[];
 }
 
-function cardMediaPlaceholder() {
-  return <div className="h-full w-full bg-[var(--funnel-card-media-bg)]" aria-hidden />;
+function cardImageSrc(card: WizardCard, index: number): string {
+  if (card.image) return card.image;
+  const slide = (Math.min(index, 3) + 1) as 1 | 2 | 3 | 4;
+  return selectionSlidePng(slide);
 }
 
-function cardImageNode(card: WizardCard, index: number) {
-  const slideIndex = (index + 1) as 1 | 2 | 3 | 4;
-  const src = card.image ?? selectionSlidePng(slideIndex);
-  if (!src) return cardMediaPlaceholder();
-  return <img src={src} alt="" className="h-full w-full object-contain" decoding="async" />;
+function CardImage({ src, title }: { src: string; title: string }) {
+  return (
+    <img
+      src={src}
+      alt=""
+      className="max-h-full max-w-full object-contain"
+      loading="lazy"
+      decoding="async"
+      title={title}
+      onError={(e) => {
+        e.currentTarget.onerror = null;
+        e.currentTarget.style.display = "none";
+      }}
+    />
+  );
 }
 
 export function StrelaCardGridStep({
@@ -64,7 +79,7 @@ export function StrelaCardGridStep({
               identifier={card.title}
               boxTitle={null}
               bullets={bullets.length ? bullets : ["—"]}
-              image={cardImageNode(card, index)}
+              image={<CardImage src={cardImageSrc(card, index)} title={card.title} />}
               captionLogoSrc={captionLogo}
               imageHoverVariant={CARD_HOVER_VARIANTS[index % CARD_HOVER_VARIANTS.length]}
               disabled={disabled}

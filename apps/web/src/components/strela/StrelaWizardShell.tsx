@@ -16,11 +16,10 @@ import { SelectionFlowFunnel } from "./SelectionFlowFunnel";
 
 
 const BACK_LABELS: Partial<Record<string, string>> = {
-
-  "product-line": "← Класс продукции",
-
+  "hm-line": "← Класс продукции",
+  "pu-line": "← Класс продукции",
+  "simpel-line": "← Класс продукции",
   "installation-type": "← Назад к линейке",
-
 };
 
 
@@ -66,21 +65,15 @@ export function StrelaWizardShell({ children }: { children: ReactNode }) {
         headerRight={<FunnelHeaderRight loginLabel={branding.copy?.loginLabel} />}
 
         stageBackgroundSrc={
-
           step === "product-class"
-
             ? stageBackdropUrl(1)
-
-            : step === "product-line"
-
+            : step === "hm-line"
               ? stageBackdropUrl(2)
-
-              : step === "installation-type"
-
+              : step === "pu-line" || step === "installation-type"
                 ? stageBackdropUrl(3)
-
-                : null
-
+                : step === "simpel-line"
+                  ? stageBackdropUrl(4)
+                  : null
         }
 
         bodyClassName="overflow-hidden"
