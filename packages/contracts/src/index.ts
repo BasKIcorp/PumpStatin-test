@@ -10,6 +10,21 @@ export interface PumpCandidate {
   id: string;
   name: string;
   powerKw?: number;
+  nominal_flow?: number;
+  nominal_head?: number;
+  curve?: Array<{ Q: number; H: number }>;
+  q_eta?: Array<number | null>;
+  eta_s?: Array<number | null>;
+  q_p2?: Array<number | null>;
+  p2_s?: Array<number | null>;
+  q_npsh?: Array<number | null>;
+  npsh_s?: Array<number | null>;
+  parabola?: Array<{ Q: number; H: number }>;
+  parabola_intersection?: { Q: number; H: number };
+  eta_at_parabola?: number | null;
+  p2_at_parabola?: number | null;
+  npsh_at_parabola?: number | null;
+  moschnost?: number | null;
 }
 
 export interface MatchPumpsResponse {

@@ -8,6 +8,8 @@ import { SELECTION_FLOW_HEADER_BRAND_DEFAULT_SRC } from "@/lib/strela/selectionA
 import { WorkHeader } from "./WorkHeader";
 import { StrelaFormField } from "./StrelaFormField";
 import { panelClass, panelHeadClass, WorkPanel } from "./panels";
+import { PumpCurveChart } from "./charts/PumpCurveChart";
+import { PowerNpshChart } from "./charts/PowerNpshChart";
 
 interface PumpCandidate {
   id: string;
@@ -16,6 +18,13 @@ interface PumpCandidate {
   powerKw?: number;
   nominal_flow?: number;
   nominal_head?: number;
+  curve?: Array<{ Q: number; H: number }>;
+  q_eta?: Array<number | null>;
+  eta_s?: Array<number | null>;
+  q_p2?: Array<number | null>;
+  p2_s?: Array<number | null>;
+  q_npsh?: Array<number | null>;
+  npsh_s?: Array<number | null>;
 }
 
 const focusRing =
@@ -326,74 +335,6 @@ function ParamsPanel({
   );
 }
 
-interface CurvePoint {
-  x: number;
-  y: number;
-}
-
-function toPolyline(points: CurvePoint[], width: number, height: number, pad: number): string {
-  const safeW = Math.max(width - pad * 2, 1);
-  const safeH = Math.max(height - pad * 2, 1);
-  const minX = Math.min(...points.map((p) => p.x));
-  const maxX = Math.max(...points.map((p) => p.x));
-  const minY = Math.min(...points.map((p) => p.y));
-  const maxY = Math.max(...points.map((p) => p.y));
-  const xRange = Math.max(maxX - minX, 1);
-  const yRange = Math.max(maxY - minY, 1);
-  return points
-    .map((p) => {
-      const px = pad + ((p.x - minX) / xRange) * safeW;
-      const py = pad + (1 - (p.y - minY) / yRange) * safeH;
-      return `${px.toFixed(1)},${py.toFixed(1)}`;
-    })
-    .join(" ");
-}
-
-function mapPointInBounds(
-  point: CurvePoint,
-  bounds: CurvePoint[],
-  width: number,
-  height: number,
-  pad: number,
-): { x: number; y: number } {
-  const safeW = Math.max(width - pad * 2, 1);
-  const safeH = Math.max(height - pad * 2, 1);
-  const minX = Math.min(...bounds.map((p) => p.x));
-  const maxX = Math.max(...bounds.map((p) => p.x));
-  const minY = Math.min(...bounds.map((p) => p.y));
-  const maxY = Math.max(...bounds.map((p) => p.y));
-  const xRange = Math.max(maxX - minX, 1);
-  const yRange = Math.max(maxY - minY, 1);
-  const px = pad + ((point.x - minX) / xRange) * safeW;
-  const py = pad + (1 - (point.y - minY) / yRange) * safeH;
-  return {
-    x: Math.min(Math.max(px, pad), width - pad),
-    y: Math.min(Math.max(py, pad), height - pad),
-  };
-}
-
-function curveFromPump(pump: PumpCandidate, flowRate: number, head: number) {
-  const qNom = Math.max(Number(pump.nominal_flow ?? flowRate ?? 20), 1);
-  const hNom = Math.max(Number(pump.nominal_head ?? head ?? 25), 1);
-  const pNom = Math.max(Number(pump.powerKw ?? 1.5), 0.1);
-  const flowEnd = qNom * 1.45;
-  const headCurve: CurvePoint[] = [];
-  const powerCurve: CurvePoint[] = [];
-  for (let i = 0; i <= 20; i += 1) {
-    const q = (flowEnd / 20) * i;
-    const qRel = q / qNom;
-    headCurve.push({
-      x: q,
-      y: Math.max(hNom * (1 - 0.58 * qRel * qRel), 0),
-    });
-    powerCurve.push({
-      x: q,
-      y: Math.max(pNom * (0.28 + 0.78 * qRel), 0),
-    });
-  }
-  return { headCurve, powerCurve };
-}
-
 function CurvesPanel({
   className,
   selectedPump,
@@ -405,161 +346,43 @@ function CurvesPanel({
   flowRate: number;
   head: number;
 }) {
-  const chartWidth = 520;
-  const chartHeight = 220;
-  const chartPad = 20;
-  const curveData = selectedPump ? curveFromPump(selectedPump, flowRate, head) : null;
-  const dutyPoint = selectedPump
-    ? {
-        x: Math.max(flowRate, 0),
-        y: Math.max(head, 0),
-      }
-    : null;
-  const dutySvgPoint =
-    curveData && dutyPoint
-      ? mapPointInBounds(dutyPoint, curveData.headCurve, chartWidth, chartHeight, chartPad)
-      : null;
-
   return (
     <WorkPanel title="Кривые характеристик" className={cn("h-full", className)}>
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-2">
         <div className="grid min-h-0 flex-1 grid-rows-2 overflow-hidden rounded-md border border-[var(--funnel-panel-border)] bg-white">
-          {curveData ? (
+          {selectedPump ? (
             <>
-              <div className="relative border-b border-[var(--funnel-panel-border)] bg-white">
-                <svg
-                  viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-                  className="h-full w-full"
-                  preserveAspectRatio="none"
-                  aria-label="Кривая напора"
-                >
-                  <rect x="0" y="0" width={chartWidth} height={chartHeight} fill="#ffffff" />
-                  {[0, 1, 2, 3, 4].map((i) => {
-                    const y = chartPad + ((chartHeight - chartPad * 2) / 4) * i;
-                    return (
-                      <line
-                        key={`h-grid-${i}`}
-                        x1={chartPad}
-                        x2={chartWidth - chartPad}
-                        y1={y}
-                        y2={y}
-                        stroke="#e5e7eb"
-                        strokeWidth="1"
-                      />
-                    );
-                  })}
-                  <line
-                    x1={chartPad}
-                    x2={chartPad}
-                    y1={chartPad}
-                    y2={chartHeight - chartPad}
-                    stroke="#9ca3af"
-                    strokeWidth="1"
-                  />
-                  <line
-                    x1={chartPad}
-                    x2={chartWidth - chartPad}
-                    y1={chartHeight - chartPad}
-                    y2={chartHeight - chartPad}
-                    stroke="#9ca3af"
-                    strokeWidth="1"
-                  />
-                  <polyline
-                    points={toPolyline(curveData.headCurve, chartWidth, chartHeight, chartPad)}
-                    fill="none"
-                    stroke="#13347f"
-                    strokeWidth="2.5"
-                  />
-                  {dutySvgPoint ? (
-                    <circle
-                      cx={dutySvgPoint.x}
-                      cy={dutySvgPoint.y}
-                      r="4.2"
-                      fill="#0b132f"
-                      stroke="#ffffff"
-                      strokeWidth="2"
-                    />
-                  ) : null}
-                  <text x={chartPad + 4} y={chartPad + 12} fill="#6b7280" fontSize="11">
-                    H, м
-                  </text>
-                  <text
-                    x={chartWidth - chartPad - 24}
-                    y={chartHeight - chartPad - 6}
-                    fill="#6b7280"
-                    fontSize="11"
-                  >
-                    Q
-                  </text>
-                </svg>
+              <div className="min-h-0 border-b border-[var(--funnel-panel-border)] bg-white">
+                <PumpCurveChart
+                  pump={{
+                    nominalFlow: selectedPump.nominal_flow,
+                    nominalHead: selectedPump.nominal_head,
+                    curve: selectedPump.curve,
+                    q_eta: selectedPump.q_eta,
+                    eta_s: selectedPump.eta_s,
+                  }}
+                  flowRate={Math.max(flowRate, 0)}
+                  head={Math.max(head, 0)}
+                />
               </div>
-              <div className="relative bg-white">
-                <svg
-                  viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-                  className="h-full w-full"
-                  preserveAspectRatio="none"
-                  aria-label="Кривая мощности"
-                >
-                  <rect x="0" y="0" width={chartWidth} height={chartHeight} fill="#ffffff" />
-                  {[0, 1, 2, 3, 4].map((i) => {
-                    const y = chartPad + ((chartHeight - chartPad * 2) / 4) * i;
-                    return (
-                      <line
-                        key={`p-grid-${i}`}
-                        x1={chartPad}
-                        x2={chartWidth - chartPad}
-                        y1={y}
-                        y2={y}
-                        stroke="#e5e7eb"
-                        strokeWidth="1"
-                      />
-                    );
-                  })}
-                  <line
-                    x1={chartPad}
-                    x2={chartPad}
-                    y1={chartPad}
-                    y2={chartHeight - chartPad}
-                    stroke="#9ca3af"
-                    strokeWidth="1"
-                  />
-                  <line
-                    x1={chartPad}
-                    x2={chartWidth - chartPad}
-                    y1={chartHeight - chartPad}
-                    y2={chartHeight - chartPad}
-                    stroke="#9ca3af"
-                    strokeWidth="1"
-                  />
-                  <polyline
-                    points={toPolyline(curveData.powerCurve, chartWidth, chartHeight, chartPad)}
-                    fill="none"
-                    stroke="#0f172a"
-                    strokeWidth="2.5"
-                  />
-                  <text x={chartPad + 4} y={chartPad + 12} fill="#6b7280" fontSize="11">
-                    P2, кВт
-                  </text>
-                  <text
-                    x={chartWidth - chartPad - 24}
-                    y={chartHeight - chartPad - 6}
-                    fill="#6b7280"
-                    fontSize="11"
-                  >
-                    Q
-                  </text>
-                </svg>
+              <div className="min-h-0 bg-white">
+                <PowerNpshChart
+                  pump={{
+                    nominalFlow: selectedPump.nominal_flow,
+                    powerKw: selectedPump.powerKw,
+                    q_p2: selectedPump.q_p2,
+                    p2_s: selectedPump.p2_s,
+                    q_npsh: selectedPump.q_npsh,
+                    npsh_s: selectedPump.npsh_s,
+                  }}
+                  flowRate={Math.max(flowRate, 0)}
+                />
               </div>
             </>
           ) : (
-            <>
-              <div className="flex items-center justify-center border-b border-[var(--funnel-panel-border)] bg-white text-center text-3xl font-medium text-black/85">
-                Выберите насос
-              </div>
-              <div className="flex items-center justify-center bg-white text-center text-3xl font-medium text-[color:color-mix(in_srgb,var(--funnel-panel-border)_55%,black)]">
-                Выберите насос
-              </div>
-            </>
+            <div className="row-span-2 flex items-center justify-center text-center text-3xl font-medium text-[color:color-mix(in_srgb,var(--funnel-panel-border)_55%,black)]">
+              Выберите насос
+            </div>
           )}
         </div>
       </div>

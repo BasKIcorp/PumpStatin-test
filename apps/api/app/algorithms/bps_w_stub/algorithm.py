@@ -9,6 +9,36 @@ class BpsWStubAlgorithm:
 
     name = "bps_w_stub"
 
+    def _curve_payload(
+        self, pump: dict[str, Any], flow: float, head: float
+    ) -> dict[str, Any]:
+        q_nom = float(pump.get("nominal_flow") or flow or 15.0)
+        h_nom = float(pump.get("nominal_head") or head or 20.0)
+        p_nom = float(pump.get("power_kw") or 1.5)
+        q_vals = [round(q_nom * 1.35 * i / 10, 3) for i in range(11)]
+        h_curve = [round(max(h_nom * (1 - 0.6 * (q / max(q_nom, 0.1)) ** 2), 0), 3) for q in q_vals]
+        eta_curve = [round(max(74 - 38 * ((q / max(q_nom, 0.1)) - 1) ** 2, 18), 3) for q in q_vals]
+        p2_curve = [round(max(p_nom * (0.28 + 0.75 * (q / max(q_nom, 0.1))), 0), 3) for q in q_vals]
+        npsh_curve = [round(max(0.9 + 2.2 * (q / max(q_nom, 0.1)) ** 2, 0), 3) for q in q_vals]
+        parabola = [round(head * (q / max(flow, 0.1)) ** 2, 3) for q in q_vals]
+        return {
+            "Q_base": round(flow, 3),
+            "H_base": round(head, 3),
+            "curve": [{"Q": q, "H": h} for q, h in zip(q_vals, h_curve)],
+            "q_eta": q_vals,
+            "eta_s": eta_curve,
+            "q_p2": q_vals,
+            "p2_s": p2_curve,
+            "q_npsh": q_vals,
+            "npsh_s": npsh_curve,
+            "parabola": [{"Q": q, "H": h} for q, h in zip(q_vals, parabola)],
+            "parabola_intersection": {"Q": round(flow, 3), "H": round(head, 3)},
+            "eta_at_parabola": round(max(74 - 38 * ((flow / max(q_nom, 0.1)) - 1) ** 2, 18), 3),
+            "p2_at_parabola": round(max(p_nom * (0.28 + 0.75 * (flow / max(q_nom, 0.1))), 0), 3),
+            "npsh_at_parabola": round(max(0.9 + 2.2 * (flow / max(q_nom, 0.1)) ** 2, 0), 3),
+            "moschnost": round(p_nom, 3),
+        }
+
     async def match_pumps(
         self,
         product_line: str,
@@ -25,6 +55,10 @@ class BpsWStubAlgorithm:
                 "name": p["name"],
                 "score": abs(p.get("nominal_flow", 20) - flow)
                 + abs(p.get("nominal_head", 25) - head),
+                "powerKw": p.get("power_kw"),
+                "nominal_flow": p.get("nominal_flow"),
+                "nominal_head": p.get("nominal_head"),
+                **self._curve_payload(p, flow, head),
             }
             for p in catalog[:3]
         ]

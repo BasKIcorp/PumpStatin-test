@@ -12,6 +12,36 @@ class BpsWV1Algorithm:
 
     name = "bps_w_v1"
 
+    def _curve_payload(
+        self, pump: dict[str, Any], flow: float, head: float
+    ) -> dict[str, Any]:
+        q_nom = float(pump.get("nominal_flow") or flow or 15.0)
+        h_nom = float(pump.get("nominal_head") or head or 20.0)
+        p_nom = float(pump.get("power_kw") or 1.5)
+        q_vals = [round(q_nom * 1.45 * i / 12, 3) for i in range(13)]
+        h_curve = [round(max(h_nom * (1 - 0.58 * (q / max(q_nom, 0.1)) ** 2), 0), 3) for q in q_vals]
+        eta_curve = [round(max(76 - 40 * ((q / max(q_nom, 0.1)) - 1) ** 2, 20), 3) for q in q_vals]
+        p2_curve = [round(max(p_nom * (0.25 + 0.8 * (q / max(q_nom, 0.1))), 0), 3) for q in q_vals]
+        npsh_curve = [round(max(0.8 + 2.6 * (q / max(q_nom, 0.1)) ** 2, 0), 3) for q in q_vals]
+        parabola = [round(head * (q / max(flow, 0.1)) ** 2, 3) for q in q_vals]
+        return {
+            "Q_base": round(flow, 3),
+            "H_base": round(head, 3),
+            "curve": [{"Q": q, "H": h} for q, h in zip(q_vals, h_curve)],
+            "q_eta": q_vals,
+            "eta_s": eta_curve,
+            "q_p2": q_vals,
+            "p2_s": p2_curve,
+            "q_npsh": q_vals,
+            "npsh_s": npsh_curve,
+            "parabola": [{"Q": q, "H": h} for q, h in zip(q_vals, parabola)],
+            "parabola_intersection": {"Q": round(flow, 3), "H": round(head, 3)},
+            "eta_at_parabola": round(max(76 - 40 * ((flow / max(q_nom, 0.1)) - 1) ** 2, 20), 3),
+            "p2_at_parabola": round(max(p_nom * (0.25 + 0.8 * (flow / max(q_nom, 0.1))), 0), 3),
+            "npsh_at_parabola": round(max(0.8 + 2.6 * (flow / max(q_nom, 0.1)) ** 2, 0), 3),
+            "moschnost": round(p_nom, 3),
+        }
+
     def _score(self, pump: dict[str, Any], flow: float, head: float) -> float:
         q_dev = abs(pump.get("nominal_flow", 0) - flow) / max(flow, 0.1)
         h_dev = abs(pump.get("nominal_head", 0) - head) / max(head, 0.1)
@@ -34,6 +64,9 @@ class BpsWV1Algorithm:
                     "name": p["name"],
                     "score": round(self._score(p, flow, head), 4),
                     "powerKw": p.get("power_kw"),
+                    "nominal_flow": p.get("nominal_flow"),
+                    "nominal_head": p.get("nominal_head"),
+                    **self._curve_payload(p, flow, head),
                 }
                 for p in catalog
             ],
