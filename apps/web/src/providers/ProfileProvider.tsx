@@ -10,6 +10,7 @@ import { fetchSession } from "@/api/auth";
 import type { ProfileBundle } from "@/api/config";
 import { loadTheme } from "@/lib/themeRegistry";
 import { useAuthStore } from "@/stores/authStore";
+import { useWizardStore } from "@/stores/wizardStore";
 import { ThemeProvider } from "./ThemeProvider";
 
 const ProfileContext = createContext<ProfileBundle | null>(null);
@@ -33,6 +34,20 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         });
       }
     }
+    // При смене профиля/темы всегда стартуем визард с первого шага.
+    useWizardStore.setState({
+      step: "product-class",
+      productClass: undefined,
+      productLine: undefined,
+      hmLine: undefined,
+      puLine: undefined,
+      simpelLine: undefined,
+      installationType: undefined,
+      flowId: undefined,
+      formValues: {},
+      matchedPumps: null,
+      stationResult: null,
+    });
     setProfile(data);
     setThemeReady(true);
   }, []);

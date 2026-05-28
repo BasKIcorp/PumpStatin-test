@@ -29,6 +29,7 @@ export function WizardEngine() {
 
   const cardSteps: WizardStepId[] = [
     "product-class",
+    "product-line",
     "hm-line",
     "pu-line",
     "simpel-line",

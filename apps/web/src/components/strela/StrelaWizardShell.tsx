@@ -15,6 +15,7 @@ import { SelectionFlowFunnel } from "./SelectionFlowFunnel";
 
 
 const BACK_LABELS: Partial<Record<string, string>> = {
+  "product-line": "← Класс продукции",
   "hm-line": "← Класс продукции",
   "pu-line": "← Класс продукции",
   "simpel-line": "← Класс продукции",

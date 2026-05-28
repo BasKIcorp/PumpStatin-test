@@ -5,6 +5,7 @@ export type StrelaStageKey = "category" | "hm_line" | "pu_line" | "pu_subtype";
 
 const STEP_TO_STAGE: Partial<Record<WizardStepId, StrelaStageKey>> = {
   "product-class": "category",
+  "product-line": "pu_line",
   "hm-line": "hm_line",
   "pu-line": "pu_line",
   "simpel-line": "category",
@@ -49,6 +50,7 @@ export function resolveStrelaStageHeading(
         title: "Линейка гидромодулей BPS–C",
         subtitle: "Выберите исполнение",
       };
+    case "product-line":
     case "pu-line":
       return {
         title: "Линейка насосных установок",

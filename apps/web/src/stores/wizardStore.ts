@@ -2,6 +2,7 @@ import { create } from "zustand";
 
 export type WizardStepId =
   | "product-class"
+  | "product-line"
   | "hm-line"
   | "pu-line"
   | "simpel-line"
@@ -30,10 +31,10 @@ interface WizardState {
 }
 
 const BACK_MAP: Partial<Record<WizardStepId, WizardStepId>> = {
+  "product-line": "product-class",
   "hm-line": "product-class",
   "pu-line": "product-class",
   "simpel-line": "product-class",
-  "installation-type": "pu-line",
   "selection-form": "installation-type",
 };
 
@@ -51,6 +52,7 @@ export const useWizardStore = create<WizardState>((set, get) => ({
       patch.puLine = cardId;
       patch.productLine = cardId;
     }
+    if (step === "product-line") patch.productLine = cardId;
     if (step === "simpel-line") patch.simpelLine = cardId;
     if (step === "installation-type") {
       patch.installationType = cardId;
@@ -70,7 +72,7 @@ export const useWizardStore = create<WizardState>((set, get) => ({
   setMatchResult: (pumps) => set({ matchedPumps: pumps }),
   setStationResult: (result) => set({ stationResult: result }),
   goBack: () => {
-    const { step, productClass } = get();
+    const { step, productClass, puLine } = get();
     if (step === "selection-form") {
       if (productClass === "hydromodules") {
         set({ step: "hm-line" });
@@ -80,6 +82,12 @@ export const useWizardStore = create<WizardState>((set, get) => ({
         set({ step: "simpel-line" });
         return;
       }
+      set({ step: puLine ? "pu-line" : "product-line" });
+      return;
+    }
+    if (step === "installation-type") {
+      set({ step: puLine ? "pu-line" : "product-line" });
+      return;
     }
     const prev = BACK_MAP[step];
     if (prev) set({ step: prev });
