@@ -3,12 +3,12 @@ import { RequireAuth } from "@/components/auth/RequireAuth";
 import { ProfileProvider } from "@/providers/ProfileProvider";
 import { WizardPage } from "@/pages/WizardPage";
 import { StrelaLoginPage } from "@/pages/StrelaLoginPage";
-import { AdminApp } from "@/pages/admin/AdminApp";
+import { ADMIN_PATH_PATTERN, AdminApp } from "@/pages/admin/AdminApp";
 
 export default function App() {
   return (
     <Switch>
-      <Route path="/admin" nest>
+      <Route path={ADMIN_PATH_PATTERN}>
         <AdminApp />
       </Route>
       <Route path="/login" component={StrelaLoginPage} />

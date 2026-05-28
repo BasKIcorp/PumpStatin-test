@@ -1,14 +1,14 @@
 import type { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 
-const ADMIN_BASE = "/admin";
 import { useAuthStore } from "@/stores/authStore";
 
+/** Пути относительно Router base="/admin" в AdminApp */
 const NAV = [
-  { href: `${ADMIN_BASE}`, label: "Обзор", end: true },
-  { href: `${ADMIN_BASE}/users`, label: "Пользователи" },
-  { href: `${ADMIN_BASE}/profiles`, label: "Профили и фронт" },
-  { href: `${ADMIN_BASE}/database`, label: "База данных" },
+  { href: "/", label: "Обзор", end: true },
+  { href: "/users", label: "Пользователи" },
+  { href: "/profiles", label: "Профили и фронт" },
+  { href: "/database", label: "База данных" },
 ];
 
 export function AdminLayout({ children }: { children: ReactNode }) {
@@ -27,7 +27,9 @@ export function AdminLayout({ children }: { children: ReactNode }) {
         </div>
         <nav className="flex flex-1 flex-col gap-0.5 p-2">
           {NAV.map((item) => {
-            const active = item.end ? path === item.href : path.startsWith(item.href);
+            const active = item.end
+              ? path === "/" || path === ""
+              : path === item.href || path.startsWith(`${item.href}/`);
             return (
               <Link
                 key={item.href}
