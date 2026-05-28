@@ -95,17 +95,20 @@ export function SelectionFormStep() {
     }
   };
 
-  const handlePdf = async () => {
+  const handlePdf = async (
+    docType: "selection" | "tkp" | "techsheet",
+    fileName: string,
+  ) => {
     const id = (stationResult as { selectionId?: string })?.selectionId;
     if (!id) return;
     setBusy(true);
     setError("");
     try {
-      const blob = await generatePdf(id);
+      const blob = await generatePdf(id, docType);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "selection.pdf";
+      a.download = fileName;
       a.click();
       URL.revokeObjectURL(url);
     } catch (e) {
@@ -117,6 +120,9 @@ export function SelectionFormStep() {
 
   const pumps = (matchedPumps ?? []) as PumpCandidate[];
   const summary = (stationResult as { summary?: string })?.summary;
+  const selectedPump = pumps.find((p) => p.id === selectedPumpId);
+  const working = Number(formValues.workingPumps ?? 1);
+  const reserve = Number(formValues.reservePumps ?? 1);
 
   return (
     <div>
@@ -217,13 +223,29 @@ export function SelectionFormStep() {
             {flow.pdf?.enabled && stationResult != null && (
               <button
                 type="button"
-                onClick={handlePdf}
+                onClick={() => void handlePdf("selection", "selection.pdf")}
                 disabled={busy}
                 className="rounded border border-[var(--color-primary)] px-4 py-2 text-sm text-[var(--color-primary)]"
               >
                 {flow.pdf.label}
               </button>
             )}
+            <button
+              type="button"
+              onClick={() => void handlePdf("tkp", "tkp.pdf")}
+              disabled={busy || stationResult == null}
+              className="rounded border border-[var(--color-primary)] px-4 py-2 text-sm text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              В ТКП
+            </button>
+            <button
+              type="button"
+              onClick={() => void handlePdf("techsheet", "techsheet.pdf")}
+              disabled={busy || stationResult == null}
+              className="rounded border border-[var(--color-primary)] px-4 py-2 text-sm text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Тех. лист
+            </button>
           </div>
         </div>
 
@@ -267,6 +289,17 @@ export function SelectionFormStep() {
                   {JSON.stringify(stationResult, null, 2)}
                 </pre>
               </div>
+            ) : null}
+          </ResultPanel>
+          <ResultPanel title="Технические характеристики" empty="Сформируйте станцию для отображения.">
+            {stationResult ? (
+              <ul className="space-y-1 text-sm">
+                <li>Количество насосов: {working} раб. + {reserve} рез.</li>
+                <li>Насос: {selectedPump?.name ?? "—"}</li>
+                <li>Номинальная мощность: {selectedPump?.powerKw ?? "—"} кВт</li>
+                <li>Номинальное напряжение: 3×380 В; 50 Гц</li>
+                <li>Макс. рабочее давление: —</li>
+              </ul>
             ) : null}
           </ResultPanel>
         </div>
