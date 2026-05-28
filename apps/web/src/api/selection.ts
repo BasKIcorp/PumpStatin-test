@@ -79,7 +79,10 @@ export async function createSelectionProject(name: string): Promise<{ id: number
     },
     body: JSON.stringify({ name }),
   });
-  if (!res.ok) throw new Error("Failed to create project");
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(detail || "Failed to create project");
+  }
   return res.json();
 }
 
@@ -92,7 +95,10 @@ export async function attachSelectionsToProject(projectId: number, selectionIds:
     },
     body: JSON.stringify({ selectionIds }),
   });
-  if (!res.ok) throw new Error("Failed to attach selections");
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(detail || "Failed to attach selections");
+  }
   const data = (await res.json()) as { attached: number };
   return data.attached;
 }

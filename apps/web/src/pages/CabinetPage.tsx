@@ -60,7 +60,10 @@ export function CabinetPage() {
 
   const createProject = async () => {
     const name = newProjectName.trim();
-    if (!name) return;
+    if (!name) {
+      setError("Введите название проекта");
+      return;
+    }
     setBusy(true);
     setError("");
     try {
@@ -76,7 +79,14 @@ export function CabinetPage() {
   };
 
   const attach = async () => {
-    if (!selectedProject || selectedIds.length === 0) return;
+    if (!selectedProject) {
+      setError("Выберите проект");
+      return;
+    }
+    if (selectedIds.length === 0) {
+      setError("Выберите хотя бы один подбор из истории");
+      return;
+    }
     setBusy(true);
     setError("");
     try {
@@ -129,7 +139,7 @@ export function CabinetPage() {
               <button
                 type="button"
                 onClick={() => void createProject()}
-                disabled={busy || newProjectName.trim().length === 0}
+                disabled={busy}
                 className="rounded bg-[var(--color-primary)] px-3 py-1.5 text-sm text-white disabled:opacity-50"
               >
                 Создать
@@ -161,7 +171,7 @@ export function CabinetPage() {
               <button
                 type="button"
                 onClick={() => void attach()}
-                disabled={busy || !selectedProject || selectedIds.length === 0}
+                disabled={busy}
                 className="rounded bg-[var(--color-accent)] px-3 py-1.5 text-sm text-white disabled:opacity-50"
               >
                 Добавить в проект
