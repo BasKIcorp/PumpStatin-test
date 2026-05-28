@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import type { SelectionHistoryItem, SelectionProjectItem } from "@pumpstation/contracts";
 import {
   attachSelectionsToProject,
@@ -8,6 +8,7 @@ import {
   getSelectionProjects,
 } from "@/api/selection";
 import { AppShell } from "@/components/layout/AppShell";
+import { useAuthStore } from "@/stores/authStore";
 
 function formatDate(value: string): string {
   const d = new Date(value);
@@ -16,6 +17,8 @@ function formatDate(value: string): string {
 }
 
 export function CabinetPage() {
+  const [, navigate] = useLocation();
+  const logout = useAuthStore((s) => s.logout);
   const [history, setHistory] = useState<SelectionHistoryItem[]>([]);
   const [projects, setProjects] = useState<SelectionProjectItem[]>([]);
   const [newProjectName, setNewProjectName] = useState("");
@@ -87,13 +90,27 @@ export function CabinetPage() {
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
   return (
     <AppShell>
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Личный кабинет: проекты и история подборов</h1>
-        <Link href="/" className="rounded border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-50">
-          К подбору
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/" className="rounded border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-50">
+            К подбору
+          </Link>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="rounded border border-red-300 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50"
+          >
+            Выйти
+          </button>
+        </div>
       </div>
       {error ? <div className="mb-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div> : null}
       {loading ? (
