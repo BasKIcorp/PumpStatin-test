@@ -4,7 +4,6 @@ import { useProfile } from "@/providers/ProfileProvider";
 
 import { useWizardStore } from "@/stores/wizardStore";
 
-import { stageBackdropUrl } from "@/lib/strela/appearance";
 import { FUNNEL_SIDEBAR_WORDMARK_DEFAULT } from "@/lib/strela/selectionAssets";
 
 import { resolveStrelaStageHeading } from "@/lib/strela/stageHeadings";
@@ -64,17 +63,7 @@ export function StrelaWizardShell({ children }: { children: ReactNode }) {
 
         headerRight={<FunnelHeaderRight loginLabel={branding.copy?.loginLabel} />}
 
-        stageBackgroundSrc={
-          step === "product-class"
-            ? stageBackdropUrl(1)
-            : step === "hm-line"
-              ? stageBackdropUrl(2)
-              : step === "pu-line" || step === "installation-type"
-                ? stageBackdropUrl(3)
-                : step === "simpel-line"
-                  ? stageBackdropUrl(4)
-                  : null
-        }
+        stageBackgroundSrc={null}
 
         bodyClassName="overflow-hidden"
 
