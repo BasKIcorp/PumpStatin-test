@@ -1,0 +1,18 @@
+id: nord-minimal
+displayName: "Nord Minimal"
+active: true
+
+theme: theme-nord
+algorithm: bps_w_v1
+database: postgres
+pdfTemplate: nord-compact
+
+wizard:
+  navigation: wizard/navigation.yaml
+  defaultFlow: bps-w-domestic
+
+locale: ru-RU
+units:
+  flow: m3h
+  head: m
+  temperature: C

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <style>
+    body { font-family: Arial, sans-serif; background: #0f1419; color: #e0e0e0; margin: 0; padding: 32px; }
+    .sheet { border: 2px solid {{ colors.accent or '#ff6f00' }}; padding: 24px; }
+    h1 { color: {{ colors.accent or '#ff6f00' }}; font-size: 22px; margin: 0 0 4px; letter-spacing: 2px; }
+    .sub { color: #9e9e9e; font-size: 10px; text-transform: uppercase; }
+    h2 { color: {{ colors.cardFooter or '#2e7d32' }}; font-size: 12px; margin-top: 20px; }
+    .grid { display: table; width: 100%; font-size: 11px; }
+    .row { display: table-row; }
+    .cell { display: table-cell; padding: 4px 8px; border-bottom: 1px solid #333; }
+    .footer { margin-top: 24px; font-size: 8px; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="sheet">
+    <h1>ACME DATASHEET</h1>
+    <div class="sub">{{ pdf.headerTagline or 'Industrial datasheet' }}</div>
+    <h2>{{ summary }}</h2>
+    <div class="grid">
+      {% for key, val in configuration.items() %}
+      <div class="row"><div class="cell"><b>{{ key }}</b></div><div class="cell">{{ val }}</div></div>
+      {% endfor %}
+    </div>
+    <div class="footer">{{ pdf.footerLegal or '' }}</div>
+  </div>
+</body>
+</html>

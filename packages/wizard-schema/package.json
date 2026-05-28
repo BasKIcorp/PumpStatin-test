@@ -1,0 +1,6 @@
+{
+  "name": "@pumpstation/wizard-schema",
+  "version": "0.1.0",
+  "private": true,
+  "description": "JSON Schema для валидации YAML визарда (подключить в CI позже)"
+}

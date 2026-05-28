@@ -1,0 +1,32 @@
+appTitle: "Подбор насосов"
+sidebar:
+  logoText: "NORD"
+  logoVertical: false
+
+layoutVariant: minimal-light
+
+colors:
+  primary: "#2e3440"
+  primaryForeground: "#eceff4"
+  accent: "#5e81ac"
+  background: "#eceff4"
+  cardFooter: "#4c566a"
+  surface: "#ffffff"
+  text: "#2e3440"
+  muted: "#6b7280"
+
+fonts:
+  body: "Open Sans, system-ui, sans-serif"
+  accent: "Open Sans, system-ui, sans-serif"
+
+assets:
+  logoUrl: "/assets/nord-logo.svg"
+  favicon: "/favicon.ico"
+
+copy:
+  homeSubtitle: "Минималистичный подбор оборудования"
+  loginLabel: "Войти"
+
+pdf:
+  headerTagline: "Nord Pump Selection"
+  footerLegal: "Nord Systems AB"

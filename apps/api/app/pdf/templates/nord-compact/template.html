@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <style>
+    body { font-family: 'Open Sans', sans-serif; color: {{ colors.text or '#2e3440' }}; margin: 48px; max-width: 480px; }
+    h1 { font-size: 18px; font-weight: 600; margin: 0; }
+    .line { width: 48px; height: 2px; background: {{ colors.accent or '#5e81ac' }}; margin: 12px 0 20px; }
+    p { font-size: 12px; line-height: 1.5; }
+    ul { font-size: 11px; padding-left: 16px; color: {{ colors.muted or '#6b7280' }}; }
+    .footer { margin-top: 40px; font-size: 9px; color: #999; }
+  </style>
+</head>
+<body>
+  <h1>{{ branding.appTitle }}</h1>
+  <div class="line"></div>
+  <p><strong>{{ summary }}</strong></p>
+  <ul>
+    {% for key, val in configuration.items() %}
+    <li>{{ key }}: {{ val }}</li>
+    {% endfor %}
+  </ul>
+  <div class="footer">{{ pdf.footerLegal or '' }} · {{ pdf.headerTagline or '' }}</div>
+</body>
+</html>

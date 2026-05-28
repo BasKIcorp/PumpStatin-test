@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background: var(--color-background);
+  color: #1a1a1a;
+}
+
+.field {
+  display: block;
+  width: 100%;
+  border: 1px solid #d4d4d4;
+  border-radius: 0.375rem;
+  background: #fff;
+  padding: 0.375rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+.btn-primary {
+  border-radius: 0.375rem;
+  background: #13347f;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #fff;
+}
+
+.btn-primary:hover {
+  opacity: 0.92;
+}
+
+.btn-secondary {
+  border-radius: 0.375rem;
+  border: 1px solid #d4d4d4;
+  background: #fff;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+}

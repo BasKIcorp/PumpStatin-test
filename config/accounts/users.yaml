@@ -1,0 +1,29 @@
+# Демо-аккаунты → профиль (внешний вид + PDF + визард)
+# Пароли только для разработки; в проде — хэши в БД
+users:
+  - username: admin
+    password: demo123
+    displayName: Администратор
+    organization: Стрела
+    profileId: default
+    role: admin
+  - username: strela
+    password: demo123
+    displayName: Инженер Стрела
+    organization: Стрела
+    profileId: default
+  - username: acme
+    password: demo123
+    displayName: Менеджер ACME
+    organization: ACME Industrial
+    profileId: acme-industrial
+  - username: nord
+    password: demo123
+    displayName: Специалист Nord
+    organization: Nord Minimal
+    profileId: nord-minimal
+  - username: aqua
+    password: demo123
+    displayName: Инженер Aqua Pro
+    organization: Aqua Pro
+    profileId: aqua-pro

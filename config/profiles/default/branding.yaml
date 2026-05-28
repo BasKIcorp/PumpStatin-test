@@ -1,0 +1,64 @@
+# Брендинг — как на референсе 159.194.215.53
+
+appTitle: "Подбор насосного оборудования Стрела"
+layoutVariant: strela-funnel
+
+sidebar:
+  logoText: "стрела"
+  logoVertical: true
+
+colors:
+  primary: "#13347f"
+  primaryForeground: "#ffffff"
+  accent: "#71d0f9"
+  background: "#ffffff"
+  cardFooter: "#ffffff"
+  surface: "#ffffff"
+  text: "#000000"
+  muted: "#000000"
+
+fonts:
+  body: '"Segoe UI", system-ui, sans-serif'
+  accent: "Caveat, cursive"
+
+assets:
+  logoUrl: "/assets/selection-flow-header-brand.png"
+  favicon: "/favicon.ico"
+
+copy:
+  homeSubtitle: "Выберите класс продукции для продолжения подбора"
+  loginLabel: "Войти"
+
+pdf:
+  headerTagline: "Подбор насосного оборудования Стрела"
+  footerLegal: "ООО «Стрела»"
+
+appearance:
+  # Палитра экрана подбора (референс BPS-C Pro / pump_station Home)
+  primary_color: "#13347f"
+  accent_color: "#71d0f9"
+  funnel_page_background_color: "#ffffff"
+  funnel_surface_color: "#ffffff"
+  funnel_card_media_background_color: "#ffffff"
+  funnel_font_heading: "segoe"
+  funnel_font_body: "segoe"
+  funnel_text_color: "#18181b"
+  funnel_text_muted_color: "#71717a"
+  funnel_panel_header_background_color: "#f4f4f5"
+  funnel_panel_header_text_color: "#52525b"
+  funnel_button_background_color: "#13347f"
+  funnel_button_text_color: "#ffffff"
+  funnel_button_secondary_background_color: "#ffffff"
+  funnel_button_secondary_text_color: "#18181b"
+  funnel_table_row_alt_background_color: "#fafafa"
+  funnel_table_row_selected_background_color: "#e8eef7"
+  sidebar_text: "стрела"
+  funnel_sidebar_wordmark_url: "/attached_assets/strela-wordmark.svg"
+  selection_card_caption_logo_url: "/selection-assets/mockup-card-caption-logo.png"
+  selection_flow_header_logo_url: "/assets/selection-flow-header-brand.png"
+  selection_category_full_width: false
+  stage_headings:
+    category: "Подбор насосного оборудования Стрела"
+    hm_line: "Линейка гидромодулей"
+    pu_line: "Линейка насосных установок"
+    pu_subtype: "Тип установки"

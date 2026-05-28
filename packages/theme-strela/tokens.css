@@ -1,0 +1,13 @@
+/**
+ * Тема «Стрела» — значения по умолчанию.
+ * Переопределяются из branding.yaml через ThemeProvider.
+ */
+:root {
+  --color-primary: #1e4a8c;
+  --color-primary-fg: #ffffff;
+  --color-accent: #c41e3a;
+  --color-background: #f5f7fa;
+  --color-card-footer: #1e4a8c;
+  --font-body: "Open Sans", system-ui, sans-serif;
+  --font-accent: "Caveat", cursive;
+}

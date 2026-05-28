@@ -1,0 +1,70 @@
+# Дерево навигации визарда (типы шагов → компоненты движка)
+
+steps:
+  - id: product-class
+    type: card-grid
+    titleKey: appTitle
+    subtitleKey: homeSubtitle
+  - id: product-line
+    type: card-grid
+    title: "Линейка насосных установок"
+    subtitle: "Далее уточните тип сети — хоз-пит или ПНС"
+    parent: product-class
+    when:
+      productClass: pump-stations
+  - id: installation-type
+    type: card-grid
+    title: "Тип установки"
+    subtitle: "Выберите назначение установки"
+    parent: product-line
+  - id: selection-form
+    type: selection-form
+    title: "Подбор насосной установки"
+    parent: installation-type
+    flowRef: flows/bps-w-domestic.yaml
+
+# Карточки первого уровня
+cards:
+  product-class:
+    - id: hydromodules
+      title: Гидромодули
+      description: >
+        Для закрытых систем вентиляции и кондиционирования.
+        Циркуляция теплоносителя между чиллером и теплообменниками.
+      enabled: true
+      next: product-line
+    - id: pump-stations
+      title: Насосные установки
+      description: >
+        Перекачка и повышение давления воды в системах
+        хозяйственно-питьевого водоснабжения и пожаротушения.
+      enabled: true
+      next: product-line
+    - id: aupd
+      title: АУПД и АУПДЗ
+      description: В разработке
+      enabled: false
+    - id: simpel
+      title: Насосы Simpel
+      description: Подбор серийных насосов COMOS, CIVOS, VMIP, HMIP.
+      enabled: true
+
+  product-line:
+    - id: bps-w
+      title: BPS-W
+      description: "—"
+      enabled: true
+      next: installation-type
+
+  installation-type:
+    - id: domestic
+      title: Хозяйственно-питьевая
+      description: Водоснабжение, повышение давления в тупиковой сети.
+      flow: bps-w-domestic
+      next: selection-form
+    - id: fire-pns
+      title: "Пожарная насосная станция (ПНС)"
+      description: "Пожаротушение: ВПВ, дренчерная, спринклерная."
+      flow: bps-w-fire
+      enabled: false
+      next: selection-form

@@ -1,0 +1,126 @@
+# Форма подбора BPS-W, хозяйственно-питьевая сеть
+# Поля → API: POST /api/v1/selection/match-pumps, build-station
+
+id: bps-w-domestic
+productLine: bps-w
+installationType: domestic
+
+sections:
+  - id: pumps-used
+    title: Используемые насосы
+    fields:
+      - id: pumpManufacturer
+        type: readonly
+        label: Производитель
+        default: "—"
+      - id: pumpType
+        type: select
+        label: Тип насоса
+        source: catalog.pumpTypes
+        required: true
+
+  - id: pump-count
+    title: Количество насосов
+    fields:
+      - id: workingPumps
+        type: number
+        label: Рабочие насосы
+        default: 1
+        min: 1
+        max: 6
+      - id: reservePumps
+        type: number
+        label: Резервные насосы
+        default: 1
+        min: 0
+        max: 6
+
+  - id: initial-params
+    title: Исходные параметры
+    fields:
+      - id: flowRate
+        type: number
+        label: "Производительность, м³/ч"
+        default: 15
+        min: 0.1
+      - id: head
+        type: number
+        label: "Напор, м"
+        default: 20
+      - id: staticHead
+        type: number
+        label: "Статический напор, м"
+        default: 20
+      - id: guaranteedHead
+        type: number
+        label: "Гарантированный напор, м"
+        default: 20
+
+  - id: fluid
+    title: Параметры перекачиваемой жидкости
+    fields:
+      - id: fluidType
+        type: select
+        label: Тип перекачиваемой жидкости
+        source: catalog.fluidTypes
+      - id: temperature
+        type: number
+        label: "Температура, °С"
+        default: 1
+
+options:
+  title: Дополнительные опции насосной установки
+  fields:
+    - id: pn
+      type: select
+      label: PN
+      source: catalog.pnRatings
+    - id: control
+      type: select
+      label: Управление
+      source: catalog.controlTypes
+    - id: filter
+      type: select
+      label: Фильтр
+      source: catalog.filters
+    - id: connection
+      type: select
+      label: Подключение
+      source: catalog.connections
+    - id: reliefValve
+      type: checkbox
+      label: Предохранительный клапан
+    - id: vibrationMounts
+      type: checkbox
+      label: Виброопоры
+    - id: insulation
+      type: checkbox
+      label: Изоляция
+      default: true
+    - id: expansionTank
+      type: checkbox
+      label: Расширительный бак
+
+actions:
+  reset:
+    label: Сбросить
+  match:
+    label: Подобрать
+    api: match-pumps
+  build:
+    label: Сформировать станцию
+    api: build-station
+    requires: match
+
+result:
+  pumpsListTitle: Подходящие насосы
+  configurationTitle: Результат конфигурации
+  emptyMatchHint: 'Нажмите «Подобрать» для поиска подходящих насосов'
+  emptyBuildHint: >
+    Здесь будет отображен результат после формирования
+    конфигурации насосной станции
+
+pdf:
+  enabled: true
+  label: Скачать PDF
+  api: generate-pdf

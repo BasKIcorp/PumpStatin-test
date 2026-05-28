@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <style>
+    body { font-family: 'Open Sans', sans-serif; color: {{ colors.text or '#1a1a1a' }}; margin: 40px; }
+    .header { background: {{ colors.primary or '#1e4a8c' }}; color: {{ colors.primaryForeground or '#fff' }};
+      padding: 20px 24px; border-radius: 8px; }
+  .header h1 { margin: 0; font-size: 20px; }
+  .tagline { font-size: 11px; opacity: 0.9; margin-top: 6px; }
+  .accent-bar { height: 4px; background: {{ colors.accent or '#c41e3a' }}; margin: 16px 0; }
+  h2 { color: {{ colors.primary or '#1e4a8c' }}; font-size: 14px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 8px; }
+  td { padding: 6px 8px; border-bottom: 1px solid #eee; }
+  td.label { color: #666; width: 40%; }
+  .footer { margin-top: 32px; font-size: 9px; color: #888; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>{{ branding.appTitle }}</h1>
+    <div class="tagline">{{ pdf.headerTagline or '' }}</div>
+  </div>
+  <div class="accent-bar"></div>
+  <h2>Результат подбора</h2>
+  <p><strong>{{ summary }}</strong></p>
+  <h2>Конфигурация</h2>
+  <table>
+    {% for key, val in configuration.items() %}
+    <tr><td class="label">{{ key }}</td><td>{{ val }}</td></tr>
+    {% endfor %}
+  </table>
+  <div class="footer">{{ pdf.footerLegal or '' }}</div>
+</body>
+</html>

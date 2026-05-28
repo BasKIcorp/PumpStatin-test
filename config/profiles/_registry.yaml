@@ -1,0 +1,22 @@
+# Справочник профилей: тема и PDF всегда парой (один внешний вид — один стиль PDF)
+profiles:
+  - id: default
+    displayName: "Стрела — демо"
+    theme: theme-strela
+    pdfTemplate: strela-standard
+    layoutVariant: sidebar-brand
+  - id: acme-industrial
+    displayName: "ACME Industrial"
+    theme: theme-acme
+    pdfTemplate: acme-datasheet
+    layoutVariant: topbar-dark
+  - id: nord-minimal
+    displayName: "Nord Minimal"
+    theme: theme-nord
+    pdfTemplate: nord-compact
+    layoutVariant: minimal-light
+  - id: aqua-pro
+    displayName: "Aqua Pro"
+    theme: theme-aqua
+    pdfTemplate: aqua-report
+    layoutVariant: sidebar-gradient

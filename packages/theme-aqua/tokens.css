@@ -1,0 +1,12 @@
+:root {
+  --color-primary: #0077b6;
+  --color-primary-fg: #ffffff;
+  --color-accent: #00b4d8;
+  --color-background: #f0f9ff;
+  --color-card-footer: #023e8a;
+  --color-surface: #ffffff;
+  --color-text: #03045e;
+  --color-muted: #64748b;
+  --font-body: "Open Sans", system-ui, sans-serif;
+  --font-accent: "Caveat", cursive;
+}

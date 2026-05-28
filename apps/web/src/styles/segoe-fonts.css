@@ -1,0 +1,78 @@
+/* Segoe UI — файлы в /public/fonts/seui (из pump_station) */
+
+@font-face {
+  font-family: "Segoe UI";
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src:
+    url("/fonts/seui/segoe_ui_light.woff2") format("woff2"),
+    url("/fonts/seui/segoe_ui_light.woff") format("woff"),
+    url("/fonts/seui/segoe_ui_light.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Segoe UI";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src:
+    url("/fonts/seui/segoe_ui.woff2") format("woff2"),
+    url("/fonts/seui/segoe_ui.woff") format("woff"),
+    url("/fonts/seui/segoe_ui.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Segoe UI";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src:
+    url("/fonts/seui/segoe_ui_semibold.woff2") format("woff2"),
+    url("/fonts/seui/segoe_ui_semibold.woff") format("woff"),
+    url("/fonts/seui/segoe_ui_semibold.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Segoe UI";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src:
+    url("/fonts/seui/segoe_ui_gras.woff2") format("woff2"),
+    url("/fonts/seui/segoe_ui_gras.woff") format("woff"),
+    url("/fonts/seui/segoe_ui_gras.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Segoe UI";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src:
+    url("/fonts/seui/segoe_ui_italique.woff2") format("woff2"),
+    url("/fonts/seui/segoe_ui_italique.woff") format("woff"),
+    url("/fonts/seui/segoe_ui_italique.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Segoe UI";
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src:
+    url("/fonts/seui/segoe_ui_gras_italique.woff2") format("woff2"),
+    url("/fonts/seui/segoe_ui_gras_italique.woff") format("woff"),
+    url("/fonts/seui/segoe_ui_gras_italique.ttf") format("truetype");
+}
+
+/* Заголовки воронки и вертикальный wordmark — Semibold */
+@font-face {
+  font-family: "SegoeUISelectionSidebar";
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  src:
+    url("/fonts/seui/segoe_ui_semibold.woff2") format("woff2"),
+    url("/fonts/seui/segoe_ui_semibold.ttf") format("truetype");
+}

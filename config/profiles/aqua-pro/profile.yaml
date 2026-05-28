@@ -1,0 +1,18 @@
+id: aqua-pro
+displayName: "Aqua Pro"
+active: true
+
+theme: theme-aqua
+algorithm: bps_w_v1
+database: postgres
+pdfTemplate: aqua-report
+
+wizard:
+  navigation: wizard/navigation.yaml
+  defaultFlow: bps-w-domestic
+
+locale: ru-RU
+units:
+  flow: m3h
+  head: m
+  temperature: C

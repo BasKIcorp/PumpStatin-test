@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <style>
+    body { font-family: 'Open Sans', sans-serif; margin: 0; }
+    .top { background: linear-gradient(135deg, {{ colors.primary or '#0077b6' }}, {{ colors.cardFooter or '#023e8a' }});
+      color: white; padding: 28px 32px; }
+    h1 { margin: 0; font-size: 20px; }
+    .content { padding: 24px 32px; color: {{ colors.text or '#03045e' }}; }
+    h2 { color: {{ colors.accent or '#00b4d8' }}; font-size: 13px; }
+    table { width: 100%; font-size: 11px; border-collapse: collapse; }
+    td { padding: 8px; border-bottom: 1px solid #e2e8f0; }
+    .footer { background: #f0f9ff; padding: 12px 32px; font-size: 9px; color: #64748b; }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <h1>{{ branding.appTitle }}</h1>
+    <div style="font-size:11px;margin-top:6px;">{{ pdf.headerTagline or '' }}</div>
+  </div>
+  <div class="content">
+    <h2>Итог подбора</h2>
+    <p>{{ summary }}</p>
+    <table>
+      {% for key, val in configuration.items() %}
+      <tr><td><b>{{ key }}</b></td><td>{{ val }}</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+  <div class="footer">{{ pdf.footerLegal or '' }}</div>
+</body>
+</html>

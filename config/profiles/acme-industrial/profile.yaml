@@ -1,0 +1,18 @@
+id: acme-industrial
+displayName: "ACME Industrial"
+active: true
+
+theme: theme-acme
+algorithm: bps_w_v1
+database: postgres
+pdfTemplate: acme-datasheet
+
+wizard:
+  navigation: wizard/navigation.yaml
+  defaultFlow: bps-w-domestic
+
+locale: ru-RU
+units:
+  flow: m3h
+  head: m
+  temperature: C

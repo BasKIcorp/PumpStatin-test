@@ -1,0 +1,24 @@
+# Активный профиль приложения (демо «Стрела»)
+# Скопируйте папку default → config/profiles/<client-id>/ для нового заказчика
+
+id: default
+displayName: "Стрела — демо"
+active: true
+
+# Плагины backend (имена должны быть зарегистрированы в registry)
+theme: theme-strela
+algorithm: bps_w_v1
+database: postgres
+pdfTemplate: strela-standard
+
+# Корень навигации визарда (относительно этой папки профиля)
+wizard:
+  navigation: wizard/navigation.yaml
+  defaultFlow: bps-w-domestic
+
+# Локаль и единицы (расширяемо)
+locale: ru-RU
+units:
+  flow: m3h
+  head: m
+  temperature: C
