@@ -99,7 +99,7 @@ async def _persist_selection(
             parameters=body.parameters,
             station_payload=result,
         )
-        session.merge(record)
+        await session.merge(record)
         await session.commit()
 
 
