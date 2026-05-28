@@ -11,5 +11,10 @@ class JinjaThemePdf:
         self.theme_id = theme_id
         self._html_name = html_name  # зарезервировано для HTML-экспорта
 
-    def render(self, selection: dict[str, Any], branding: dict[str, Any]) -> bytes:
-        return build_themed_pdf(selection, branding, self.template_id)
+    def render(
+        self,
+        selection: dict[str, Any],
+        branding: dict[str, Any],
+        document_type: str = "selection",
+    ) -> bytes:
+        return build_themed_pdf(selection, branding, self.template_id, document_type)

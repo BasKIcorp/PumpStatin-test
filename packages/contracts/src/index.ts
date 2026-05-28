@@ -31,4 +31,5 @@ export interface BuildStationResponse {
 
 export interface GeneratePdfRequest {
   selectionId: string;
+  docType?: "selection" | "tkp" | "techsheet";
 }

@@ -30,14 +30,17 @@ export const matchPumps = (req: MatchPumpsRequest) =>
 export const buildStation = (req: BuildStationRequest) =>
   post<BuildStationResponse>("build-station", req);
 
-export const generatePdf = async (selectionId: string): Promise<Blob> => {
+export const generatePdf = async (
+  selectionId: string,
+  docType: "selection" | "tkp" | "techsheet" = "selection",
+): Promise<Blob> => {
   const res = await fetch(`${API_BASE}/api/v1/selection/generate-pdf`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       ...getAuthHeader(),
     },
-    body: JSON.stringify({ selectionId }),
+    body: JSON.stringify({ selectionId, docType }),
   });
   if (!res.ok) throw new Error("PDF generation failed");
   return res.blob();

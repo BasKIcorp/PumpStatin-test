@@ -27,6 +27,7 @@ class GeneratePdfBody(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     selection_id: str = Field(validation_alias="selectionId")
+    doc_type: str = Field(default="selection", validation_alias="docType")
 
 
 @router.post("/match-pumps")
@@ -70,11 +71,18 @@ def generate_pdf(
         raise HTTPException(404, "Selection not found")
     if selection.get("_profileId") != profile_id:
         raise HTTPException(403, "PDF недоступен для этого профиля")
-    content = pdf.render(selection, branding)
+    content = pdf.render(selection, branding, body.doc_type)
+    filename_suffix = (
+        "tkp"
+        if body.doc_type == "tkp"
+        else "techsheet"
+        if body.doc_type == "techsheet"
+        else "selection"
+    )
     return Response(
         content=content,
         media_type="application/pdf",
         headers={
-            "Content-Disposition": f'attachment; filename="{profile_id}-selection.pdf"'
+            "Content-Disposition": f'attachment; filename="{profile_id}-{filename_suffix}.pdf"'
         },
     )

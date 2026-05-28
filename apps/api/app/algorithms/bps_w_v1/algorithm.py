@@ -67,6 +67,9 @@ class BpsWV1Algorithm:
                 "expansionTank",
             )
         }
+        unit_price = int(120000 + (pump.get("power_kw") or 0) * 35000)
+        total_count = working + reserve
+        total_price = unit_price * max(total_count, 1)
         return {
             "selectionId": str(uuid4()),
             "configuration": {
@@ -81,6 +84,12 @@ class BpsWV1Algorithm:
                     "guaranteedHead": parameters.get("guaranteedHead"),
                 },
                 "options": options,
+            },
+            "commercial": {
+                "basePriceRub": 120000,
+                "unitPriceRub": unit_price,
+                "totalPriceRub": total_price,
+                "currency": "RUB",
             },
             "summary": (
                 f"Насосная станция {product_line.upper()} / {pump.get('name', selected_pump_id)} "

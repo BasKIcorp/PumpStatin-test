@@ -99,17 +99,17 @@ export function StrelaSelectionFormStep() {
     }
   };
 
-  const handlePdf = async () => {
+  const handlePdf = async (docType: "selection" | "tkp" | "techsheet", fileName: string) => {
     const id = (stationResult as { selectionId?: string })?.selectionId;
     if (!id) return;
     setBusy(true);
     setError("");
     try {
-      const blob = await generatePdf(id);
+      const blob = await generatePdf(id, docType);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "selection.pdf";
+      a.download = fileName;
       a.click();
       URL.revokeObjectURL(url);
     } catch (e) {
@@ -157,7 +157,12 @@ export function StrelaSelectionFormStep() {
         <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto lg:hidden">
           <ParamsPanel flow={flow} formValues={formValues} setFormValue={setFormValue} />
           <CurvesPanel />
-          <TechSpecsPanel working={working} reserve={reserve} />
+          <TechSpecsPanel
+            working={working}
+            reserve={reserve}
+            onTkp={stationResult ? () => void handlePdf("tkp", "tkp.pdf") : undefined}
+            onTechsheet={stationResult ? () => void handlePdf("techsheet", "techsheet.pdf") : undefined}
+          />
           <OptionsPanel
             flow={flow}
             formValues={formValues}
@@ -182,7 +187,11 @@ export function StrelaSelectionFormStep() {
             selectedPumpId={selectedPumpId}
             onSelect={setSelectedPumpId}
             summary={summary}
-            onPdf={flow.pdf?.enabled && stationResult ? handlePdf : undefined}
+            onPdf={
+              flow.pdf?.enabled && stationResult
+                ? () => void handlePdf("selection", "selection.pdf")
+                : undefined
+            }
             pdfLabel={flow.pdf?.label}
           />
         </div>
@@ -196,7 +205,13 @@ export function StrelaSelectionFormStep() {
 
             <div className="flex h-full min-h-0 min-w-0 items-stretch gap-3">
               <CurvesPanel className="min-h-0 min-w-0 flex-[1.71]" />
-              <TechSpecsPanel working={working} reserve={reserve} className="h-full min-w-0 flex-[1]" />
+              <TechSpecsPanel
+                working={working}
+                reserve={reserve}
+                className="h-full min-w-0 flex-[1]"
+                onTkp={stationResult ? () => void handlePdf("tkp", "tkp.pdf") : undefined}
+                onTechsheet={stationResult ? () => void handlePdf("techsheet", "techsheet.pdf") : undefined}
+              />
             </div>
 
             <OptionsPanel
@@ -224,7 +239,11 @@ export function StrelaSelectionFormStep() {
               selectedPumpId={selectedPumpId}
               onSelect={setSelectedPumpId}
               summary={summary}
-              onPdf={flow.pdf?.enabled && stationResult ? handlePdf : undefined}
+              onPdf={
+                flow.pdf?.enabled && stationResult
+                  ? () => void handlePdf("selection", "selection.pdf")
+                  : undefined
+              }
               pdfLabel={flow.pdf?.label}
             />
           </div>
@@ -286,10 +305,14 @@ function TechSpecsPanel({
   working,
   reserve,
   className,
+  onTkp,
+  onTechsheet,
 }: {
   working: number;
   reserve: number;
   className?: string;
+  onTkp?: () => void;
+  onTechsheet?: () => void;
 }) {
   const rows = [
     ["Количество насосов", `${working} раб. + ${reserve} рез.`],
@@ -315,8 +338,10 @@ function TechSpecsPanel({
         <div className="grid shrink-0 grid-cols-2 gap-2 border-t border-zinc-200 p-2">
           <button
             type="button"
+            onClick={onTkp}
+            disabled={!onTkp}
             className={cn(
-              "inline-flex items-center justify-center rounded-md px-2 py-2 text-center text-xs font-medium selection-work-btn-secondary",
+              "inline-flex items-center justify-center rounded-md px-2 py-2 text-center text-xs font-medium selection-work-btn-secondary disabled:cursor-not-allowed disabled:opacity-50",
               focusRing,
             )}
           >
@@ -324,8 +349,10 @@ function TechSpecsPanel({
           </button>
           <button
             type="button"
+            onClick={onTechsheet}
+            disabled={!onTechsheet}
             className={cn(
-              "inline-flex items-center justify-center rounded-md px-2 py-2 text-center text-xs font-medium selection-work-btn-secondary",
+              "inline-flex items-center justify-center rounded-md px-2 py-2 text-center text-xs font-medium selection-work-btn-secondary disabled:cursor-not-allowed disabled:opacity-50",
               focusRing,
             )}
           >

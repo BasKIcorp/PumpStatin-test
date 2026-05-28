@@ -48,6 +48,7 @@ def build_themed_pdf(
     selection: dict[str, Any],
     branding: dict[str, Any],
     template_id: str,
+    document_type: str = "selection",
 ) -> bytes:
     buf = BytesIO()
     doc = SimpleDocTemplate(
@@ -98,13 +99,50 @@ def build_themed_pdf(
         )
         story.append(Spacer(1, 6))
 
+    config = selection.get("configuration", {})
+    pump = config.get("pump", {}) if isinstance(config, dict) else {}
+    commercial = selection.get("commercial", {})
+
+    if document_type == "tkp":
+        story.append(Paragraph("<b>Технико-коммерческое предложение (ТКП)</b>", body))
+    elif document_type == "techsheet":
+        story.append(Paragraph("<b>Технический лист подобранного насоса</b>", body))
+    else:
+        story.append(Paragraph("<b>Результат подбора</b>", body))
     story.append(Paragraph(f"<b>{selection.get('summary', '')}</b>", body))
     story.append(Spacer(1, 12))
 
-    config = selection.get("configuration", {})
     rows = [["Параметр", "Значение"]]
-    for key, val in _flatten_config(config):
-        rows.append([str(key), str(val)])
+    if document_type == "tkp":
+        rows.extend(
+            [
+                ["Линейка", str(config.get("productLine", "—"))],
+                ["Насос", str(pump.get("name", "—"))],
+                ["Количество насосов", str(config.get("pumpCount", "—"))],
+                ["Базовая цена, руб", str(commercial.get("basePriceRub", "—"))],
+                ["Цена за насос, руб", str(commercial.get("unitPriceRub", "—"))],
+                ["Итоговая стоимость, руб", str(commercial.get("totalPriceRub", "—"))],
+            ]
+        )
+    elif document_type == "techsheet":
+        hydraulics = config.get("hydraulics", {}) if isinstance(config, dict) else {}
+        rows.extend(
+            [
+                ["Наименование", str(pump.get("name", "—"))],
+                ["ID насоса", str(pump.get("id", "—"))],
+                ["Номинальная подача, м3/ч", str(pump.get("nominal_flow", "—"))],
+                ["Номинальный напор, м", str(pump.get("nominal_head", "—"))],
+                ["Номинальная мощность, кВт", str(pump.get("power_kw", "—"))],
+                ["Расход системы, м3/ч", str(hydraulics.get("flowRate", "—"))],
+                ["Напор системы, м", str(hydraulics.get("head", "—"))],
+                ["Статический напор, м", str(hydraulics.get("staticHead", "—"))],
+                ["Гарантированный напор, м", str(hydraulics.get("guaranteedHead", "—"))],
+                ["Опции", ", ".join(f"{k}={v}" for k, v in config.get("options", {}).items()) or "—"],
+            ]
+        )
+    else:
+        for key, val in _flatten_config(config):
+            rows.append([str(key), str(val)])
 
     table = Table(rows, colWidths=[70 * mm, 95 * mm])
     table.setStyle(
