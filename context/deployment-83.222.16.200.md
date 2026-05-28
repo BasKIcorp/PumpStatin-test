@@ -41,7 +41,21 @@ ssh -i $env:USERPROFILE\.ssh\id_ed25519_pumpstatin root@83.222.16.200
 
 Полный тест на сервере: `python3 /opt/pumpstation-base/deploy/smoke_test.py`
 
-## Обновление
+## Автодеплой (GitHub Actions)
+
+При **push в ветку `base`** репозитория [BasKIcorp/PumpStatin-test](https://github.com/BasKIcorp/PumpStatin-test) запускается workflow `.github/workflows/deploy-base.yml`: архив → `/opt/pumpstation-base` → `deploy/remote-setup.sh`.
+
+### Секреты репозитория (Settings → Secrets → Actions)
+
+| Secret | Значение |
+|--------|----------|
+| `DEPLOY_HOST` | `83.222.16.200` |
+| `DEPLOY_USER` | `root` |
+| `DEPLOY_SSH_KEY` | приватный ключ `~/.ssh/id_ed25519_pumpstatin` (полное содержимое файла) |
+
+Проверка: **Actions** → workflow «Deploy base branch» после push.
+
+## Ручное обновление
 
 ```powershell
 cd c:\projects\PumpStation_Base

@@ -1,0 +1,58 @@
+name: Deploy base branch
+
+on:
+  push:
+    branches:
+      - base
+
+concurrency:
+  group: deploy-83-222-16-200
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create deployment archive
+        run: |
+          tar -czf pumpstation-base.tar.gz \
+            --exclude=node_modules \
+            --exclude=.git \
+            --exclude=dist \
+            --exclude=.venv \
+            --exclude=__pycache__ \
+            --exclude=.cursor/projects \
+            --exclude=assets \
+            .
+
+      - name: Upload archive to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: 22
+          source: pumpstation-base.tar.gz
+          target: /tmp/
+
+      - name: Extract, build, and restart services
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: 22
+          script_stop: true
+          script: |
+            set -eu
+            APP_ROOT=/opt/pumpstation-base
+            mkdir -p "$APP_ROOT"
+            tar -xzf /tmp/pumpstation-base.tar.gz -C "$APP_ROOT"
+            sed -i 's/\r$//' "$APP_ROOT"/deploy/*.sh
+            bash "$APP_ROOT/deploy/remote-setup.sh"
+            rm -f /tmp/pumpstation-base.tar.gz
