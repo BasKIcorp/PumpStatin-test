@@ -19,19 +19,30 @@ export interface PumpCurveInput {
   eta_s?: Array<number | null>;
 }
 
+function toFiniteNumber(value: unknown): number | null {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
 function buildCurveData(pump: PumpCurveInput, flowRate: number, head: number): Point[] {
   if (pump.curve?.length && pump.q_eta?.length && pump.eta_s?.length) {
     const allQ = Array.from(
       new Set([
-        ...pump.curve.map((p) => p.Q),
-        ...pump.q_eta.filter((q): q is number => q != null),
+        ...pump.curve.map((p) => toFiniteNumber(p.Q)).filter((q): q is number => q != null),
+        ...pump.q_eta.map((q) => toFiniteNumber(q)).filter((q): q is number => q != null),
       ]),
     ).sort((a, b) => a - b);
+    if (!allQ.length) return [];
     return allQ.map((q) => {
-      const h = pump.curve?.find((p) => Math.abs(p.Q - q) < 0.0001)?.H ?? 0;
+      const h = toFiniteNumber(
+        pump.curve?.find((p) => {
+          const pointQ = toFiniteNumber(p.Q);
+          return pointQ != null && Math.abs(pointQ - q) < 0.0001;
+        })?.H,
+      );
       const idx = pump.q_eta?.findIndex((qv) => qv != null && Math.abs(qv - q) < 0.0001) ?? -1;
-      const eta = idx >= 0 ? Number(pump.eta_s?.[idx] ?? 0) : 0;
-      return { q, h, eta };
+      const eta = idx >= 0 ? toFiniteNumber(pump.eta_s?.[idx]) : null;
+      return { q, h: h ?? 0, eta: eta ?? 0 };
     });
   }
   const qNom = Math.max(Number(pump.nominalFlow ?? flowRate ?? 20), 1);
@@ -68,8 +79,9 @@ export function PumpCurveChart({
   head: number;
 }) {
   const data = buildCurveData(pump, flowRate, head);
-  const qMaxRaw = Math.max(...data.map((d) => d.q), flowRate, 1);
-  const hMaxRaw = Math.max(...data.map((d) => d.h), head, 1);
+  const fallbackData = data.length > 0 ? data : buildCurveData({}, flowRate, head);
+  const qMaxRaw = Math.max(...fallbackData.map((d) => d.q), flowRate, 1);
+  const hMaxRaw = Math.max(...fallbackData.map((d) => d.h), head, 1);
   const qStep = roundStep(qMaxRaw);
   const hStep = roundStep(hMaxRaw);
   const qMax = Math.ceil(qMaxRaw / qStep) * qStep;
@@ -81,7 +93,7 @@ export function PumpCurveChart({
 
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <LineChart data={data} margin={{ top: 4, right: 6, left: 4, bottom: 8 }}>
+      <LineChart data={fallbackData} margin={{ top: 4, right: 6, left: 4, bottom: 8 }}>
         {hTicks.map((y) => (
           <ReferenceLine key={`h-${y}`} y={y} stroke="#d1d5db" strokeWidth={1} yAxisId="left" />
         ))}

@@ -19,22 +19,28 @@ export interface PowerNpshInput {
   npsh_s?: Array<number | null>;
 }
 
+function toFiniteNumber(value: unknown): number | null {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
 function buildPowerData(pump: PowerNpshInput, flowRate: number): Point[] {
   if (pump.q_p2?.length && pump.p2_s?.length && pump.q_npsh?.length && pump.npsh_s?.length) {
     const allQ = Array.from(
       new Set([
-        ...pump.q_p2.filter((q): q is number => q != null),
-        ...pump.q_npsh.filter((q): q is number => q != null),
+        ...pump.q_p2.map((q) => toFiniteNumber(q)).filter((q): q is number => q != null),
+        ...pump.q_npsh.map((q) => toFiniteNumber(q)).filter((q): q is number => q != null),
       ]),
     ).sort((a, b) => a - b);
+    if (!allQ.length) return [];
     return allQ.map((q) => {
       const p2Idx = pump.q_p2?.findIndex((qv) => qv != null && Math.abs(qv - q) < 0.0001) ?? -1;
       const npshIdx =
         pump.q_npsh?.findIndex((qv) => qv != null && Math.abs(qv - q) < 0.0001) ?? -1;
       return {
         q,
-        p2: p2Idx >= 0 ? Number(pump.p2_s?.[p2Idx] ?? 0) : 0,
-        npsh: npshIdx >= 0 ? Number(pump.npsh_s?.[npshIdx] ?? 0) : 0,
+        p2: p2Idx >= 0 ? (toFiniteNumber(pump.p2_s?.[p2Idx]) ?? 0) : 0,
+        npsh: npshIdx >= 0 ? (toFiniteNumber(pump.npsh_s?.[npshIdx]) ?? 0) : 0,
       };
     });
   }
@@ -69,9 +75,10 @@ export function PowerNpshChart({
   flowRate: number;
 }) {
   const data = buildPowerData(pump, flowRate);
-  const qMaxRaw = Math.max(...data.map((d) => d.q), flowRate, 1);
-  const pMaxRaw = Math.max(...data.map((d) => d.p2), 1);
-  const npshMaxRaw = Math.max(...data.map((d) => d.npsh), 1);
+  const fallbackData = data.length > 0 ? data : buildPowerData({}, flowRate);
+  const qMaxRaw = Math.max(...fallbackData.map((d) => d.q), flowRate, 1);
+  const pMaxRaw = Math.max(...fallbackData.map((d) => d.p2), 1);
+  const npshMaxRaw = Math.max(...fallbackData.map((d) => d.npsh), 1);
   const qStep = roundStep(qMaxRaw);
   const pStep = roundStep(pMaxRaw);
   const npshStep = 0.5;
@@ -88,7 +95,7 @@ export function PowerNpshChart({
 
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <LineChart data={data} margin={{ top: 4, right: 6, left: 4, bottom: 8 }}>
+      <LineChart data={fallbackData} margin={{ top: 4, right: 6, left: 4, bottom: 8 }}>
         {pTicks.map((y) => (
           <ReferenceLine key={`p-${y}`} y={y} stroke="#d1d5db" strokeWidth={1} yAxisId="left" />
         ))}
