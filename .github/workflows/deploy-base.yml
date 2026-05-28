@@ -20,6 +20,7 @@ jobs:
 
       - name: Create deployment archive
         run: |
+          # Exit code 1 = "file changed as we read it" (harmless on CI checkout)
           tar -czf pumpstation-base.tar.gz \
             --exclude=node_modules \
             --exclude=.git \
@@ -28,7 +29,7 @@ jobs:
             --exclude=__pycache__ \
             --exclude=.cursor/projects \
             --exclude=assets \
-            .
+            . || test $? -eq 1
 
       - name: Upload archive to server
         uses: appleboy/scp-action@v0.1.7
