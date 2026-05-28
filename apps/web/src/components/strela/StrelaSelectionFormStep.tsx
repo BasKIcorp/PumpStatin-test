@@ -82,8 +82,7 @@ export function StrelaSelectionFormStep() {
     }
   };
 
-  const handleBuild = async () => {
-    if (!selectedPumpId) return;
+  const buildStationForPump = async (pumpId: string) => {
     setBusy(true);
     setError("");
     try {
@@ -91,23 +90,35 @@ export function StrelaSelectionFormStep() {
         productLine: productLine ?? "bps-w",
         flowId,
         parameters: formValues,
-        selectedPumpId,
+        selectedPumpId: pumpId,
       });
       setStationResult(res);
+      return res;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Ошибка формирования станции");
+      return null;
     } finally {
       setBusy(false);
     }
   };
 
-  const handlePdf = async (docType: "selection" | "tkp" | "techsheet", fileName: string) => {
-    const id = (stationResult as { selectionId?: string })?.selectionId;
-    if (!id) return;
+  const handleBuild = async () => {
+    if (!selectedPumpId) {
+      setError("Сначала выберите насос");
+      return;
+    }
+    await buildStationForPump(selectedPumpId);
+  };
+
+  const handlePdfBySelectionId = async (
+    selectionId: string,
+    docType: "selection" | "tkp" | "techsheet",
+    fileName: string,
+  ) => {
     setBusy(true);
     setError("");
     try {
-      const blob = await generatePdf(id, docType);
+      const blob = await generatePdf(selectionId, docType);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -119,6 +130,20 @@ export function StrelaSelectionFormStep() {
     } finally {
       setBusy(false);
     }
+  };
+
+  const handlePdf = async (docType: "selection" | "tkp" | "techsheet", fileName: string) => {
+    let selectionId = (stationResult as { selectionId?: string } | null)?.selectionId ?? null;
+    if (!selectionId) {
+      if (!selectedPumpId) {
+        setError("Сначала выполните подбор и выберите насос");
+        return;
+      }
+      const built = await buildStationForPump(selectedPumpId);
+      selectionId = (built as { selectionId?: string } | null)?.selectionId ?? null;
+      if (!selectionId) return;
+    }
+    await handlePdfBySelectionId(selectionId, docType, fileName);
   };
 
   const pumps = (matchedPumps ?? []) as PumpCandidate[];
@@ -166,8 +191,8 @@ export function StrelaSelectionFormStep() {
           <TechSpecsPanel
             working={working}
             reserve={reserve}
-            onTkp={stationResult ? () => void handlePdf("tkp", "tkp.pdf") : undefined}
-            onTechsheet={stationResult ? () => void handlePdf("techsheet", "techsheet.pdf") : undefined}
+            onTkp={() => void handlePdf("tkp", "tkp.pdf")}
+            onTechsheet={() => void handlePdf("techsheet", "techsheet.pdf")}
           />
           <OptionsPanel
             flow={flow}
@@ -220,8 +245,8 @@ export function StrelaSelectionFormStep() {
                 working={working}
                 reserve={reserve}
                 className="h-full min-w-0 flex-[1]"
-                onTkp={stationResult ? () => void handlePdf("tkp", "tkp.pdf") : undefined}
-                onTechsheet={stationResult ? () => void handlePdf("techsheet", "techsheet.pdf") : undefined}
+                onTkp={() => void handlePdf("tkp", "tkp.pdf")}
+                onTechsheet={() => void handlePdf("techsheet", "techsheet.pdf")}
               />
             </div>
 
@@ -251,7 +276,7 @@ export function StrelaSelectionFormStep() {
               onSelect={setSelectedPumpId}
               summary={summary}
               onPdf={
-                flow.pdf?.enabled && stationResult
+                flow.pdf?.enabled
                   ? () => void handlePdf("selection", "selection.pdf")
                   : undefined
               }
@@ -409,6 +434,36 @@ function CurvesPanel({
                   aria-label="Кривая напора"
                 >
                   <rect x="0" y="0" width={chartWidth} height={chartHeight} fill="#ffffff" />
+                  {[0, 1, 2, 3, 4].map((i) => {
+                    const y = chartPad + ((chartHeight - chartPad * 2) / 4) * i;
+                    return (
+                      <line
+                        key={`h-grid-${i}`}
+                        x1={chartPad}
+                        x2={chartWidth - chartPad}
+                        y1={y}
+                        y2={y}
+                        stroke="#e5e7eb"
+                        strokeWidth="1"
+                      />
+                    );
+                  })}
+                  <line
+                    x1={chartPad}
+                    x2={chartPad}
+                    y1={chartPad}
+                    y2={chartHeight - chartPad}
+                    stroke="#9ca3af"
+                    strokeWidth="1"
+                  />
+                  <line
+                    x1={chartPad}
+                    x2={chartWidth - chartPad}
+                    y1={chartHeight - chartPad}
+                    y2={chartHeight - chartPad}
+                    stroke="#9ca3af"
+                    strokeWidth="1"
+                  />
                   <polyline
                     points={toPolyline(curveData.headCurve, chartWidth, chartHeight, chartPad)}
                     fill="none"
@@ -425,6 +480,17 @@ function CurvesPanel({
                       strokeWidth="2"
                     />
                   ) : null}
+                  <text x={chartPad + 4} y={chartPad + 12} fill="#6b7280" fontSize="11">
+                    H, м
+                  </text>
+                  <text
+                    x={chartWidth - chartPad - 24}
+                    y={chartHeight - chartPad - 6}
+                    fill="#6b7280"
+                    fontSize="11"
+                  >
+                    Q
+                  </text>
                 </svg>
               </div>
               <div className="relative bg-white">
@@ -435,12 +501,53 @@ function CurvesPanel({
                   aria-label="Кривая мощности"
                 >
                   <rect x="0" y="0" width={chartWidth} height={chartHeight} fill="#ffffff" />
+                  {[0, 1, 2, 3, 4].map((i) => {
+                    const y = chartPad + ((chartHeight - chartPad * 2) / 4) * i;
+                    return (
+                      <line
+                        key={`p-grid-${i}`}
+                        x1={chartPad}
+                        x2={chartWidth - chartPad}
+                        y1={y}
+                        y2={y}
+                        stroke="#e5e7eb"
+                        strokeWidth="1"
+                      />
+                    );
+                  })}
+                  <line
+                    x1={chartPad}
+                    x2={chartPad}
+                    y1={chartPad}
+                    y2={chartHeight - chartPad}
+                    stroke="#9ca3af"
+                    strokeWidth="1"
+                  />
+                  <line
+                    x1={chartPad}
+                    x2={chartWidth - chartPad}
+                    y1={chartHeight - chartPad}
+                    y2={chartHeight - chartPad}
+                    stroke="#9ca3af"
+                    strokeWidth="1"
+                  />
                   <polyline
                     points={toPolyline(curveData.powerCurve, chartWidth, chartHeight, chartPad)}
                     fill="none"
                     stroke="#0f172a"
                     strokeWidth="2.5"
                   />
+                  <text x={chartPad + 4} y={chartPad + 12} fill="#6b7280" fontSize="11">
+                    P2, кВт
+                  </text>
+                  <text
+                    x={chartWidth - chartPad - 24}
+                    y={chartHeight - chartPad - 6}
+                    fill="#6b7280"
+                    fontSize="11"
+                  >
+                    Q
+                  </text>
                 </svg>
               </div>
             </>

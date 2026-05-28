@@ -76,8 +76,7 @@ export function SelectionFormStep() {
     }
   };
 
-  const handleBuild = async () => {
-    if (!selectedPumpId) return;
+  const buildStationForPump = async (pumpId: string) => {
     setBusy(true);
     setError("");
     try {
@@ -85,22 +84,40 @@ export function SelectionFormStep() {
         productLine: productLine ?? "bps-w",
         flowId,
         parameters: formValues,
-        selectedPumpId,
+        selectedPumpId: pumpId,
       });
       setStationResult(res);
+      return res;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Ошибка формирования станции");
+      return null;
     } finally {
       setBusy(false);
     }
+  };
+
+  const handleBuild = async () => {
+    if (!selectedPumpId) {
+      setError("Сначала выберите насос");
+      return;
+    }
+    await buildStationForPump(selectedPumpId);
   };
 
   const handlePdf = async (
     docType: "selection" | "tkp" | "techsheet",
     fileName: string,
   ) => {
-    const id = (stationResult as { selectionId?: string })?.selectionId;
-    if (!id) return;
+    let id = (stationResult as { selectionId?: string } | null)?.selectionId ?? null;
+    if (!id) {
+      if (!selectedPumpId) {
+        setError("Сначала выполните подбор и выберите насос");
+        return;
+      }
+      const built = await buildStationForPump(selectedPumpId);
+      id = (built as { selectionId?: string } | null)?.selectionId ?? null;
+      if (!id) return;
+    }
     setBusy(true);
     setError("");
     try {
@@ -237,7 +254,7 @@ export function SelectionFormStep() {
             >
               {flow.actions.build?.label}
             </button>
-            {flow.pdf?.enabled && stationResult != null && (
+            {flow.pdf?.enabled && (
               <button
                 type="button"
                 onClick={() => void handlePdf("selection", "selection.pdf")}
@@ -255,7 +272,7 @@ export function SelectionFormStep() {
             <button
               type="button"
               onClick={() => void handlePdf("tkp", "tkp.pdf")}
-              disabled={busy || stationResult == null}
+              disabled={busy || !selectedPumpId}
               className={actionSecondaryClass}
               style={{
                 borderColor: "var(--color-primary)",
@@ -268,7 +285,7 @@ export function SelectionFormStep() {
             <button
               type="button"
               onClick={() => void handlePdf("techsheet", "techsheet.pdf")}
-              disabled={busy || stationResult == null}
+              disabled={busy || !selectedPumpId}
               className={actionSecondaryClass}
               style={{
                 borderColor: "var(--color-primary)",

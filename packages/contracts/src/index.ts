@@ -33,3 +33,22 @@ export interface GeneratePdfRequest {
   selectionId: string;
   docType?: "selection" | "tkp" | "techsheet";
 }
+
+export interface SelectionHistoryItem {
+  selection_id: string;
+  profile_id: string;
+  product_line: string;
+  flow_id: string;
+  selected_pump_id: string;
+  summary: string;
+  project_id: number | null;
+  created_at: string;
+  station_payload: Record<string, unknown>;
+}
+
+export interface SelectionProjectItem {
+  id: number;
+  name: string;
+  created_at: string;
+  selections_count: number;
+}

@@ -3,6 +3,8 @@ import type {
   BuildStationResponse,
   MatchPumpsRequest,
   MatchPumpsResponse,
+  SelectionHistoryItem,
+  SelectionProjectItem,
 } from "@pumpstation/contracts";
 import { getAuthHeader } from "@/stores/authStore";
 
@@ -45,3 +47,52 @@ export const generatePdf = async (
   if (!res.ok) throw new Error("PDF generation failed");
   return res.blob();
 };
+
+export async function getSelectionHistory(): Promise<SelectionHistoryItem[]> {
+  const res = await fetch(`${API_BASE}/api/v1/selection/history`, {
+    headers: {
+      ...getAuthHeader(),
+    },
+  });
+  if (!res.ok) throw new Error("Failed to load history");
+  const data = (await res.json()) as { items: SelectionHistoryItem[] };
+  return data.items;
+}
+
+export async function getSelectionProjects(): Promise<SelectionProjectItem[]> {
+  const res = await fetch(`${API_BASE}/api/v1/selection/projects`, {
+    headers: {
+      ...getAuthHeader(),
+    },
+  });
+  if (!res.ok) throw new Error("Failed to load projects");
+  const data = (await res.json()) as { items: SelectionProjectItem[] };
+  return data.items;
+}
+
+export async function createSelectionProject(name: string): Promise<{ id: number; name: string }> {
+  const res = await fetch(`${API_BASE}/api/v1/selection/projects`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAuthHeader(),
+    },
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) throw new Error("Failed to create project");
+  return res.json();
+}
+
+export async function attachSelectionsToProject(projectId: number, selectionIds: string[]): Promise<number> {
+  const res = await fetch(`${API_BASE}/api/v1/selection/projects/${projectId}/selections`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAuthHeader(),
+    },
+    body: JSON.stringify({ selectionIds }),
+  });
+  if (!res.ok) throw new Error("Failed to attach selections");
+  const data = (await res.json()) as { attached: number };
+  return data.attached;
+}

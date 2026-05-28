@@ -10,6 +10,12 @@ export function FunnelHeaderRight({ loginLabel = "Войти" }: { loginLabel?: 
   if (user) {
     return (
       <div className="flex shrink-0 items-center gap-2">
+        <Link
+          href="/cabinet"
+          className="text-sm font-semibold text-[var(--funnel-primary)] hover:underline"
+        >
+          Кабинет
+        </Link>
         {isAdmin ? (
           <Link
             href="/admin"
