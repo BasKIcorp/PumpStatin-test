@@ -398,20 +398,21 @@ function CurvesPanel({
   return (
     <WorkPanel title="Кривые характеристик" className={cn("h-full", className)}>
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-2">
-        <div className="grid min-h-0 flex-1 grid-rows-2 overflow-hidden rounded-md border border-[var(--funnel-accent)] bg-[var(--funnel-button-bg)]/85">
+        <div className="grid min-h-0 flex-1 grid-rows-2 overflow-hidden rounded-md border border-[var(--funnel-panel-border)] bg-white">
           {curveData ? (
             <>
-              <div className="relative border-b border-[color:color-mix(in_srgb,var(--funnel-button-bg)_70%,#000)]">
+              <div className="relative border-b border-[var(--funnel-panel-border)] bg-white">
                 <svg
                   viewBox={`0 0 ${chartWidth} ${chartHeight}`}
                   className="h-full w-full"
                   preserveAspectRatio="none"
                   aria-label="Кривая напора"
                 >
+                  <rect x="0" y="0" width={chartWidth} height={chartHeight} fill="#ffffff" />
                   <polyline
                     points={toPolyline(curveData.headCurve, chartWidth, chartHeight, chartPad)}
                     fill="none"
-                    stroke="rgba(145,247,255,0.95)"
+                    stroke="#13347f"
                     strokeWidth="2.5"
                   />
                   {dutySvgPoint ? (
@@ -420,23 +421,24 @@ function CurvesPanel({
                       cy={dutySvgPoint.y}
                       r="4.2"
                       fill="#0b132f"
-                      stroke="#71d0f9"
+                      stroke="#ffffff"
                       strokeWidth="2"
                     />
                   ) : null}
                 </svg>
               </div>
-              <div className="relative">
+              <div className="relative bg-white">
                 <svg
                   viewBox={`0 0 ${chartWidth} ${chartHeight}`}
                   className="h-full w-full"
                   preserveAspectRatio="none"
                   aria-label="Кривая мощности"
                 >
+                  <rect x="0" y="0" width={chartWidth} height={chartHeight} fill="#ffffff" />
                   <polyline
                     points={toPolyline(curveData.powerCurve, chartWidth, chartHeight, chartPad)}
                     fill="none"
-                    stroke="rgba(250,250,250,0.9)"
+                    stroke="#0f172a"
                     strokeWidth="2.5"
                   />
                 </svg>
@@ -444,10 +446,10 @@ function CurvesPanel({
             </>
           ) : (
             <>
-              <div className="flex items-center justify-center border-b border-[color:color-mix(in_srgb,var(--funnel-button-bg)_70%,#000)] text-center text-3xl font-medium text-black/90">
+              <div className="flex items-center justify-center border-b border-[var(--funnel-panel-border)] bg-white text-center text-3xl font-medium text-black/85">
                 Выберите насос
               </div>
-              <div className="flex items-center justify-center text-center text-3xl font-medium text-[color:color-mix(in_srgb,var(--funnel-panel-border)_55%,black)]">
+              <div className="flex items-center justify-center bg-white text-center text-3xl font-medium text-[color:color-mix(in_srgb,var(--funnel-panel-border)_55%,black)]">
                 Выберите насос
               </div>
             </>

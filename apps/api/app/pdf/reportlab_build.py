@@ -44,6 +44,19 @@ def _hex(color: str, fallback: str = "#1e4a8c") -> colors.Color:
     return colors.HexColor(fallback)
 
 
+def _format_rub(value: Any) -> str:
+    if value is None:
+        return "по запросу"
+    try:
+        num = float(value)
+    except (TypeError, ValueError):
+        text = str(value).strip()
+        return text or "по запросу"
+    if num <= 0:
+        return "по запросу"
+    return f"{int(round(num)):,}".replace(",", " ")
+
+
 def build_themed_pdf(
     selection: dict[str, Any],
     branding: dict[str, Any],
@@ -104,7 +117,7 @@ def build_themed_pdf(
     commercial = selection.get("commercial", {})
 
     if document_type == "tkp":
-        story.append(Paragraph("<b>Технико-коммерческое предложение (ТКП)</b>", body))
+        story.append(Paragraph("<b>КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ</b>", body))
     elif document_type == "techsheet":
         story.append(Paragraph("<b>Технический лист подобранного насоса</b>", body))
     else:
@@ -114,14 +127,54 @@ def build_themed_pdf(
 
     rows = [["Параметр", "Значение"]]
     if document_type == "tkp":
+        pump_name = str(pump.get("name", "—"))
+        pump_count = str(config.get("pumpCount", "—"))
+        unit_price = _format_rub(commercial.get("unitPriceRub"))
+        total_price = _format_rub(commercial.get("totalPriceRub"))
+        story.append(Paragraph("<b>Цены и условия оплаты: розница</b>", body))
+        story.append(Spacer(1, 6))
+        offer_rows = [
+            [
+                "№",
+                "Описание",
+                "Кол-во, шт",
+                "Цена, руб",
+                "Сумма, руб",
+            ],
+            [
+                "1",
+                pump_name,
+                "1",
+                unit_price,
+                total_price,
+            ],
+        ]
+        offer_table = Table(offer_rows, colWidths=[10 * mm, 87 * mm, 22 * mm, 28 * mm, 28 * mm])
+        offer_table.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.whitesmoke),
+                    ("FONTNAME", (0, 0), (-1, 0), font),
+                    ("FONTNAME", (0, 1), (-1, -1), font),
+                    ("GRID", (0, 0), (-1, -1), 0.6, colors.black),
+                    ("ALIGN", (0, 0), (0, -1), "CENTER"),
+                    ("ALIGN", (2, 0), (-1, -1), "CENTER"),
+                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                    ("FONTSIZE", (0, 0), (-1, -1), 9),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                ]
+            )
+        )
+        story.append(offer_table)
+        story.append(Spacer(1, 8))
+        story.append(Paragraph(f"<b>Итого, с НДС:</b> {total_price} руб", body))
+        story.append(Spacer(1, 12))
         rows.extend(
             [
                 ["Линейка", str(config.get("productLine", "—"))],
-                ["Насос", str(pump.get("name", "—"))],
-                ["Количество насосов", str(config.get("pumpCount", "—"))],
-                ["Базовая цена, руб", str(commercial.get("basePriceRub", "—"))],
-                ["Цена за насос, руб", str(commercial.get("unitPriceRub", "—"))],
-                ["Итоговая стоимость, руб", str(commercial.get("totalPriceRub", "—"))],
+                ["Насос", pump_name],
+                ["Количество насосов", pump_count],
+                ["Базовая цена, руб", _format_rub(commercial.get("basePriceRub"))],
             ]
         )
     elif document_type == "techsheet":
@@ -138,6 +191,8 @@ def build_themed_pdf(
                 ["Статический напор, м", str(hydraulics.get("staticHead", "—"))],
                 ["Гарантированный напор, м", str(hydraulics.get("guaranteedHead", "—"))],
                 ["Опции", ", ".join(f"{k}={v}" for k, v in config.get("options", {}).items()) or "—"],
+                ["Цена за насос, руб", _format_rub(commercial.get("unitPriceRub"))],
+                ["Итоговая стоимость, руб", _format_rub(commercial.get("totalPriceRub"))],
             ]
         )
     else:
