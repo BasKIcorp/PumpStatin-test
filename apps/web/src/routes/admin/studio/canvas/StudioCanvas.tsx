@@ -1,20 +1,22 @@
 import { useCallback, useRef, useState, type ReactNode } from "react";
 
 /**
- * Canvas с зумом, панарамированием и выделением.
- * Оборачивает children в scaled/translated контейнер.
+ * Canvas с зумом, панарамированием, выделением и дроп-зоной.
  */
 export function StudioCanvas({
   children,
   onSelect,
+  onDropBlock,
 }: {
   children: ReactNode;
   selectedId?: string | null;
   onSelect: (id: string | null) => void;
+  onDropBlock?: (type: string) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(0.5);
   const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isDragOver, setIsDragOver] = useState(false);
   const isPanning = useRef(false);
   const panStart = useRef({ x: 0, y: 0 });
   const panStartPos = useRef({ x: 0, y: 0 });
@@ -29,7 +31,7 @@ export function StudioCanvas({
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
-      if (e.target === containerRef.current || (e.target as HTMLElement).closest('[data-canvas-bg]')) {
+      if (e.target === containerRef.current || (e.target as HTMLElement).closest("[data-canvas-bg]")) {
         isPanning.current = true;
         panStart.current = { x: e.clientX, y: e.clientY };
         panStartPos.current = { x: pan.x, y: pan.y };
@@ -56,6 +58,31 @@ export function StudioCanvas({
     isPanning.current = false;
   }, []);
 
+  // Drag & drop from palette
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    if (e.dataTransfer.types.includes("text/plain")) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "copy";
+      setIsDragOver(true);
+    }
+  }, []);
+
+  const handleDragLeave = useCallback(() => {
+    setIsDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragOver(false);
+      const type = e.dataTransfer.getData("text/plain");
+      if (type && onDropBlock) {
+        onDropBlock(type);
+      }
+    },
+    [onDropBlock],
+  );
+
   const zoomIn = () => setZoom((z) => Math.min(2, z + 0.1));
   const zoomOut = () => setZoom((z) => Math.max(0.2, z - 0.1));
   const resetView = () => {
@@ -71,46 +98,35 @@ export function StudioCanvas({
           <span>Масштаб: {Math.round(zoom * 100)}%</span>
         </div>
         <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={zoomOut}
-            className="rounded px-2 py-0.5 text-xs hover:bg-neutral-100"
-            title="Уменьшить"
-          >
-            −
-          </button>
-          <button
-            type="button"
-            onClick={resetView}
-            className="rounded px-2 py-0.5 text-xs hover:bg-neutral-100"
-            title="Сбросить вид"
-          >
-            ⊞
-          </button>
-          <button
-            type="button"
-            onClick={zoomIn}
-            className="rounded px-2 py-0.5 text-xs hover:bg-neutral-100"
-            title="Увеличить"
-          >
-            +
-          </button>
+          <button type="button" onClick={zoomOut} className="rounded px-2 py-0.5 text-xs hover:bg-neutral-100" title="Уменьшить">−</button>
+          <button type="button" onClick={resetView} className="rounded px-2 py-0.5 text-xs hover:bg-neutral-100" title="Сбросить вид">⊞</button>
+          <button type="button" onClick={zoomIn} className="rounded px-2 py-0.5 text-xs hover:bg-neutral-100" title="Увеличить">+</button>
         </div>
       </div>
 
       {/* Canvas viewport */}
       <div
         ref={containerRef}
-        className="relative flex-1 cursor-grab overflow-hidden active:cursor-grabbing"
+        className={`relative flex-1 overflow-hidden transition-colors ${
+          isDragOver ? "bg-blue-50" : "cursor-grab active:cursor-grabbing"
+        }`}
         onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        onMouseLeave={() => {
+          handleMouseUp();
+          handleDragLeave();
+        }}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
       >
         {/* Desktop preview frame */}
         <div
-          className="absolute left-1/2 top-8 overflow-hidden rounded-lg border border-neutral-300 bg-white shadow-lg"
+          className={`absolute left-1/2 top-8 overflow-hidden rounded-lg border bg-white shadow-lg transition-shadow ${
+            isDragOver ? "border-blue-400 shadow-blue-200" : "border-neutral-300"
+          }`}
           style={{
             width: 1024,
             minHeight: 700,

@@ -12,24 +12,26 @@ export function HeroBlock({ block }: BlockProps) {
   const style: React.CSSProperties = {};
   if (props.background) {
     style.backgroundColor = props.background;
+    style.color = "#ffffff";
   }
 
   return (
-    <section className="hero-block flex min-h-[50vh] flex-col items-center justify-center px-6 py-20 text-center"
+    <section
+      className="hero-block flex min-h-[30vh] flex-col items-center justify-center px-6 py-16 text-center"
       style={style}
     >
-      <h1 className="mb-4 max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl">
+      <h1 className="mb-3 max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl">
         {props.heading ?? "Заголовок"}
       </h1>
       {props.subheading && (
-        <p className="mb-8 max-w-2xl text-lg text-muted-foreground sm:text-xl">
+        <p className="mb-6 max-w-2xl text-base text-white/80 sm:text-lg">
           {props.subheading}
         </p>
       )}
       {props.cta && (
         <Link
           href={props.cta.pageId ? `/${props.cta.pageId}` : "/"}
-          className="inline-flex items-center justify-center rounded-md bg-primary px-8 py-3 text-base font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90"
+          className="inline-flex items-center justify-center rounded-md bg-white/20 px-8 py-3 text-base font-medium text-white shadow backdrop-blur transition-colors hover:bg-white/30"
         >
           {props.cta.label}
         </Link>

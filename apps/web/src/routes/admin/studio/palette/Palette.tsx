@@ -19,14 +19,17 @@ export function Palette({
   const [category, setCategory] = useState<string | null>(null);
 
   const filtered = schemas.filter((s) => {
-    if (filter) {
-      return s.label.toLowerCase().includes(filter.toLowerCase());
-    }
+    if (filter) return s.label.toLowerCase().includes(filter.toLowerCase());
     if (category) return s.category === category;
     return true;
   });
 
   const categories = [...new Set(schemas.map((s) => s.category))];
+
+  const handleDragStart = (e: React.DragEvent, type: string) => {
+    e.dataTransfer.setData("text/plain", type);
+    e.dataTransfer.effectAllowed = "copy";
+  };
 
   return (
     <div className="space-y-2">
@@ -76,15 +79,16 @@ export function Palette({
 
       <div className="space-y-1">
         {filtered.map((s) => (
-          <button
+          <div
             key={s.type}
-            type="button"
+            draggable
+            onDragStart={(e) => handleDragStart(e, s.type)}
             onClick={() => onAddBlock(s.type)}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-neutral-700 hover:bg-neutral-100"
+            className="flex w-full cursor-grab items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-neutral-700 hover:bg-neutral-100 active:cursor-grabbing"
           >
             <span className="text-sm">{s.icon}</span>
             <span>{s.label}</span>
-          </button>
+          </div>
         ))}
         {filtered.length === 0 && (
           <p className="py-2 text-center text-[11px] text-neutral-400">Нет блоков</p>

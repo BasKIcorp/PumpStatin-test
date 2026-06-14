@@ -82,8 +82,8 @@ export function CanvasBlock({
         </button>
       </div>
 
-      {/* Рендер блока в режиме preview */}
-      <div className={isSelected ? "pointer-events-none" : "pointer-events-none"}>
+      {/* Рендер блока */}
+      <div className={isSelected ? "pointer-events-none" : ""}>
         {Component ? (
           <Component block={block} profile={{}} />
         ) : (
