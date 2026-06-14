@@ -1,17 +1,21 @@
 import { useCallback, useRef, useState, type ReactNode } from "react";
 
 /**
- * Canvas с зумом, панарамированием, выделением и дроп-зоной.
+ * Canvas с зумом, панарамированием, дроп-зоной и превью-режимом.
  */
 export function StudioCanvas({
   children,
   onSelect,
   onDropBlock,
+  previewMode,
+  onTogglePreview,
 }: {
   children: ReactNode;
   selectedId?: string | null;
   onSelect: (id: string | null) => void;
   onDropBlock?: (type: string) => void;
+  previewMode?: boolean;
+  onTogglePreview?: () => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(0.5);
@@ -46,10 +50,7 @@ export function StudioCanvas({
       if (!isPanning.current) return;
       const dx = e.clientX - panStart.current.x;
       const dy = e.clientY - panStart.current.y;
-      setPan({
-        x: panStartPos.current.x + dx,
-        y: panStartPos.current.y + dy,
-      });
+      setPan({ x: panStartPos.current.x + dx, y: panStartPos.current.y + dy });
     },
     [],
   );
@@ -58,7 +59,6 @@ export function StudioCanvas({
     isPanning.current = false;
   }, []);
 
-  // Drag & drop from palette
   const handleDragOver = useCallback((e: React.DragEvent) => {
     if (e.dataTransfer.types.includes("text/plain")) {
       e.preventDefault();
@@ -67,44 +67,48 @@ export function StudioCanvas({
     }
   }, []);
 
-  const handleDragLeave = useCallback(() => {
-    setIsDragOver(false);
-  }, []);
-
+  const handleDragLeave = useCallback(() => setIsDragOver(false), []);
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
       setIsDragOver(false);
       const type = e.dataTransfer.getData("text/plain");
-      if (type && onDropBlock) {
-        onDropBlock(type);
-      }
+      if (type && onDropBlock) onDropBlock(type);
     },
     [onDropBlock],
   );
 
   const zoomIn = () => setZoom((z) => Math.min(2, z + 0.1));
   const zoomOut = () => setZoom((z) => Math.max(0.2, z - 0.1));
-  const resetView = () => {
-    setZoom(0.5);
-    setPan({ x: 0, y: 0 });
-  };
+  const resetView = () => { setZoom(0.5); setPan({ x: 0, y: 0 }); };
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden rounded-lg border border-neutral-200 bg-neutral-100">
-      {/* Панель инструментов */}
       <div className="flex items-center justify-between border-b border-neutral-200 bg-white px-3 py-1.5">
         <div className="flex items-center gap-1 text-xs text-neutral-500">
           <span>Масштаб: {Math.round(zoom * 100)}%</span>
         </div>
         <div className="flex items-center gap-1">
-          <button type="button" onClick={zoomOut} className="rounded px-2 py-0.5 text-xs hover:bg-neutral-100" title="Уменьшить">−</button>
-          <button type="button" onClick={resetView} className="rounded px-2 py-0.5 text-xs hover:bg-neutral-100" title="Сбросить вид">⊞</button>
-          <button type="button" onClick={zoomIn} className="rounded px-2 py-0.5 text-xs hover:bg-neutral-100" title="Увеличить">+</button>
+          <button type="button" onClick={zoomOut} className="rounded px-2 py-0.5 text-xs hover:bg-neutral-100">−</button>
+          <button type="button" onClick={resetView} className="rounded px-2 py-0.5 text-xs hover:bg-neutral-100">⊞</button>
+          <button type="button" onClick={zoomIn} className="rounded px-2 py-0.5 text-xs hover:bg-neutral-100">+</button>
+          <span className="mx-1 text-neutral-300">|</span>
+          {onTogglePreview && (
+            <button
+              type="button"
+              onClick={onTogglePreview}
+              className={`rounded px-2 py-0.5 text-xs ${
+                previewMode
+                  ? "bg-green-600 text-white"
+                  : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+              }`}
+            >
+              {previewMode ? "👁 Превью" : "👁"}
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Canvas viewport */}
       <div
         ref={containerRef}
         className={`relative flex-1 overflow-hidden transition-colors ${
@@ -114,15 +118,11 @@ export function StudioCanvas({
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        onMouseLeave={() => {
-          handleMouseUp();
-          handleDragLeave();
-        }}
+        onMouseLeave={() => { handleMouseUp(); handleDragLeave(); }}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
-        {/* Desktop preview frame */}
         <div
           className={`absolute left-1/2 top-8 overflow-hidden rounded-lg border bg-white shadow-lg transition-shadow ${
             isDragOver ? "border-blue-400 shadow-blue-200" : "border-neutral-300"
@@ -134,9 +134,15 @@ export function StudioCanvas({
             transformOrigin: "top center",
           }}
         >
-          <div data-canvas-bg className="min-h-full">
-            {children}
-          </div>
+          {previewMode ? (
+            <div className="flex items-center justify-center p-8 text-sm text-neutral-500">
+              Превью загружается в отдельном окне
+            </div>
+          ) : (
+            <div data-canvas-bg className="min-h-full">
+              {children}
+            </div>
+          )}
         </div>
       </div>
     </div>
