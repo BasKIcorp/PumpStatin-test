@@ -1,3 +1,17 @@
+export type {
+  SiteConfig,
+  LayoutConfig,
+  HeaderConfig,
+  FooterConfig,
+  PageConfig,
+  BlockConfig,
+  BlockProps,
+  BlockRegistry,
+  MenuItem,
+  FooterColumn,
+  FooterLink,
+} from "./site.js";
+
 /** Общие типы API (синхронизировать с OpenAPI при внедрении) */
 
 export interface MatchPumpsRequest {

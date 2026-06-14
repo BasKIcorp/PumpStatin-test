@@ -1,0 +1,97 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SiteConfig",
+  "description": "Конфигурация сайта PumpStation: layout, страницы, блоки",
+  "type": "object",
+  "required": ["layout", "pages"],
+  "properties": {
+    "layout": {
+      "type": "object",
+      "required": ["header", "footer"],
+      "properties": {
+        "header": {
+          "type": "object",
+          "required": ["logo", "menu"],
+          "properties": {
+            "logo": {
+              "type": "object",
+              "required": ["src", "width", "link"],
+              "properties": {
+                "src": { "type": "string" },
+                "width": { "type": "integer", "minimum": 1 },
+                "link": { "type": "string" }
+              }
+            },
+            "menu": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["label", "pageId"],
+                "properties": {
+                  "label": { "type": "string" },
+                  "pageId": { "type": "string" }
+                }
+              }
+            },
+            "loginButton": { "type": "boolean" }
+          }
+        },
+        "footer": {
+          "type": "object",
+          "required": ["columns", "copyright"],
+          "properties": {
+            "columns": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["title"],
+                "properties": {
+                  "title": { "type": "string" },
+                  "links": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": ["label", "pageId"],
+                      "properties": {
+                        "label": { "type": "string" },
+                        "pageId": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "copyright": { "type": "string" }
+          }
+        }
+      }
+    },
+    "pages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "route"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "route": { "type": "string" },
+          "inMenu": { "type": "boolean" },
+          "type": { "type": "string", "enum": ["page", "wizard"] },
+          "wizardRef": { "type": "string" },
+          "blocks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "type"],
+              "properties": {
+                "id": { "type": "string" },
+                "type": { "type": "string" },
+                "props": { "type": "object" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,28 @@
+layout:
+  header:
+    logo:
+      src: /logo.svg
+      width: 180
+      link: /
+    menu:
+    - label: Подбор насосов
+      pageId: wizard
+    loginButton: true
+  footer:
+    columns:
+    - title: Продукты
+      links:
+      - label: Подбор насосов
+        pageId: wizard
+    - title: Помощь
+      links:
+      - label: Кабинет
+        pageId: cabinet
+    copyright: © PumpStation. Все права защищены.
+pages:
+- id: wizard
+  title: Подбор насосов
+  route: /
+  inMenu: true
+  type: wizard
+  wizardRef: wizard/navigation.yaml

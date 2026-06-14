@@ -8,6 +8,8 @@ import yaml
 from app.core.config import ACCOUNTS_DIR, PROFILES_DIR
 from app.core.profile_loader import THEME_PDF_PAIRS, validate_profile_plugins
 
+SITE_FILENAME = "site.yaml"
+
 
 def load_yaml(path: Path) -> dict[str, Any]:
     if not path.exists():
@@ -94,6 +96,19 @@ def load_branding_yaml(profile_id: str) -> dict[str, Any]:
 def save_branding_yaml(profile_id: str, data: dict[str, Any]) -> dict[str, Any]:
     save_yaml(PROFILES_DIR / profile_id / "branding.yaml", data)
     return data
+
+
+def load_site_yaml(profile_id: str) -> dict:
+    path = PROFILES_DIR / profile_id / SITE_FILENAME
+    if not path.is_file():
+        from app.schemas.site import get_default_site
+
+        return get_default_site(profile_id)
+    return load_yaml(path)
+
+
+def save_site_yaml(profile_id: str, data: dict) -> None:
+    save_yaml(PROFILES_DIR / profile_id / SITE_FILENAME, data)
 
 
 def list_pdf_templates() -> list[dict[str, str]]:

@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import admin, auth, catalog, config, selection
+from app.api.routes import admin, admin_site, auth, catalog, config, selection
 from app.core.config import settings
 from app.db.init_db import init_database
 
@@ -35,6 +35,7 @@ app.include_router(config.router, prefix="/api/v1/config", tags=["config"])
 app.include_router(catalog.router, prefix="/api/v1/catalog", tags=["catalog"])
 app.include_router(selection.router, prefix="/api/v1/selection", tags=["selection"])
 app.include_router(admin.router, prefix="/api/v1/admin", tags=["admin"])
+app.include_router(admin_site.router, prefix="/api/v1/admin", tags=["admin"])
 
 
 @app.get("/health")

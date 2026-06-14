@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "wouter";
 import {
   fetchAdminMeta,
   fetchAdminProfileDetail,
@@ -96,21 +97,28 @@ export function AdminProfilesPage() {
 
       <div className="flex flex-wrap gap-2">
         {rows.map((r) => (
-          <button
-            key={r.profile.id}
-            type="button"
-            onClick={() => {
-              setSelectedId(r.profile.id);
-              setMessage("");
-            }}
-            className={`rounded-md border px-3 py-1.5 text-sm ${
-              selectedId === r.profile.id
-                ? "border-[#13347f] bg-[#13347f] text-white"
-                : "border-neutral-300 bg-white hover:bg-neutral-50"
-            }`}
-          >
-            {r.profile.displayName ?? r.profile.id}
-          </button>
+          <div key={r.profile.id} className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedId(r.profile.id);
+                setMessage("");
+              }}
+              className={`rounded-md border px-3 py-1.5 text-sm ${
+                selectedId === r.profile.id
+                  ? "border-[#13347f] bg-[#13347f] text-white"
+                  : "border-neutral-300 bg-white hover:bg-neutral-50"
+              }`}
+            >
+              {r.profile.displayName ?? r.profile.id}
+            </button>
+            <Link
+              href={`/admin/profiles/${r.profile.id}`}
+              className="rounded-md border border-blue-300 bg-blue-50 px-2 py-1.5 text-xs text-blue-700 hover:bg-blue-100"
+            >
+              ✎ Конструктор
+            </Link>
+          </div>
         ))}
       </div>
 

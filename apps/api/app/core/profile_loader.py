@@ -48,10 +48,13 @@ def load_profile_bundle(profile_id: str | None = None) -> dict[str, Any]:
             flow = _load_yaml(flow_file)
             flows[flow.get("id", flow_file.stem)] = flow
 
+    from app.services.config_store import load_site_yaml
+
     return {
         "profile": profile,
         "branding": branding,
         "wizard": {"navigation": navigation, "flows": flows},
+        "site": load_site_yaml(pid),
     }
 
 

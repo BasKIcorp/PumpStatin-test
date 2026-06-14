@@ -1,4 +1,6 @@
+import { apiFetch } from "./client";
 import type { StrelaAppearance } from "@/lib/strela/appearance";
+import type { SiteConfig } from "@pumpstation/contracts";
 
 export interface BrandingConfig {
   appTitle: string;
@@ -28,4 +30,8 @@ export interface ProfileBundle {
     navigation: unknown;
     flows: Record<string, unknown>;
   };
+}
+
+export function fetchSiteConfig(): Promise<SiteConfig> {
+  return apiFetch<SiteConfig>("/api/v1/config/site");
 }

@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends
 from app.api.deps import get_current_user
 from app.core.config import settings
 from app.core.profile_loader import list_profiles, load_profile_bundle
+from app.services.config_store import load_site_yaml
 
 router = APIRouter()
 
@@ -19,3 +20,10 @@ def get_profile(user: Annotated[dict | None, Depends(get_current_user)]):
 @router.get("/profiles")
 def get_profiles_registry():
     return {"profiles": list_profiles()}
+
+
+@router.get("/site")
+def get_site_config(user: Annotated[dict | None, Depends(get_current_user)]):
+    """Конфиг сайта (site.yaml): страницы, layout, навигация."""
+    profile_id = user["profileId"] if user else settings.app_profile_id
+    return load_site_yaml(profile_id)
