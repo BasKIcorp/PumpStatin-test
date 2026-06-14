@@ -1,36 +1,12 @@
-import { getBlockTypes } from "@/engine/BlockRegistry";
+import { getBlockSchemas } from "@/routes/admin/studio/properties/blockSchema";
 import { useState } from "react";
 
-const BLOCK_LABELS: Record<string, string> = {
-  hero: "Hero (заголовок + CTA)",
-  "rich-text": "Rich Text (контент)",
-  "card-grid": "Card Grid (сетка карточек)",
-  wizard: "Визард подбора",
-  "product-grid": "Каталог",
-  "contact-form": "Форма связи",
-  map: "Карта",
-  gallery: "Галерея",
-  accordion: "Аккордеон",
-  tabs: "Табы",
-  divider: "Разделитель",
-  image: "Изображение",
-  video: "Видео",
-};
-
-const BLOCK_ICONS: Record<string, string> = {
-  hero: "🎯",
-  "rich-text": "📝",
-  "card-grid": "📊",
-  wizard: "⚙️",
-  "product-grid": "🏷️",
-  "contact-form": "📧",
-  map: "🗺️",
-  gallery: "🖼️",
-  accordion: "📑",
-  tabs: "📌",
-  divider: "➖",
-  image: "🖼️",
-  video: "🎬",
+const CATEGORIES: Record<string, string> = {
+  content: "Контент",
+  media: "Медиа",
+  data: "Данные",
+  special: "Специальные",
+  layout: "Разметка",
 };
 
 export function Palette({
@@ -38,14 +14,19 @@ export function Palette({
 }: {
   onAddBlock: (type: string) => void;
 }) {
-  const types = getBlockTypes();
+  const schemas = getBlockSchemas();
   const [filter, setFilter] = useState("");
+  const [category, setCategory] = useState<string | null>(null);
 
-  const filtered = types.filter((t) => {
-    if (!filter) return true;
-    const label = BLOCK_LABELS[t] ?? t;
-    return label.toLowerCase().includes(filter.toLowerCase());
+  const filtered = schemas.filter((s) => {
+    if (filter) {
+      return s.label.toLowerCase().includes(filter.toLowerCase());
+    }
+    if (category) return s.category === category;
+    return true;
   });
+
+  const categories = [...new Set(schemas.map((s) => s.category))];
 
   return (
     <div className="space-y-2">
@@ -57,24 +38,57 @@ export function Palette({
 
       <input
         type="text"
-        placeholder="Поиск блоков..."
+        placeholder="Поиск..."
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
         className="w-full rounded border border-neutral-300 px-2 py-1 text-xs"
       />
 
-      <div className="space-y-1">
-        {filtered.map((type) => (
+      {!filter && (
+        <div className="flex flex-wrap gap-1">
           <button
-            key={type}
             type="button"
-            onClick={() => onAddBlock(type)}
+            onClick={() => setCategory(null)}
+            className={`rounded px-1.5 py-0.5 text-[10px] ${
+              category === null
+                ? "bg-[#13347f] text-white"
+                : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+            }`}
+          >
+            Все
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => setCategory(cat)}
+              className={`rounded px-1.5 py-0.5 text-[10px] ${
+                category === cat
+                  ? "bg-[#13347f] text-white"
+                  : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+              }`}
+            >
+              {CATEGORIES[cat] ?? cat}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="space-y-1">
+        {filtered.map((s) => (
+          <button
+            key={s.type}
+            type="button"
+            onClick={() => onAddBlock(s.type)}
             className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-neutral-700 hover:bg-neutral-100"
           >
-            <span className="text-sm">{BLOCK_ICONS[type] ?? "🧩"}</span>
-            <span>{BLOCK_LABELS[type] ?? type}</span>
+            <span className="text-sm">{s.icon}</span>
+            <span>{s.label}</span>
           </button>
         ))}
+        {filtered.length === 0 && (
+          <p className="py-2 text-center text-[11px] text-neutral-400">Нет блоков</p>
+        )}
       </div>
     </div>
   );

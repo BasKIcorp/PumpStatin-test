@@ -187,8 +187,7 @@ export function AdminProfileStudio() {
                   onBlocksChange={updatePageBlocks}
                   selectedBlockId={selectedBlockId}
                   onSelectBlock={setSelectedBlockId}
-                  onSave={() => saveSiteConfig({ layout, pages })}
-                />
+                  />
               ) : selectedPage?.type === "wizard" ? (
                 <div className="flex h-full items-center justify-center">
                   <p className="text-sm text-neutral-500">
