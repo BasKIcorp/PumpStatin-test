@@ -189,6 +189,41 @@ def admin_save_wizard(
     return {"ok": True}
 
 
+# --- PDF preview / compile ---
+
+
+@router.post("/profiles/{profile_id}/pdf/preview")
+def admin_pdf_preview(
+    profile_id: str,
+    body: dict[str, Any],
+    _: Annotated[dict, Depends(require_admin)],
+):
+    """Сгенерировать PDF из template.json + тестовые данные."""
+    from app.pdf.block_renderer import render_pdf_from_blocks
+    from fastapi.responses import Response
+
+    config_store.load_site_yaml(profile_id)
+    selection = body.get("selection", {})
+    branding = body.get("branding", {})
+
+    tpl_path = config_store.PROFILES_DIR / profile_id / "pdf" / "template.json"
+    if tpl_path.is_file():
+        with tpl_path.open("r", encoding="utf-8") as f:
+            import json
+            template = json.load(f)
+    else:
+        template = {"blocks": body.get("blocks", [])}
+
+    pdf_bytes = render_pdf_from_blocks(template, selection, branding)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'inline; filename="{profile_id}-preview.pdf"',
+        },
+    )
+
+
 # --- PDF templates ---
 
 

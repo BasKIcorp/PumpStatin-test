@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { PdfCanvas, type PdfBlock } from "./PdfCanvas";
 import { apiFetch } from "@/api/client";
 
@@ -22,7 +22,7 @@ function defaultProps(type: string): Record<string, unknown> {
     case "image": return { caption: "Изображение", src: "" };
     case "equipment-table": return {};
     case "spec-sheet": return {};
-    case "customer-info": return { organization: "ООО «Заказчик»", date: new Date().toLocaleDateString("ru-RU") };
+    case "customer-info": return { organization: "{{profile.displayName}}", date: "{{selection.date}}" };
     case "signature": return { name: "ФИО" };
     default: return {};
   }
@@ -39,6 +39,18 @@ const BLOCK_SIZES: Record<string, { w: number; h: number }> = {
   "customer-info": { w: 250, h: 40 },
   signature: { w: 200, h: 40 },
 };
+
+/** Доступные источники данных для привязки */
+const DATA_SOURCES = [
+  { path: "selection.input.flowRate", desc: "Расход из формы" },
+  { path: "selection.input.head", desc: "Напор из формы" },
+  { path: "selection.result.pumps[].model", desc: "Модель насоса" },
+  { path: "selection.result.pumps[].flow", desc: "Расход насоса" },
+  { path: "selection.result.pumps[].head", desc: "Напор насоса" },
+  { path: "selection.result.pumps[].power", desc: "Мощность" },
+  { path: "profile.displayName", desc: "Название профиля" },
+  { path: "selection.date", desc: "Дата" },
+];
 
 export interface PdfTemplate {
   profileId: string;
@@ -92,6 +104,23 @@ export function PdfBuilder({ profileId }: { profileId?: string }) {
     }
   };
 
+  /** Вставить {{path}} в текущее поле */
+  const insertBinding = useCallback(
+    (path: string) => {
+      if (!selectedId) return;
+      const block = blocks.find((b) => b.id === selectedId);
+      if (!block) return;
+      const firstTextKey = Object.keys(block.props).find(
+        (k) => typeof block.props[k] === "string"
+      );
+      if (firstTextKey) {
+        const current = String(block.props[firstTextKey] ?? "");
+        updateProp(selectedId, firstTextKey, current + `{{${path}}}`);
+      }
+    },
+    [selectedId, blocks, updateProp],
+  );
+
   const selectedBlock = blocks.find((b) => b.id === selectedId) ?? null;
 
   return (
@@ -125,42 +154,67 @@ export function PdfBuilder({ profileId }: { profileId?: string }) {
         />
       </div>
 
-      {/* Properties + Save */}
-      <div className="w-64 shrink-0 space-y-3 overflow-y-auto">
+      {/* Properties + Data Binding */}
+      <div className="w-72 shrink-0 space-y-3 overflow-y-auto">
         {selectedBlock && (
           <div className="rounded-lg border bg-white p-3">
             <div className="mb-2 flex items-center justify-between">
               <h3 className="text-xs font-semibold text-neutral-700">{selectedBlock.type}</h3>
               <button type="button" onClick={() => removeBlock(selectedBlock.id)} className="rounded px-1 text-xs text-red-500 hover:bg-red-50">✕</button>
             </div>
+
+            <div className="mb-2 text-[10px] text-blue-600">
+              Используйте двойные фигурные скобки для подстановки данных
+            </div>
+
             {selectedBlock.type === "header" && (
               <>
-                <PropField label="Заголовок" value={String(selectedBlock.props.title ?? "")} onChange={(v) => updateProp(selectedBlock.id, "title", v)} />
-                <PropField label="Подзаголовок" value={String(selectedBlock.props.subtitle ?? "")} onChange={(v) => updateProp(selectedBlock.id, "subtitle", v)} />
+                <BindingField label="Заголовок" value={String(selectedBlock.props.title ?? "")} onChange={(v) => updateProp(selectedBlock.id, "title", v)} />
+                <BindingField label="Подзаголовок" value={String(selectedBlock.props.subtitle ?? "")} onChange={(v) => updateProp(selectedBlock.id, "subtitle", v)} />
               </>
             )}
             {selectedBlock.type === "footer" && (
-              <PropField label="Текст" value={String(selectedBlock.props.text ?? "")} onChange={(v) => updateProp(selectedBlock.id, "text", v)} />
+              <BindingField label="Текст" value={String(selectedBlock.props.text ?? "")} onChange={(v) => updateProp(selectedBlock.id, "text", v)} />
             )}
             {selectedBlock.type === "text" && (
               <div>
                 <label className="mb-0.5 block text-xs text-neutral-600">Содержимое</label>
-                <textarea className="min-h-[100px] w-full rounded border px-2 py-1 text-xs" value={String(selectedBlock.props.content ?? "")} onChange={(e) => updateProp(selectedBlock.id, "content", e.target.value)} />
+                <textarea className="min-h-[100px] w-full rounded border px-2 py-1 text-xs font-mono" value={String(selectedBlock.props.content ?? "")} onChange={(e) => updateProp(selectedBlock.id, "content", e.target.value)} />
               </div>
             )}
             {selectedBlock.type === "customer-info" && (
               <>
-                <PropField label="Организация" value={String(selectedBlock.props.organization ?? "")} onChange={(v) => updateProp(selectedBlock.id, "organization", v)} />
-                <PropField label="Дата" value={String(selectedBlock.props.date ?? "")} onChange={(v) => updateProp(selectedBlock.id, "date", v)} />
+                <BindingField label="Организация" value={String(selectedBlock.props.organization ?? "")} onChange={(v) => updateProp(selectedBlock.id, "organization", v)} />
+                <BindingField label="Дата" value={String(selectedBlock.props.date ?? "")} onChange={(v) => updateProp(selectedBlock.id, "date", v)} />
               </>
             )}
             {selectedBlock.type === "signature" && (
-              <PropField label="ФИО" value={String(selectedBlock.props.name ?? "")} onChange={(v) => updateProp(selectedBlock.id, "name", v)} />
+              <BindingField label="ФИО" value={String(selectedBlock.props.name ?? "")} onChange={(v) => updateProp(selectedBlock.id, "name", v)} />
             )}
+
+            {/* Data sources quick insert */}
+            <details className="mt-2">
+              <summary className="cursor-pointer text-[10px] text-neutral-500 hover:text-neutral-700">
+                Источники данных
+              </summary>
+              <div className="mt-1 space-y-1">
+                {DATA_SOURCES.map((ds) => (
+                  <button
+                    key={ds.path}
+                    type="button"
+                    onClick={() => insertBinding(ds.path)}
+                    className="block w-full rounded px-1.5 py-1 text-left text-[10px] text-blue-700 hover:bg-blue-50"
+                  >
+                    <code>{`{{${ds.path}}}`}</code>
+                    <span className="ml-1 text-neutral-500">— {ds.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </details>
           </div>
         )}
 
-        {/* Save section */}
+        {/* Save + Preview */}
         <div className="rounded-lg border bg-white p-3">
           <div className="mb-2">
             <label className="mb-0.5 block text-xs text-neutral-600">Название шаблона</label>
@@ -168,14 +222,28 @@ export function PdfBuilder({ profileId }: { profileId?: string }) {
           </div>
           {saveMsg && <div className="mb-2 rounded bg-green-100 px-2 py-1 text-xs text-green-700">{saveMsg}</div>}
           {error && <div className="mb-2 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{error}</div>}
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={blocks.length === 0}
-            className="w-full rounded bg-[#13347f] py-1.5 text-sm text-white hover:bg-[#0f2866] disabled:opacity-50"
-          >
-            Сохранить шаблон
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={blocks.length === 0}
+              className="flex-1 rounded bg-[#13347f] py-1.5 text-sm text-white hover:bg-[#0f2866] disabled:opacity-50"
+            >
+              Сохранить
+            </button>
+            {profileId && (
+              <button
+                type="button"
+                onClick={() => {
+                  const url = `/api/v1/admin/profiles/${encodeURIComponent(profileId)}/pdf/preview`;
+                  window.open(url, "_blank");
+                }}
+                className="rounded bg-green-700 px-3 py-1.5 text-sm text-white hover:bg-green-800"
+              >
+                PDF
+              </button>
+            )}
+          </div>
           {blocks.length === 0 && <p className="mt-1 text-center text-[10px] text-neutral-400">Добавьте блоки слева</p>}
         </div>
       </div>
@@ -183,11 +251,20 @@ export function PdfBuilder({ profileId }: { profileId?: string }) {
   );
 }
 
-function PropField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+/** Поле с подсветкой {{binding}} шаблонов */
+function BindingField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  const hasBinding = value.includes("{{");
   return (
     <div className="mb-2">
-      <label className="mb-0.5 block text-xs text-neutral-600">{label}</label>
-      <input className="w-full rounded border px-2 py-1 text-sm" value={value} onChange={(e) => onChange(e.target.value)} />
+      <div className="flex items-center justify-between">
+        <label className="mb-0.5 block text-xs text-neutral-600">{label}</label>
+        {hasBinding && <span className="text-[9px] text-blue-500">⚡ binding</span>}
+      </div>
+      <input
+        className={`w-full rounded border px-2 py-1 text-sm font-mono ${hasBinding ? "border-blue-300 bg-blue-50" : ""}`}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
     </div>
   );
 }
