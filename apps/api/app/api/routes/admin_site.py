@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from app.api.deps import require_admin
 from app.core.profile_loader import load_profile_bundle
 from app.services import config_store
+from app.schemas.site import get_default_site
 
 router = APIRouter()
 
@@ -106,3 +107,74 @@ async def admin_upload(
         "path": str(dest.relative_to(config_store.PROFILES_DIR.parent)),
         "size": len(content),
     }
+
+
+# --- Wizard config ---
+
+
+@router.get("/profiles/{profile_id}/wizard")
+def admin_get_wizard(
+    profile_id: str,
+    _: Annotated[dict, Depends(require_admin)],
+):
+    """Загрузить конфиг визарда (navigation.yaml + flows)."""
+    if profile_id not in config_store.list_profile_ids():
+        raise HTTPException(404, "Profile not found")
+
+    profile = config_store.load_profile_yaml(profile_id)
+    nav_key = profile.get("wizard", {}).get("navigation", "wizard/navigation.yaml")
+    nav_path = config_store.PROFILES_DIR / profile_id / nav_key
+
+    if not nav_path.is_file():
+        return {"navigation": {"steps": [], "cards": {}}, "flows": {}}
+
+    nav = config_store.load_yaml(nav_path)
+
+    # Load flows referenced in navigation
+    flows_base = config_store.PROFILES_DIR / profile_id / "wizard" / "flows"
+    flows: dict[str, Any] = {}
+    if flows_base.is_dir():
+        for f in flows_base.glob("*.yaml"):
+            flow_data = config_store.load_yaml(f)
+            flows[flow_data.get("id", f.stem)] = flow_data
+
+    return {"navigation": nav, "flows": flows}
+
+
+@router.put("/profiles/{profile_id}/wizard")
+def admin_save_wizard(
+    profile_id: str,
+    body: dict[str, Any],
+    _: Annotated[dict, Depends(require_admin)],
+):
+    """Сохранить конфиг визарда (navigation + flows)."""
+    if profile_id not in config_store.list_profile_ids():
+        raise HTTPException(404, "Profile not found")
+
+    profile = config_store.load_profile_yaml(profile_id)
+    nav_key = profile.get("wizard", {}).get("navigation", "wizard/navigation.yaml")
+    nav_path = config_store.PROFILES_DIR / profile_id / nav_key
+
+    # Save navigation
+    nav = body.get("navigation", {})
+    nav_path.parent.mkdir(parents=True, exist_ok=True)
+    config_store.save_yaml(nav_path, nav)
+
+    # Save flows
+    flows = body.get("flows", {})
+    flows_dir = config_store.PROFILES_DIR / profile_id / "wizard" / "flows"
+    flows_dir.mkdir(parents=True, exist_ok=True)
+    for flow_id, flow_data in flows.items():
+        if isinstance(flow_data, dict):
+            flow_path = flows_dir / f"{flow_id}.yaml"
+            with flow_path.open("w", encoding="utf-8") as f:
+                import yaml
+                yaml.dump(
+                    flow_data,
+                    f,
+                    allow_unicode=True,
+                    default_flow_style=False,
+                    sort_keys=False,
+                )
+
+    return {"ok": True}

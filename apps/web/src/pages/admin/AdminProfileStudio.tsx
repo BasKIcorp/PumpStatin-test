@@ -229,7 +229,7 @@ export function AdminProfileStudio() {
           </div>
         )}
 
-        {activeTab === "wizard" && <WizardEditorShell />}
+        {activeTab === "wizard" && <WizardEditorShell profileId={profileId} />}
 
         {activeTab === "pdf" && <PdfPlaceholder />}
       </StudioShell>
