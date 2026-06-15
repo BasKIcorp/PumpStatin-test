@@ -66,6 +66,15 @@ def admin_blocks_registry(_: Annotated[dict, Depends(require_admin)]):
             {"type": "rich-text", "label": "Rich Text / Текст"},
             {"type": "card-grid", "label": "Card Grid / Сетка карточек"},
             {"type": "wizard", "label": "Wizard / Форма подбора"},
+            {"type": "product-grid", "label": "Product Grid / Каталог"},
+            {"type": "contact-form", "label": "Contact Form / Обратная связь"},
+            {"type": "map", "label": "Map / Карта"},
+            {"type": "gallery", "label": "Gallery / Галерея"},
+            {"type": "accordion", "label": "Accordion / Аккордеон"},
+            {"type": "tabs", "label": "Tabs / Табы"},
+            {"type": "divider", "label": "Divider / Разделитель"},
+            {"type": "image", "label": "Image / Изображение"},
+            {"type": "video", "label": "Video / Видео"},
         ]
     }
 
@@ -177,4 +186,41 @@ def admin_save_wizard(
                     sort_keys=False,
                 )
 
+    return {"ok": True}
+
+
+# --- PDF templates ---
+
+
+@router.get("/profiles/{profile_id}/pdf/template")
+def admin_get_pdf_template(
+    profile_id: str,
+    _: Annotated[dict, Depends(require_admin)],
+):
+    """Загрузить PDF template.json."""
+    if profile_id not in config_store.list_profile_ids():
+        raise HTTPException(404, "Profile not found")
+    tpl_path = config_store.PROFILES_DIR / profile_id / "pdf" / "template.json"
+    if not tpl_path.is_file():
+        return {"templateName": "custom", "blocks": []}
+    with tpl_path.open("r", encoding="utf-8") as f:
+        import json
+        return json.load(f)
+
+
+@router.put("/profiles/{profile_id}/pdf/template")
+def admin_save_pdf_template(
+    profile_id: str,
+    body: dict[str, Any],
+    _: Annotated[dict, Depends(require_admin)],
+):
+    """Сохранить PDF template.json."""
+    if profile_id not in config_store.list_profile_ids():
+        raise HTTPException(404, "Profile not found")
+    pdf_dir = config_store.PROFILES_DIR / profile_id / "pdf"
+    pdf_dir.mkdir(parents=True, exist_ok=True)
+    tpl_path = pdf_dir / "template.json"
+    with tpl_path.open("w", encoding="utf-8") as f:
+        import json
+        json.dump(body, f, ensure_ascii=False, indent=2)
     return {"ok": True}

@@ -1,7 +1,7 @@
 const { chromium } = require("playwright");
 const path = require("path");
 
-const BASE = "http://localhost:5174";
+const BASE = "http://localhost:5173";
 const SHOTS = path.join(__dirname, "..", "evidence", "studio-test");
 const fs = require("fs");
 

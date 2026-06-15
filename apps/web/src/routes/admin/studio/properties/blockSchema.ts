@@ -61,6 +61,94 @@ const BLOCK_SCHEMAS: BlockTypeInfo[] = [
     category: "special",
     fields: [],
   },
+  {
+    type: "product-grid",
+    label: "Каталог товаров",
+    icon: "🏷️",
+    category: "data",
+    fields: [
+      { key: "columns", label: "Колонок", section: "style", type: "number", defaultValue: 3 },
+      { key: "filter", label: "Показывать фильтр", section: "behavior", type: "checkbox", defaultValue: true },
+    ],
+  },
+  {
+    type: "contact-form",
+    label: "Форма обратной связи",
+    icon: "📧",
+    category: "content",
+    fields: [
+      { key: "email", label: "Email для уведомлений", section: "behavior", type: "text", defaultValue: "" },
+    ],
+  },
+  {
+    type: "map",
+    label: "Карта",
+    icon: "🗺️",
+    category: "media",
+    fields: [
+      { key: "address", label: "Адрес", section: "content", type: "text", defaultValue: "Москва, ул. Примерная" },
+      { key: "lat", label: "Широта", section: "content", type: "number", defaultValue: 55.75 },
+      { key: "lng", label: "Долгота", section: "content", type: "number", defaultValue: 37.62 },
+    ],
+  },
+  {
+    type: "gallery",
+    label: "Галерея изображений",
+    icon: "🖼️",
+    category: "media",
+    fields: [
+      { key: "images", label: "Изображения (JSON)", section: "content", type: "json", defaultValue: [] },
+    ],
+  },
+  {
+    type: "accordion",
+    label: "Аккордеон",
+    icon: "📑",
+    category: "content",
+    fields: [
+      { key: "items", label: "Элементы (JSON)", section: "content", type: "json", defaultValue: [] },
+    ],
+  },
+  {
+    type: "tabs",
+    label: "Табы",
+    icon: "📌",
+    category: "content",
+    fields: [
+      { key: "tabs", label: "Вкладки (JSON)", section: "content", type: "json", defaultValue: [] },
+    ],
+  },
+  {
+    type: "divider",
+    label: "Разделитель",
+    icon: "➖",
+    category: "layout",
+    fields: [
+      { key: "style", label: "Стиль", section: "style", type: "select", defaultValue: "solid", options: ["solid", "dashed", "dotted"] },
+      { key: "color", label: "Цвет", section: "style", type: "color", defaultValue: "#e5e7eb" },
+    ],
+  },
+  {
+    type: "image",
+    label: "Изображение",
+    icon: "🖼️",
+    category: "media",
+    fields: [
+      { key: "src", label: "URL", section: "content", type: "text", defaultValue: "" },
+      { key: "alt", label: "Alt-текст", section: "content", type: "text", defaultValue: "" },
+      { key: "caption", label: "Подпись", section: "content", type: "text", defaultValue: "" },
+    ],
+  },
+  {
+    type: "video",
+    label: "Видео",
+    icon: "🎬",
+    category: "media",
+    fields: [
+      { key: "url", label: "URL видео", section: "content", type: "text", defaultValue: "" },
+      { key: "title", label: "Заголовок", section: "content", type: "text", defaultValue: "Видео" },
+    ],
+  },
 ];
 
 export function getBlockSchemas(): BlockTypeInfo[] {

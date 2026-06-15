@@ -231,7 +231,7 @@ export function AdminProfileStudio() {
 
         {activeTab === "wizard" && <WizardEditorShell profileId={profileId} />}
 
-        {activeTab === "pdf" && <PdfPlaceholder />}
+        {activeTab === "pdf" && <PdfPlaceholder profileId={profileId} />}
       </StudioShell>
 
       {/* Кнопка сохранения всего сайта (для вкладок Страницы и Layout) */}

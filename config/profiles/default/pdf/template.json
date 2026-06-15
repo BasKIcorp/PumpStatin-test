@@ -1,0 +1,16 @@
+{
+  "templateName": "test",
+  "blocks": [
+    {
+      "id": "h1",
+      "type": "header",
+      "x": 0,
+      "y": 0,
+      "w": 595,
+      "h": 60,
+      "props": {
+        "title": "Test"
+      }
+    }
+  ]
+}
