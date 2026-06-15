@@ -1,5 +1,6 @@
 """Admin API: site config, preview, blocks registry, file upload."""
 
+import datetime
 import shutil
 from pathlib import Path
 from typing import Annotated, Any
@@ -222,6 +223,122 @@ def admin_pdf_preview(
             "Content-Disposition": f'inline; filename="{profile_id}-preview.pdf"',
         },
     )
+
+
+# --- Versioning (git snapshots) ---
+
+import subprocess  # noqa: E402
+
+
+def _git(*args: str, cwd: str | None = None) -> str:
+    """Выполнить git команду, вернуть stdout."""
+    base = str(config_store.PROFILES_DIR.parent.parent)  # project root
+    try:
+        result = subprocess.run(
+            ["git", *args],
+            capture_output=True,
+            text=True,
+            cwd=cwd or base,
+            timeout=10,
+        )
+        return result.stdout.strip()
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError) as e:
+        raise HTTPException(500, f"Git error: {e}")
+
+
+@router.post("/profiles/{profile_id}/snapshot")
+def admin_create_snapshot(
+    profile_id: str,
+    body: dict[str, Any],
+    _: Annotated[dict, Depends(require_admin)],
+):
+    """Создать git snapshot (commit) профиля."""
+    if profile_id not in config_store.list_profile_ids():
+        raise HTTPException(404, "Profile not found")
+
+    msg = body.get("message", f"Snapshot: {profile_id}")
+
+    # Stage and commit only the profile dir
+    _git("add", f"config/profiles/{profile_id}")
+    _git("commit", "-m", msg, "--allow-empty")
+
+    return {"ok": True, "message": msg}
+
+
+@router.get("/profiles/{profile_id}/versions")
+def admin_list_versions(
+    profile_id: str,
+    _: Annotated[dict, Depends(require_admin)],
+):
+    """Получить историю коммитов, затрагивающих профиль."""
+    if profile_id not in config_store.list_profile_ids():
+        raise HTTPException(404, "Profile not found")
+
+    log = _git(
+        "log",
+        "--oneline",
+        "--format=%H|%ct|%s",
+        "-n",
+        "20",
+        "--",
+        f"config/profiles/{profile_id}",
+    )
+    versions = []
+    for line in log.split("\n"):
+        if not line.strip():
+            continue
+        parts = line.split("|", 2)
+        if len(parts) == 3:
+            from datetime import datetime
+            versions.append({
+                "hash": parts[0][:8],
+                "timestamp": datetime.fromtimestamp(int(parts[1])).isoformat(),
+                "message": parts[2],
+            })
+    return {"versions": versions}
+
+
+@router.post("/profiles/{profile_id}/rollback/{commit_hash}")
+def admin_rollback(
+    profile_id: str,
+    commit_hash: str,
+    _: Annotated[dict, Depends(require_admin)],
+):
+    """Откатить файлы профиля к указанному коммиту."""
+    if profile_id not in config_store.list_profile_ids():
+        raise HTTPException(404, "Profile not found")
+
+    _git("checkout", commit_hash, "--", f"config/profiles/{profile_id}")
+    return {"ok": True, "hash": commit_hash}
+
+
+@router.post("/profiles/{profile_id}/publish")
+def admin_publish(
+    profile_id: str,
+    _: Annotated[dict, Depends(require_admin)],
+):
+    """Опубликовать: git add → commit → push."""
+    if profile_id not in config_store.list_profile_ids():
+        raise HTTPException(404, "Profile not found")
+
+    _git("add", f"config/profiles/{profile_id}")
+    msg = f"Publish: {profile_id} - {datetime.datetime.now().isoformat()}"
+    _git("commit", "-m", msg, "--allow-empty")
+    try:
+        push_result = _git("push", "origin", "base")
+    except HTTPException:
+        return {"ok": False, "error": "Push failed"}
+    return {"ok": True, "message": msg, "push": push_result}
+
+
+@router.get("/profiles/{profile_id}/status")
+def admin_status(
+    profile_id: str,
+    _: Annotated[dict, Depends(require_admin)],
+):
+    """Статус профиля: есть ли незакоммиченные изменения."""
+    dirty = _git("status", "--porcelain", f"config/profiles/{profile_id}")
+    return {"dirty": len(dirty) > 0, "changes": dirty.split("\n") if dirty else []}
 
 
 # --- PDF templates ---

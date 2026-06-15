@@ -8,6 +8,7 @@ import { VisualPageEditor } from "@/routes/admin/studio/canvas/VisualPageEditor"
 import { MenuEditor, FooterEditor } from "@/routes/admin/studio/layout/LayoutEditor";
 import { WizardEditorShell } from "@/routes/admin/studio/wizard/WizardEditorShell";
 import { PdfPlaceholder } from "@/routes/admin/studio/pdf/PdfPlaceholder";
+import { VersionPanel } from "@/routes/admin/studio/versioning/VersionPanel";
 import type { SiteConfig, PageConfig, BlockConfig } from "@pumpstation/contracts";
 
 interface ProfileData {
@@ -246,6 +247,11 @@ export function AdminProfileStudio() {
           </button>
         </div>
       )}
+
+      {/* Versioning panel */}
+      <div className="mt-6">
+        <VersionPanel profileId={profileId} />
+      </div>
     </div>
   );
 }
