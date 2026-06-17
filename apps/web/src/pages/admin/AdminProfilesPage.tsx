@@ -113,7 +113,7 @@ export function AdminProfilesPage() {
               {r.profile.displayName ?? r.profile.id}
             </button>
             <Link
-              href={`/admin/profiles/${r.profile.id}`}
+              href={`/profiles/${r.profile.id}`}
               className="rounded-md border border-blue-300 bg-blue-50 px-2 py-1.5 text-xs text-blue-700 hover:bg-blue-100"
             >
               ✎ Конструктор

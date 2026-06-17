@@ -1,0 +1,14 @@
+export const FIGMA = {
+  appBg: "#1e1e1e",
+  panel: "#2c2c2c",
+  panelHover: "#383838",
+  panelBorder: "#3d3d3d",
+  inputBg: "#383838",
+  text: "#ffffff",
+  textMuted: "#b3b3b3",
+  textDim: "#7a7a7a",
+  accent: "#0d99ff",
+  accentSoft: "rgba(13, 153, 255, 0.15)",
+  canvasDot: "#444444",
+  artboardShadow: "0 2px 8px rgba(0,0,0,0.45)",
+} as const;

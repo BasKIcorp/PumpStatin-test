@@ -9,7 +9,8 @@
       "w": 595,
       "h": 60,
       "props": {
-        "title": "Test"
+        "title": "Test",
+        "subtitle": "Sub"
       }
     }
   ]

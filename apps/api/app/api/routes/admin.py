@@ -13,7 +13,9 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.api.deps import require_admin
 from app.core.config import settings
 from app.core.profile_loader import list_profiles
+from app.db.dialect import database_mode, is_editable_database
 from app.db.models import CatalogItemModel, PumpModel
+from app.db.schema_introspection import list_tables_with_columns
 from app.db.session import SessionLocal
 from app.services import config_store
 from app.services.accounts import create_user, delete_user, list_users_admin, update_user
@@ -224,12 +226,12 @@ def admin_update_branding(
 # --- Database ---
 
 
-def _require_postgres_admin():
-    if settings.use_mock_db:
+def _require_editable_db():
+    if not is_editable_database():
         raise HTTPException(
             503,
             "Редактирование БД недоступно при USE_MOCK_DB=true. "
-            "Установите USE_MOCK_DB=false и перезапустите API.",
+            "Установите USE_MOCK_DB=false (по умолчанию используется SQLite в data/pumpstation.db).",
         )
 
 
@@ -298,13 +300,14 @@ def _safe_type(value: str) -> str:
 
 @router.get("/database/status")
 async def admin_db_status(_: Annotated[dict, Depends(require_admin)]):
-    if settings.use_mock_db:
-        return {"mode": "mock", "editable": False}
+    mode = database_mode()
+    if not is_editable_database():
+        return {"mode": mode, "editable": False}
     async with SessionLocal() as session:
         pumps = await session.execute(select(PumpModel.id))
         catalog = await session.execute(select(CatalogItemModel.id))
         return {
-            "mode": "postgres",
+            "mode": mode,
             "editable": True,
             "pumpCount": len(pumps.scalars().all()),
             "catalogItemCount": len(catalog.scalars().all()),
@@ -313,61 +316,9 @@ async def admin_db_status(_: Annotated[dict, Depends(require_admin)]):
 
 @router.get("/database/schema")
 async def admin_db_schema(_: Annotated[dict, Depends(require_admin)]):
-    _require_postgres_admin()
+    _require_editable_db()
     async with SessionLocal() as session:
-        table_rows = await session.execute(
-            text(
-                """
-                SELECT table_name
-                FROM information_schema.tables
-                WHERE table_schema = 'public'
-                ORDER BY table_name
-                """
-            )
-        )
-        tables: list[dict[str, Any]] = []
-        for (table_name,) in table_rows.all():
-            columns_rows = await session.execute(
-                text(
-                    """
-                    SELECT column_name, data_type, is_nullable
-                    FROM information_schema.columns
-                    WHERE table_schema = 'public' AND table_name = :table_name
-                    ORDER BY ordinal_position
-                    """
-                ),
-                {"table_name": table_name},
-            )
-            pk_rows = await session.execute(
-                text(
-                    """
-                    SELECT kcu.column_name
-                    FROM information_schema.table_constraints tc
-                    JOIN information_schema.key_column_usage kcu
-                      ON tc.constraint_name = kcu.constraint_name
-                     AND tc.table_schema = kcu.table_schema
-                    WHERE tc.table_schema='public'
-                      AND tc.table_name=:table_name
-                      AND tc.constraint_type='PRIMARY KEY'
-                    """
-                ),
-                {"table_name": table_name},
-            )
-            pk_cols = {name for (name,) in pk_rows.all()}
-            tables.append(
-                {
-                    "name": table_name,
-                    "columns": [
-                        {
-                            "name": c_name,
-                            "type": c_type,
-                            "nullable": is_nullable == "YES",
-                            "primary_key": c_name in pk_cols,
-                        }
-                        for (c_name, c_type, is_nullable) in columns_rows.all()
-                    ],
-                }
-            )
+        tables = await list_tables_with_columns(session)
     return {"tables": tables}
 
 
@@ -375,7 +326,7 @@ async def admin_db_schema(_: Annotated[dict, Depends(require_admin)]):
 async def admin_db_create_table(
     body: CreateTableBody, _: Annotated[dict, Depends(require_admin)]
 ):
-    _require_postgres_admin()
+    _require_editable_db()
     table_name = _safe_ident(body.table_name, "table_name")
     if not body.columns:
         raise HTTPException(400, "At least one column is required")
@@ -406,7 +357,7 @@ async def admin_db_create_table(
 async def admin_db_alter_table(
     body: AlterTableBody, _: Annotated[dict, Depends(require_admin)]
 ):
-    _require_postgres_admin()
+    _require_editable_db()
     table_name = _safe_ident(body.table_name, "table_name")
     action = (body.action or "").strip().lower()
     if action == "add_column":
@@ -445,7 +396,7 @@ async def admin_db_import_excel(
     file: Annotated[UploadFile, File(...)],
     _: Annotated[dict, Depends(require_admin)],
 ):
-    _require_postgres_admin()
+    _require_editable_db()
     safe_table = _safe_ident(table_name, "table_name")
     if not file.filename or not file.filename.lower().endswith((".xlsx", ".xlsm")):
         raise HTTPException(400, "Only .xlsx/.xlsm files are supported")
@@ -496,7 +447,7 @@ async def admin_db_import_excel(
 
 @router.get("/database/pumps")
 async def admin_list_pumps(_: Annotated[dict, Depends(require_admin)]):
-    _require_postgres_admin()
+    _require_editable_db()
     async with SessionLocal() as session:
         result = await session.execute(select(PumpModel))
         rows = result.scalars().all()
@@ -517,7 +468,7 @@ async def admin_list_pumps(_: Annotated[dict, Depends(require_admin)]):
 
 @router.post("/database/pumps")
 async def admin_create_pump(body: PumpBody, _: Annotated[dict, Depends(require_admin)]):
-    _require_postgres_admin()
+    _require_editable_db()
     async with SessionLocal() as session:
         existing = await session.get(PumpModel, body.id)
         if existing:
@@ -540,7 +491,7 @@ async def admin_create_pump(body: PumpBody, _: Annotated[dict, Depends(require_a
 async def admin_update_pump(
     pump_id: str, body: PumpBody, _: Annotated[dict, Depends(require_admin)]
 ):
-    _require_postgres_admin()
+    _require_editable_db()
     async with SessionLocal() as session:
         row = await session.get(PumpModel, pump_id)
         if not row:
@@ -556,7 +507,7 @@ async def admin_update_pump(
 
 @router.delete("/database/pumps/{pump_id}")
 async def admin_delete_pump(pump_id: str, _: Annotated[dict, Depends(require_admin)]):
-    _require_postgres_admin()
+    _require_editable_db()
     async with SessionLocal() as session:
         await session.execute(delete(PumpModel).where(PumpModel.id == pump_id))
         await session.commit()
@@ -568,7 +519,7 @@ async def admin_list_catalog(
     source_key: str | None = None,
     _: Annotated[dict, Depends(require_admin)] = None,
 ):
-    _require_postgres_admin()
+    _require_editable_db()
     async with SessionLocal() as session:
         q = select(CatalogItemModel)
         if source_key:
@@ -591,7 +542,7 @@ async def admin_list_catalog(
 async def admin_create_catalog_item(
     body: CatalogItemBody, _: Annotated[dict, Depends(require_admin)]
 ):
-    _require_postgres_admin()
+    _require_editable_db()
     async with SessionLocal() as session:
         session.add(
             CatalogItemModel(
@@ -608,7 +559,7 @@ async def admin_create_catalog_item(
 async def admin_delete_catalog_item(
     item_id: int, _: Annotated[dict, Depends(require_admin)]
 ):
-    _require_postgres_admin()
+    _require_editable_db()
     async with SessionLocal() as session:
         await session.execute(
             delete(CatalogItemModel).where(CatalogItemModel.id == item_id)

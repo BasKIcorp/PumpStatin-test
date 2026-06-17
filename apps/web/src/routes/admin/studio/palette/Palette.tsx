@@ -1,5 +1,6 @@
 import { getBlockSchemas } from "@/routes/admin/studio/properties/blockSchema";
 import { useState } from "react";
+import { FIGMA } from "../figma/figmaTokens";
 
 const CATEGORIES: Record<string, string> = {
   content: "Контент",
@@ -9,11 +10,7 @@ const CATEGORIES: Record<string, string> = {
   layout: "Разметка",
 };
 
-export function Palette({
-  onAddBlock,
-}: {
-  onAddBlock: (type: string) => void;
-}) {
+export function Palette({ onAddBlock }: { onAddBlock: (type: string) => void }) {
   const schemas = getBlockSchemas();
   const [filter, setFilter] = useState("");
   const [category, setCategory] = useState<string | null>(null);
@@ -33,18 +30,13 @@ export function Palette({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-          Блоки
-        </h3>
-      </div>
-
       <input
         type="text"
-        placeholder="Поиск..."
+        placeholder="Поиск блоков..."
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
-        className="w-full rounded border border-neutral-300 px-2 py-1 text-xs"
+        className="w-full rounded border-0 px-2 py-1.5 text-xs text-white outline-none focus:ring-1 focus:ring-[#0d99ff]"
+        style={{ background: FIGMA.inputBg }}
       />
 
       {!filter && (
@@ -52,11 +44,12 @@ export function Palette({
           <button
             type="button"
             onClick={() => setCategory(null)}
-            className={`rounded px-1.5 py-0.5 text-[10px] ${
+            className="rounded px-1.5 py-0.5 text-[10px]"
+            style={
               category === null
-                ? "bg-[#13347f] text-white"
-                : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
-            }`}
+                ? { background: FIGMA.accentSoft, color: FIGMA.accent }
+                : { color: FIGMA.textDim }
+            }
           >
             Все
           </button>
@@ -65,11 +58,12 @@ export function Palette({
               key={cat}
               type="button"
               onClick={() => setCategory(cat)}
-              className={`rounded px-1.5 py-0.5 text-[10px] ${
+              className="rounded px-1.5 py-0.5 text-[10px]"
+              style={
                 category === cat
-                  ? "bg-[#13347f] text-white"
-                  : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
-              }`}
+                  ? { background: FIGMA.accentSoft, color: FIGMA.accent }
+                  : { color: FIGMA.textDim }
+              }
             >
               {CATEGORIES[cat] ?? cat}
             </button>
@@ -77,21 +71,22 @@ export function Palette({
         </div>
       )}
 
-      <div className="space-y-1">
+      <div className="space-y-0.5">
         {filtered.map((s) => (
           <div
             key={s.type}
             draggable
             onDragStart={(e) => handleDragStart(e, s.type)}
             onClick={() => onAddBlock(s.type)}
-            className="flex w-full cursor-grab items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-neutral-700 hover:bg-neutral-100 active:cursor-grabbing"
+            className="flex w-full cursor-grab items-center gap-2 rounded px-2 py-1.5 text-left text-xs active:cursor-grabbing hover:bg-[#383838]"
+            style={{ color: FIGMA.textMuted }}
           >
             <span className="text-sm">{s.icon}</span>
             <span>{s.label}</span>
           </div>
         ))}
         {filtered.length === 0 && (
-          <p className="py-2 text-center text-[11px] text-neutral-400">Нет блоков</p>
+          <p className="py-2 text-center text-[11px] text-[#666]">Нет блоков</p>
         )}
       </div>
     </div>

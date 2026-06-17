@@ -73,8 +73,8 @@ export function AdminDatabasePage() {
         <h1 className="text-xl font-semibold">База данных</h1>
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
           API работает в режиме <strong>mock</strong> (USE_MOCK_DB=true). Редактирование насосов и
-          справочников недоступно. Установите USE_MOCK_DB=false в production.env и перезапустите
-          pumpstation-api.
+          справочников недоступно. Установите USE_MOCK_DB=false — по умолчанию используется SQLite
+          в <code className="text-xs">data/pumpstation.db</code>, перезапустите pumpstation-api.
         </div>
       </div>
     );

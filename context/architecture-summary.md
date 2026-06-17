@@ -16,8 +16,10 @@ default (Стрела), acme-industrial, nord-minimal, aqua-pro — см. `confi
 
 ## Локальная разработка
 
-`USE_MOCK_DB=true` в `.env` — без Postgres, каталог насосов из mock-адаптера.
+По умолчанию **SQLite** (`data/pumpstation.db`), `USE_MOCK_DB=false` — таблицы и seed при старте API.
 
-## Postgres
+`USE_MOCK_DB=true` — только in-memory mock для подбора; кабинет и история не работают.
+
+## Postgres (продакшен / docker)
 
 `USE_MOCK_DB=false` + `docker compose up` — таблицы и seed при старте API.

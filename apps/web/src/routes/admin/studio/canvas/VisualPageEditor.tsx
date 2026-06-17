@@ -1,34 +1,28 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import type { BlockConfig, PageConfig } from "@pumpstation/contracts";
 import { Palette } from "@/routes/admin/studio/palette/Palette";
+import { LayersPanel } from "@/routes/admin/studio/palette/LayersPanel";
 import { StudioCanvas } from "./StudioCanvas";
 import { CanvasBlock } from "./CanvasBlock";
 import { PropertiesPanel } from "@/routes/admin/studio/properties/PropertiesPanel";
+import { PagePropertiesPanel } from "@/routes/admin/studio/properties/PagePropertiesPanel";
 import { getSchema } from "@/routes/admin/studio/properties/blockSchema";
 import { LivePreview } from "@/routes/admin/studio/preview/LivePreview";
+import { setNested } from "./studioPropUtils";
+import { StudioLeftSidebar } from "@/routes/admin/studio/figma/StudioLeftSidebar";
+import { StudioRightSidebar } from "@/routes/admin/studio/figma/StudioRightSidebar";
+import { FIGMA } from "@/routes/admin/studio/figma/figmaTokens";
 
 function defaultProps(type: string): Record<string, unknown> {
   const schema = getSchema(type);
   if (!schema) return {};
-  const result: Record<string, unknown> = {};
+  let result: Record<string, unknown> = {};
   for (const field of schema.fields) {
     if (field.defaultValue !== undefined) {
-      const parts = field.key.split(".");
-      if (parts.length === 1) result[field.key] = field.defaultValue;
-      else setNested(result, field.key, field.defaultValue);
+      result = setNested(result, field.key, field.defaultValue);
     }
   }
   return result;
-}
-
-function setNested(obj: Record<string, unknown>, key: string, value: unknown) {
-  const parts = key.split(".");
-  let current = obj;
-  for (let i = 0; i < parts.length - 1; i++) {
-    if (!current[parts[i]]) current[parts[i]] = {};
-    current = current[parts[i]] as Record<string, unknown>;
-  }
-  current[parts[parts.length - 1]] = value;
 }
 
 export function VisualPageEditor({
@@ -39,6 +33,8 @@ export function VisualPageEditor({
   selectedBlockId,
   onSelectBlock,
   profileId,
+  previewMode = false,
+  onPreviewClose,
 }: {
   blocks: BlockConfig[];
   page: PageConfig;
@@ -47,14 +43,14 @@ export function VisualPageEditor({
   selectedBlockId: string | null;
   onSelectBlock: (id: string | null) => void;
   profileId?: string;
+  previewMode?: boolean;
+  onPreviewClose?: () => void;
 }) {
   const selectedBlock = blocks.find((b) => b.id === selectedBlockId) ?? null;
-  const [previewMode, setPreviewMode] = useState(false);
 
   const addBlock = (type: string) => {
     const id = `block-${Date.now()}`;
-    const newBlocks = [...blocks, { id, type, props: defaultProps(type) }];
-    onBlocksChange(newBlocks);
+    onBlocksChange([...blocks, { id, type, props: defaultProps(type) }]);
     onSelectBlock(id);
   };
 
@@ -63,11 +59,11 @@ export function VisualPageEditor({
     if (selectedBlockId === id) onSelectBlock(null);
   };
 
-  const moveBlock = (index: number, dir: -1 | 1) => {
-    const target = index + dir;
-    if (target < 0 || target >= blocks.length) return;
+  const reorderBlock = (from: number, to: number) => {
+    if (from === to || from < 0 || to < 0 || from >= blocks.length || to >= blocks.length) return;
     const nb = [...blocks];
-    [nb[index], nb[target]] = [nb[target], nb[index]];
+    const [item] = nb.splice(from, 1);
+    nb.splice(to, 0, item);
     onBlocksChange(nb);
   };
 
@@ -76,66 +72,82 @@ export function VisualPageEditor({
   };
 
   const updateProp = (id: string, key: string, value: unknown) => {
-    onBlocksChange(blocks.map((b) => (b.id !== id ? b : { ...b, props: { ...b.props, [key]: value } })));
+    onBlocksChange(
+      blocks.map((b) =>
+        b.id !== id ? b : { ...b, props: setNested(b.props ?? {}, key, value) },
+      ),
+    );
   };
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        e.target instanceof HTMLSelectElement
+      ) {
+        return;
+      }
+      if (e.key === "Escape") onSelectBlock(null);
+      if ((e.key === "Delete" || e.key === "Backspace") && selectedBlockId) {
+        e.preventDefault();
+        onBlocksChange(blocks.filter((b) => b.id !== selectedBlockId));
+        onSelectBlock(null);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [selectedBlockId, blocks, onBlocksChange, onSelectBlock]);
 
   if (previewMode) {
     return (
-      <div className="h-full">
-        <LivePreview profileId={profileId ?? ""} onClose={() => setPreviewMode(false)} />
+      <div className="h-full min-h-0 flex-1">
+        <LivePreview profileId={profileId ?? ""} onClose={() => onPreviewClose?.()} />
       </div>
     );
   }
 
   return (
-    <div className="flex h-full gap-4">
-      {/* Левая панель — Palette */}
-      <div className="w-44 shrink-0">
-        <Palette onAddBlock={addBlock} />
-      </div>
+    <div className="flex h-full min-h-0 flex-1 overflow-hidden">
+      <StudioLeftSidebar
+        layers={
+          <LayersPanel
+            blocks={blocks}
+            selectedId={selectedBlockId}
+            onSelect={onSelectBlock}
+            onReorder={reorderBlock}
+            onDelete={removeBlock}
+          />
+        }
+        assets={<Palette onAddBlock={addBlock} />}
+      />
 
-      {/* Центр — Canvas */}
-      <div className="min-w-0 flex-1">
-        <StudioCanvas
-          selectedId={selectedBlockId}
-          onSelect={onSelectBlock}
-          onDropBlock={addBlock}
-          previewMode={false}
-          onTogglePreview={() => setPreviewMode(true)}
-        >
-          <div className="flex items-center gap-3 border-b px-4 py-2">
-            <input className="flex-1 rounded border px-2 py-1 text-sm font-medium" value={page.title} onChange={(e) => onPageChange({ title: e.target.value })} placeholder="Название страницы" />
-            <input className="w-32 rounded border px-2 py-1 text-xs font-mono" value={page.route} onChange={(e) => onPageChange({ route: e.target.value })} placeholder="/route" />
-            <label className="flex items-center gap-1 text-xs">
-              <input type="checkbox" checked={page.inMenu} onChange={(e) => onPageChange({ inMenu: e.target.checked })} />
-              В меню
-            </label>
+      <StudioCanvas
+        artboardLabel={page.title}
+        onSelect={onSelectBlock}
+        onDropBlock={addBlock}
+      >
+        {blocks.length === 0 ? (
+          <div
+            className="flex flex-col items-center justify-center gap-2 py-32 text-sm"
+            style={{ color: FIGMA.textDim }}
+          >
+            <span>Перетащите блок из панели «Блоки»</span>
+            <span className="text-xs">или кликните по типу в списке</span>
           </div>
-          <div className="space-y-0 p-4">
-            {blocks.length === 0 && (
-              <div className="flex items-center justify-center py-16 text-sm text-neutral-400">
-                Перетащите блоки из палитры слева
-              </div>
-            )}
-            {blocks.map((block, i) => (
-              <CanvasBlock
-                key={block.id}
-                block={block}
-                isSelected={selectedBlockId === block.id}
-                onSelect={() => onSelectBlock(block.id)}
-                onMoveUp={() => moveBlock(i, -1)}
-                onMoveDown={() => moveBlock(i, 1)}
-                canMoveUp={i > 0}
-                canMoveDown={i < blocks.length - 1}
-                onDelete={() => removeBlock(block.id)}
-              />
-            ))}
-          </div>
-        </StudioCanvas>
-      </div>
+        ) : (
+          blocks.map((block) => (
+            <CanvasBlock
+              key={block.id}
+              block={block}
+              isSelected={selectedBlockId === block.id}
+              onSelect={() => onSelectBlock(block.id)}
+            />
+          ))
+        )}
+      </StudioCanvas>
 
-      {/* Правая панель — Properties */}
-      <div className="w-64 shrink-0 overflow-y-auto rounded-lg border bg-white p-3">
+      <StudioRightSidebar>
         {selectedBlock ? (
           <PropertiesPanel
             block={selectedBlock}
@@ -143,11 +155,9 @@ export function VisualPageEditor({
             onChangeProp={(key, value) => updateProp(selectedBlock.id, key, value)}
           />
         ) : (
-          <div className="flex h-full items-center justify-center p-4 text-center text-xs text-neutral-400">
-            Выберите блок на странице
-          </div>
+          <PagePropertiesPanel page={page} onChange={onPageChange} />
         )}
-      </div>
+      </StudioRightSidebar>
     </div>
   );
 }

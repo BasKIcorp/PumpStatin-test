@@ -13,12 +13,21 @@ _SEED_PUMPS = [
 ]
 
 _CATALOGS = {
-    "catalog.pumpTypes": [("inline", "Инлайн"), ("end", "Консольный")],
-    "catalog.fluidTypes": [("water", "Вода"), ("glycol", "Гликоль")],
-    "catalog.pnRatings": [("16", "PN16"), ("25", "PN25")],
-    "catalog.controlTypes": [("fc", "Частотное"), ("fix", "Фиксированное")],
-    "catalog.filters": [("yes", "С фильтром"), ("no", "Без фильтра")],
-    "catalog.connections": [("flange", "Фланец"), ("thread", "Резьба")],
+    "catalog.pumpTypes": [
+        ("civos", "CIVOS"),
+        ("inline", "Инлайн"),
+        ("end", "Консольный"),
+    ],
+    "catalog.fluidTypes": [("water", "Вода"), ("glycol", "Гликоль 30%")],
+    "catalog.pnRatings": [("10", "PN10"), ("16", "PN16"), ("25", "PN25")],
+    "catalog.controlTypes": [
+        ("fc", "Частотное регулирование"),
+        ("fix", "Прямой пуск"),
+    ],
+    "catalog.filters": [("none", "отсутствует"), ("yes", "Сетчатый фильтр")],
+    "catalog.housings": [("none", "отсутствует"), ("standard", "Стандартный")],
+    "catalog.connections": [("flange", "фланец"), ("thread", "Резьбовое")],
+    "catalog.collectorMaterials": [("aisi304", "AISI304"), ("aisi316", "AISI316")],
 }
 
 

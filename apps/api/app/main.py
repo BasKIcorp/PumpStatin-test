@@ -40,4 +40,10 @@ app.include_router(admin_site.router, prefix="/api/v1/admin", tags=["admin"])
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "mockDb": settings.use_mock_db}
+    from app.db.dialect import database_mode
+
+    return {
+        "status": "ok",
+        "mockDb": settings.use_mock_db,
+        "database": database_mode(),
+    }

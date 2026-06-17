@@ -49,7 +49,7 @@
 
 ```powershell
 pnpm install
-pnpm dev:api    # API :8000
+pnpm dev:api    # API :8000 (SQLite data/pumpstation.db)
 pnpm dev:web    # UI :5173
 ```
 
