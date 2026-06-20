@@ -16,10 +16,8 @@ function sortPreviewPages(pages: PageConfig[]): PageConfig[] {
 
 function wizardPreviewStepId(page: PageConfig, bundle: ProfileBundle): string | undefined {
   if (page.type !== "wizard") return undefined;
-  const frameSteps = page.frames ? Object.keys(page.frames) : [];
-  if (frameSteps.length > 0) return frameSteps[0];
   const nav = bundle.wizard?.navigation as { steps?: { id: string }[] } | undefined;
-  return nav?.steps?.[0]?.id;
+  return nav?.steps?.[0]?.id ?? "product-class";
 }
 
 /** Превью всего сайта с текущим черновиком (pages + layout + wizard nav) */
@@ -27,13 +25,18 @@ export function DraftSitePreview({
   site,
   bundle,
   onClose,
+  initialPageId,
 }: {
   site: SiteConfig;
   bundle: ProfileBundle;
   onClose: () => void;
+  /** С какой страницы начать (например wizard при превью из редактора) */
+  initialPageId?: string;
 }) {
   const sorted = useMemo(() => sortPreviewPages(site.pages), [site.pages]);
-  const [pageId, setPageId] = useState(() => sorted[0]?.id ?? "");
+  const [pageId, setPageId] = useState(
+    () => initialPageId ?? sorted.find((p) => p.type === "wizard")?.id ?? sorted[0]?.id ?? "",
+  );
   const page = sorted.find((p) => p.id === pageId) ?? sorted[0];
   const [viewportId, setViewportId] = useState<PreviewViewportId>("full");
 

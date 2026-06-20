@@ -22,8 +22,9 @@ export interface WizardStepRendererProps {
 }
 
 /**
- * Единый рендер шага визарда: frames → GridPageContent, иначе WizardEngine.
- * Используется на live (WizardGridPage) и в Studio (WizardVisualEditor).
+ * Единый рендер шага визарда.
+ * Live / read-only preview → WizardEngine (оригинальная вёрстка Strela).
+ * Studio с editor → frames + GridPageContent для drag/resize.
  */
 export function WizardStepRenderer({
   page,
@@ -35,13 +36,17 @@ export function WizardStepRenderer({
   selectedCardId,
   onSelectCard,
 }: WizardStepRendererProps) {
-  const savedBlocks = page.frames?.[stepId]?.blocks;
-  const frameBlocks =
-    savedBlocks && savedBlocks.length > 0
-      ? savedBlocks
-      : stepDef
-        ? frameBlocksForStep(page, stepId, stepDef, strela)
-        : [];
+  if (!editor) {
+    return (
+      <WizardEngine
+        previewStep={stepId}
+        selectedCardId={selectedCardId}
+        onSelectCard={onSelectCard}
+      />
+    );
+  }
+
+  const frameBlocks = frameBlocksForStep(page, stepId, stepDef, strela);
   const useFrames = frameBlocks.length > 0;
   const { cols } = pageGridMetrics(page);
 

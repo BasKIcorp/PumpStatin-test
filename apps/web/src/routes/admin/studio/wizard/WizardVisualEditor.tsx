@@ -186,6 +186,7 @@ export function WizardVisualEditor({
   onRegisterSave,
   onDraftPageChange,
   onNavDraftChange,
+  onPreviewStepChange,
 }: {
   page: PageConfig;
   site: SiteConfig;
@@ -200,6 +201,7 @@ export function WizardVisualEditor({
   onRegisterSave?: (fn: () => Promise<void>) => void;
   onDraftPageChange?: (page: PageConfig) => void;
   onNavDraftChange?: (nav: WizardNavState) => void;
+  onPreviewStepChange?: (stepId: string) => void;
 }) {
   const { state: nav, setState: setNav, undo, redo, canUndo, canRedo, reset } = useUndoRedo(initialNav);
   const serverNavKeyRef = useRef<string>("");
@@ -210,7 +212,7 @@ export function WizardVisualEditor({
   const [previewStep, setPreviewStep] = useState(initialNav.steps[0]?.id ?? "product-class");
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [showStrelaChrome, setShowStrelaChrome] = useState(false);
+  const [showStrelaChrome, setShowStrelaChrome] = useState(true);
   const initialAppearance = (profileBundle.branding.appearance ?? {}) as StrelaAppearance;
   const [appearanceDraft, setAppearanceDraft] = useState<StrelaAppearance>(initialAppearance);
   const gridMetrics = pageGridMetrics(page);
@@ -245,6 +247,10 @@ export function WizardVisualEditor({
   useEffect(() => {
     onNavDraftChange?.(nav);
   }, [nav, onNavDraftChange]);
+
+  useEffect(() => {
+    onPreviewStepChange?.(previewStep);
+  }, [previewStep, onPreviewStepChange]);
 
   useEffect(() => {
     const key = JSON.stringify(initialNav);

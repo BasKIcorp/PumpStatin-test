@@ -25,7 +25,6 @@ export function WizardGridPage({
   const isStrela = branding.layoutVariant === "strela-funnel";
   const nav = wizard.navigation as NavigationConfig;
   const stepDef = nav.steps?.find((s) => s.id === step);
-  const useFrames = Boolean(page.frames?.[step]?.blocks?.length);
 
   useEffect(() => {
     if (previewStepId) return;
@@ -46,7 +45,8 @@ export function WizardGridPage({
   );
 
   if (isStrela) {
-    if (step === "selection-form" && !useFrames) {
+    // Как в legacy WizardPage: форма подбора без funnel-оболочки
+    if (step === "selection-form") {
       return inner;
     }
     return (

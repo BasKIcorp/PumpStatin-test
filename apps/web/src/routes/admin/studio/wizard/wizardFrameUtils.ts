@@ -43,6 +43,17 @@ export function defaultFrameBlocks(step: WizardStepDef, strela = true): BlockCon
   return [];
 }
 
+function normalizeStrelaFrameBlocks(blocks: BlockConfig[], stepDef?: WizardStepDef): BlockConfig[] {
+  if (stepDef?.type !== "card-grid") return blocks;
+  return blocks
+    .filter((b) => b.type !== "wizard/step-heading")
+    .map((b) =>
+      b.type === "wizard/card-grid-strela" && (b.layout?.y ?? 0) > 0
+        ? { ...b, layout: { ...b.layout!, y: 0 } }
+        : b,
+    );
+}
+
 export function frameBlocksForStep(
   page: PageConfig,
   stepId: string,
@@ -50,9 +61,13 @@ export function frameBlocksForStep(
   strela = true,
 ): BlockConfig[] {
   const saved = page.frames?.[stepId]?.blocks;
-  if (saved && saved.length > 0) return saved;
-  if (stepDef) return defaultFrameBlocks(stepDef, strela);
-  return [];
+  const raw =
+    saved && saved.length > 0
+      ? saved
+      : stepDef
+        ? defaultFrameBlocks(stepDef, strela)
+        : [];
+  return strela ? normalizeStrelaFrameBlocks(raw, stepDef) : raw;
 }
 
 export function patchWizardPageFrames(

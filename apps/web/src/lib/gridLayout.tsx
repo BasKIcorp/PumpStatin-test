@@ -22,9 +22,13 @@ export function pageGridMetrics(page: PageConfig) {
 }
 
 export function pageGridContainerClass(page: PageConfig): string {
-  return page.type === "auth"
-    ? "page-grid w-full min-h-[100dvh] p-0"
-    : "page-grid mx-auto w-full max-w-6xl p-4";
+  if (page.type === "auth") {
+    return "page-grid w-full min-h-[100dvh] p-0";
+  }
+  if (page.type === "wizard") {
+    return "page-grid relative h-full min-h-0 w-full flex-1 p-0";
+  }
+  return "page-grid mx-auto w-full max-w-6xl p-4";
 }
 
 export function gridContentHeight(blocks: BlockConfig[], rowHeight = DEFAULT_ROW_HEIGHT): number {

@@ -11,7 +11,7 @@ test.describe("Wizard smoke", () => {
     await expect(page.locator("body")).toBeVisible();
   });
 
-  test("wizard route reachable after login", async ({ page }) => {
+  test("wizard route shows product class cards", async ({ page }) => {
     await page.goto("/login");
     const loginInput = page.getByRole("textbox").first();
     if (await loginInput.isVisible().catch(() => false)) {
@@ -20,7 +20,11 @@ test.describe("Wizard smoke", () => {
       await page.getByRole("button", { name: /войти|login/i }).click();
       await page.waitForURL(/\/(wizard|dashboard|home)?/i, { timeout: 15_000 }).catch(() => {});
     }
-    await expect(page.locator("body")).toBeVisible();
+    await page.goto("/wizard");
+    await expect(page.locator(".selection-mockup-card-face").first()).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByText(/гидромодули/i)).toBeVisible({ timeout: 10_000 });
   });
 });
 

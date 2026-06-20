@@ -186,7 +186,11 @@ function GridEditableBlock({
     <BlockShell
       block={displayBlock}
       rowHeight={rowHeight}
-      className="relative min-h-0 overflow-hidden"
+      className={
+        isWizardCardGridBlock(block.type)
+          ? "relative flex min-h-0 flex-col overflow-visible"
+          : "relative min-h-0 overflow-hidden"
+      }
       style={selectionStyle}
       onClick={(e) => {
         e.stopPropagation();
@@ -198,7 +202,15 @@ function GridEditableBlock({
         onPointerDown={startDrag}
         style={{ pointerEvents: editor.onLayoutChange ? "auto" : undefined }}
       >
-        <div className={editor.onLayoutChange ? "pointer-events-none h-full overflow-hidden" : "h-full overflow-hidden"}>
+        <div
+          className={
+            isWizardCardGridBlock(block.type)
+              ? "flex h-full min-h-0 flex-1 flex-col"
+              : editor.onLayoutChange
+                ? "pointer-events-none h-full overflow-hidden"
+                : "h-full overflow-hidden"
+          }
+        >
           {inner}
         </div>
       </div>
@@ -211,6 +223,10 @@ function GridEditableBlock({
       ) : null}
     </BlockShell>
   );
+}
+
+function isWizardCardGridBlock(type: string): boolean {
+  return type === "wizard/card-grid-strela" || type === "wizard/card-grid-simple";
 }
 
 /** CSS Grid — единый рендерер для live, preview и studio (с editor) */
@@ -298,7 +314,16 @@ export function GridPageContent({ page, blocks, site, editor }: GridPageContentP
           );
         }
         return (
-          <BlockShell key={block.id} block={block} rowHeight={rowHeight} className="min-h-0 overflow-hidden">
+          <BlockShell
+            key={block.id}
+            block={block}
+            rowHeight={rowHeight}
+            className={
+              page.type === "wizard" && isWizardCardGridBlock(block.type)
+                ? "flex min-h-0 flex-col overflow-visible"
+                : "min-h-0 overflow-hidden"
+            }
+          >
             <Component block={block} profile={blockProfileProps(profile, { site })} />
           </BlockShell>
         );

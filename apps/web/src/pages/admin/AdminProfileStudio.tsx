@@ -19,6 +19,7 @@ import type { SiteConfig, PageConfig, BlockConfig } from "@pumpstation/contracts
 import type { ProfileBundle } from "@/api/config";
 import { StudioProfileProvider } from "@/providers/StudioProfileProvider";
 import { DraftSitePreview } from "@/routes/admin/studio/preview/DraftSitePreview";
+import { DraftPagePreview } from "@/routes/admin/studio/preview/DraftPagePreview";
 import type { StrelaAppearance } from "@/lib/strela/appearance";
 import {
   siteConfigFingerprint,
@@ -48,6 +49,7 @@ export function AdminProfileStudio() {
   const [pagePreview, setPagePreview] = useState(false);
   const [sitePreview, setSitePreview] = useState(false);
   const [pdfPreview, setPdfPreview] = useState(false);
+  const [wizardPreviewStep, setWizardPreviewStep] = useState("product-class");
   const pdfSaveRef = useRef<(() => Promise<void>) | null>(null);
   const wizardSaveRef = useRef<(() => Promise<void>) | null>(null);
   const savedSiteFpRef = useRef("");
@@ -406,8 +408,8 @@ export function AdminProfileStudio() {
               : activeTab === "frontend" && frontendMode === "pages" && selectedPage
                 ? isWizardPageSelected
                   ? () => {
-                      setPagePreview(false);
-                      setSitePreview(true);
+                      setSitePreview(false);
+                      setPagePreview(true);
                     }
                   : isStudioPagesEditorPage(selectedPage)
                     ? () => {
@@ -456,6 +458,20 @@ export function AdminProfileStudio() {
               }}
               onDraftPageChange={handleWizardDraftPageChange}
               onNavDraftChange={handleWizardDraftNavChange}
+              onPreviewStepChange={setWizardPreviewStep}
+            />
+          )}
+
+          {pagePreview &&
+            isWizardPageSelected &&
+            selectedPage &&
+            previewBundle && (
+            <DraftPagePreview
+              page={wizardDraftPage ?? selectedPage}
+              site={previewSite}
+              bundle={previewBundle}
+              previewWizardStepId={wizardPreviewStep}
+              onClose={() => setPagePreview(false)}
             />
           )}
 

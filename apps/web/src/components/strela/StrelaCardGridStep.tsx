@@ -63,7 +63,7 @@ export function StrelaCardGridStep({
   const resolvedTitle =
     title ?? (titleKey ? String(branding[titleKey as keyof typeof branding] ?? branding.appTitle) : "");
   const resolvedSubtitle =
-    subtitle ?? (subtitleKey ? branding.copy[subtitleKey] : undefined);
+    subtitle ?? (subtitleKey ? branding.copy?.[subtitleKey] : undefined);
 
   return (
     <div className="selection-funnel-stage-top flex min-h-0 flex-1 flex-col">

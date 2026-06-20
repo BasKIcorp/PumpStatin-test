@@ -19,8 +19,16 @@
 ## Strela funnel — сайдбар и canvas (2026-06-20, доработка)
 
 - **Сайдбар** не grid-блок — настраивается в правой панели **«Оболочка Strela (сайдбар)»**: ширина (`appearance.funnel_sidebar_width`), текст, wordmark.
-- **Режим «Сетка»** (по умолчанию): `StudioCanvas` + drag/resize блоков шага, как у CMS-страниц. Слева пунктир — зона сайдбара.
-- **Режим «Оболочка Strela»**: WYSIWYG-превью с `StrelaWizardShell` (без редактирования layout).
+- **Режим «Оболочка Strela»** (по умолчанию): WYSIWYG как на сайте (`WizardEngine`).
+- **Режим «Сетка»**: drag/resize блоков в StudioCanvas.
+- **Превью** (кнопка в toolbar): `DraftPagePreview` текущей страницы визарда + выбранный шаг, не «Главная».
+- **Live `/wizard`**: всегда `WizardEngine` внутри funnel — frames только для Studio-редактора.
+
+## Исправление 2026-06-20 (card-grid regression)
+
+**Причина:** frames перевели card-grid на `GridPageContent` (CSS Grid), Strela-карточки требуют flex внутри funnel.
+
+**Fix:** `WizardStepRenderer` без `editor` → `WizardEngine`. Превью визарда → `DraftPagePreview`, не site preview с «Главной». Восстановлен `pdfPreview` state в AdminProfileStudio.
 - Заголовок шага на live — в шапке funnel, не в grid; текст — в панели **«Шаг»**. Для Strela дефолтные frames без `wizard/step-heading`.
 - Сохранение: `handleSaveWizard` пишет wizard + site frames + `branding.appearance` при изменении оболочки.
 
