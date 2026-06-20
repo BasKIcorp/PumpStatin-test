@@ -14,6 +14,9 @@ interface Props {
   headerRight?: ReactNode;
   stageBackgroundSrc?: string | null;
   bodyClassName?: string;
+  sidebarWidth?: string;
+  /** Внутри конструктора: sidebar не fixed, а в границах превью */
+  embedded?: boolean;
   children: ReactNode;
 }
 
@@ -27,23 +30,36 @@ export function SelectionFlowFunnel({
   headerRight,
   stageBackgroundSrc,
   bodyClassName,
+  sidebarWidth,
+  embedded = false,
   children,
 }: Props) {
+  const sidebarW = sidebarWidth ?? `var(--funnel-sidebar-width, ${STRELA_SIDEBAR_WIDTH})`;
   return (
     <div
-      className="selection-flow-funnel-root relative flex min-h-0 flex-1 items-stretch"
+      className={cn(
+        "selection-flow-funnel-root flex min-h-0 flex-1 items-stretch",
+        embedded ? "relative h-full overflow-hidden" : "relative",
+      )}
       style={{ fontFamily: "var(--funnel-font-body)" }}
     >
       <div
-        className="fixed bottom-0 left-0 top-0 z-30 flex flex-col overflow-x-visible border-r border-neutral-200 bg-white"
-        style={{ width: STRELA_SIDEBAR_WIDTH }}
+        className={cn(
+          "z-30 flex flex-col overflow-x-visible border-r border-neutral-200 bg-white",
+          embedded ? "absolute bottom-0 left-0 top-0" : "fixed bottom-0 left-0 top-0",
+        )}
+        style={{ width: sidebarW }}
       >
-        <SidebarWordmark wordmarkSrc={sidebarWordmarkSrc ?? null} sidebarText={sidebarText} />
+        <SidebarWordmark
+          wordmarkSrc={sidebarWordmarkSrc ?? null}
+          sidebarText={sidebarText}
+          embedded={embedded}
+        />
       </div>
 
       <div
         className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[var(--funnel-page-bg)]"
-        style={{ marginLeft: STRELA_SIDEBAR_WIDTH }}
+        style={{ marginLeft: sidebarW }}
       >
         <header className="flex-shrink-0 border-0 px-2 py-2 sm:px-4 sm:py-2.5 lg:px-5">
           <div className="flex min-h-[44px] flex-col gap-2 sm:hidden">

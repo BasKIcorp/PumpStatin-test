@@ -1,5 +1,15 @@
 {
-  "templateName": "test",
+  "templateName": "bps-w-v2",
+  "bindings": {
+    "station.DN": "{{station.DN}}",
+    "station.dn_suction": "{{station.dn_suction}}",
+    "station.dn_discharge": "{{station.dn_discharge}}",
+    "bom.items": "{{bom.items}}",
+    "pump.name": "{{pump.name}}",
+    "pump.Q": "{{working_point.Q}}",
+    "pump.H": "{{working_point.H}}",
+    "curves.qh": "{{curves.qh_main}}"
+  },
   "blocks": [
     {
       "id": "h1",
@@ -9,8 +19,55 @@
       "w": 595,
       "h": 60,
       "props": {
-        "title": "Test",
-        "subtitle": "Sub"
+        "title": "{{branding.appTitle}}",
+        "subtitle": "Технико-коммерческое предложение"
+      }
+    },
+    {
+      "id": "dn1",
+      "type": "dn-info",
+      "x": 24,
+      "y": 72,
+      "w": 200,
+      "h": 40,
+      "props": {}
+    },
+    {
+      "id": "eq1",
+      "type": "equipment-table",
+      "x": 24,
+      "y": 120,
+      "w": 547,
+      "h": 120,
+      "props": {}
+    },
+    {
+      "id": "bom1",
+      "type": "bom-table",
+      "x": 24,
+      "y": 260,
+      "w": 547,
+      "h": 180,
+      "props": {}
+    },
+    {
+      "id": "chart1",
+      "type": "curves-chart",
+      "x": 24,
+      "y": 460,
+      "w": 547,
+      "h": 200,
+      "props": {}
+    },
+    {
+      "id": "f1",
+      "type": "footer",
+      "x": 0,
+      "y": 782,
+      "w": 595,
+      "h": 60,
+      "props": {
+        "text": "{{branding.copy.footer}}"
       }
     }
   ]

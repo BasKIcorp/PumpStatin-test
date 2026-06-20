@@ -1,4 +1,9 @@
-import { STUDIO_TABS } from "@/routes/admin/studio/TabNav";
+import {
+  CONSTRUCTOR_TABS,
+  FRONTEND_MODES,
+  type ConstructorTab,
+  type FrontendMode,
+} from "@/routes/admin/studio/studioTabs";
 import type { PageConfig } from "@pumpstation/contracts";
 import { PageSelector } from "./PageSelector";
 import { FIGMA } from "./figmaTokens";
@@ -12,10 +17,13 @@ export function StudioEditorTopBar({
   onDeletePage,
   activeTab,
   onTabChange,
+  frontendMode,
+  onFrontendModeChange,
   onSave,
   onPreview,
   saveMsg,
   contextLabel,
+  dirtyHint,
 }: {
   profileTitle: string;
   pages?: PageConfig[];
@@ -23,14 +31,24 @@ export function StudioEditorTopBar({
   onSelectPage?: (id: string) => void;
   onAddPage?: () => void;
   onDeletePage?: (id: string) => void;
-  activeTab: string;
-  onTabChange: (tab: string) => void;
-  onSave: () => void;
+  activeTab: ConstructorTab;
+  onTabChange: (tab: ConstructorTab) => void;
+  frontendMode?: FrontendMode;
+  onFrontendModeChange?: (mode: FrontendMode) => void;
+  onSave?: () => void;
   onPreview?: () => void;
   saveMsg?: string;
   contextLabel?: string;
+  /** Несохранённые изменения */
+  dirtyHint?: string;
 }) {
-  const showPageSelector = pages && onSelectPage && onAddPage && onDeletePage;
+  const showPageSelector =
+    activeTab === "frontend" &&
+    frontendMode !== "settings" &&
+    pages &&
+    onSelectPage &&
+    onAddPage &&
+    onDeletePage;
 
   return (
     <header
@@ -49,11 +67,11 @@ export function StudioEditorTopBar({
           onDelete={onDeletePage}
         />
       ) : (
-        <span className="text-sm font-medium text-white">{contextLabel ?? "Редактор"}</span>
+        <span className="text-sm font-medium text-white">{contextLabel ?? "Конструктор"}</span>
       )}
 
       <nav className="ml-2 flex items-center gap-0.5">
-        {STUDIO_TABS.map((tab) => (
+        {CONSTRUCTOR_TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
@@ -70,7 +88,31 @@ export function StudioEditorTopBar({
         ))}
       </nav>
 
+      {activeTab === "frontend" && onFrontendModeChange && (
+        <nav className="ml-1 flex items-center gap-0.5 border-l pl-2" style={{ borderColor: FIGMA.panelBorder }}>
+          {FRONTEND_MODES.map((mode) => (
+            <button
+              key={mode.id}
+              type="button"
+              onClick={() => onFrontendModeChange(mode.id)}
+              className="rounded px-2 py-1 text-[11px] transition-colors"
+              style={
+                frontendMode === mode.id
+                  ? { background: "#383838", color: FIGMA.text }
+                  : { color: FIGMA.textDim }
+              }
+            >
+              {mode.label}
+            </button>
+          ))}
+        </nav>
+      )}
+
       <div className="flex-1" />
+
+      {dirtyHint && !saveMsg && (
+        <span className="rounded bg-amber-900/30 px-2 py-0.5 text-[11px] text-amber-400">{dirtyHint}</span>
+      )}
 
       {saveMsg && (
         <span className="rounded bg-green-900/40 px-2 py-0.5 text-[11px] text-green-400">{saveMsg}</span>
@@ -86,14 +128,16 @@ export function StudioEditorTopBar({
         </button>
       )}
 
-      <button
-        type="button"
-        onClick={onSave}
-        className="rounded px-3 py-1 text-xs font-medium text-white"
-        style={{ background: FIGMA.accent }}
-      >
-        Сохранить
-      </button>
+      {onSave && (
+        <button
+          type="button"
+          onClick={onSave}
+          className="rounded px-3 py-1 text-xs font-medium text-white"
+          style={{ background: FIGMA.accent }}
+        >
+          Сохранить
+        </button>
+      )}
     </header>
   );
 }

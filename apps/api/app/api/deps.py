@@ -17,9 +17,8 @@ async def get_current_user(
     try:
         payload = decode_token(creds.credentials)
     except ValueError:
-        raise HTTPException(
-            status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token"
-        ) from None
+        # Просроченный/битый токен — как без авторизации (не блокируем публичные эндпоинты)
+        return None
     username = payload.get("sub")
     if not username:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Invalid token")

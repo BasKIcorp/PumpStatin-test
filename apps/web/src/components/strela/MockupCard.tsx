@@ -8,6 +8,7 @@ interface Props {
   bullets: string[];
   boxTitle?: string | null;
   disabled?: boolean;
+  selected?: boolean;
   onClick?: () => void;
   imageHoverVariant?: ImageHoverVariant;
   captionLogoSrc?: string | null;
@@ -20,6 +21,7 @@ export function MockupCard({
   bullets,
   boxTitle = null,
   disabled = false,
+  selected = false,
   onClick,
   imageHoverVariant = "zoomSubtle",
   captionLogoSrc = null,
@@ -47,6 +49,7 @@ export function MockupCard({
     <div
       className={cn(
         "selection-mockup-card-face flex min-h-0 w-full flex-col overflow-hidden rounded-xl border-0 bg-white shadow-[0_2px_8px_rgba(15,23,42,0.08),0_1px_3px_rgba(15,23,42,0.06)] ring-0 transition-[box-shadow,transform] duration-300 ease-out",
+        selected && "ring-2 ring-[#0d99ff] ring-offset-2",
         cardShadow,
       )}
     >

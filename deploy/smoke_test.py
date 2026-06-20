@@ -26,11 +26,15 @@ def req(method: str, path: str, data: dict | None = None, token: str | None = No
 def main() -> None:
     health = req("GET", "/health")
     assert health["status"] == "ok", health
-    print("OK health", health)
+    print("OK health", health.get("algorithm"), health.get("rulesVersion"))
 
     login = req("POST", "/api/v1/auth/login", {"username": "strela", "password": "demo123"})
     token = login["accessToken"]
     print("OK login profile", login["profile"]["id"])
+
+    site = req("GET", "/api/v1/config/site", token=token)
+    assert "pages" in site
+    print("OK site config", len(site.get("pages", [])))
 
     session = req("GET", "/api/v1/auth/session", token=token)
     assert session["authenticated"]
@@ -46,7 +50,14 @@ def main() -> None:
         {
             "product_line": "bps-w",
             "flow_id": "bps-w-domestic",
-            "parameters": {"flowRate": 15, "head": 20, "workingPumps": 1, "reservePumps": 1},
+            "parameters": {
+                "flowRate": 15,
+                "head": 20,
+                "workingPumps": 2,
+                "reservePumps": 1,
+                "pumpType": "COMOS",
+                "puLine": "bps-w-pro",
+            },
         },
         token=token,
     )

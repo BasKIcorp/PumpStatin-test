@@ -1,9 +1,10 @@
 interface Props {
   wordmarkSrc: string | null;
   sidebarText?: string;
+  embedded?: boolean;
 }
 
-export function SidebarWordmark({ wordmarkSrc, sidebarText }: Props) {
+export function SidebarWordmark({ wordmarkSrc, sidebarText, embedded = false }: Props) {
   const text = sidebarText?.trim();
   if (!wordmarkSrc && !text) {
     return <div className="h-full w-full bg-white" aria-hidden />;
@@ -19,7 +20,9 @@ export function SidebarWordmark({ wordmarkSrc, sidebarText }: Props) {
           src={wordmarkSrc}
           alt=""
           className="w-full max-w-full object-contain object-[left_top]"
-          style={{ maxHeight: "min(72dvh, calc(100dvh - 6rem))" }}
+          style={{
+            maxHeight: embedded ? "min(72%, calc(100% - 2rem))" : "min(72dvh, calc(100dvh - 6rem))",
+          }}
           decoding="async"
         />
       ) : null}

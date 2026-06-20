@@ -1,4 +1,4 @@
-import type { BlockConfig } from "@pumpstation/contracts";
+import type { BlockConfig, BlockGridLayout } from "@pumpstation/contracts";
 import { getNested } from "@/routes/admin/studio/canvas/studioPropUtils";
 import { getSchema, getBlockSchemas, type BlockFieldSchema } from "./blockSchema";
 import { FIGMA } from "../figma/figmaTokens";
@@ -83,6 +83,7 @@ function FieldEditor({
           style={bg}
           value={String(val)}
           onChange={(e) => onChange(e.target.value)}
+          disabled={field.key === "_dataStub"}
         >
           {field.options?.map((opt) => (
             <option key={opt} value={opt}>
@@ -99,6 +100,7 @@ function FieldEditor({
           value={String(val)}
           placeholder={field.placeholder}
           onChange={(e) => onChange(e.target.value)}
+          readOnly={field.key === "_dataStub"}
         />
       );
   }
@@ -108,16 +110,21 @@ const SECTION_LABELS: Record<string, string> = {
   style: "Стили",
   content: "Контент",
   behavior: "Поведение",
+  data: "Данные",
 };
 
 export function PropertiesPanel({
   block,
   onChangeType,
   onChangeProp,
+  onChangeLayout,
+  gridCols = 12,
 }: {
   block: BlockConfig;
   onChangeType: (type: string) => void;
   onChangeProp: (key: string, value: unknown) => void;
+  onChangeLayout?: (layout: BlockGridLayout) => void;
+  gridCols?: number;
 }) {
   const schema = getSchema(block.type);
   const allTypes = getBlockSchemas();
@@ -125,7 +132,12 @@ export function PropertiesPanel({
     return <div className="text-xs text-[#888]">Нет схемы для «{block.type}»</div>;
   }
 
-  const sections: Array<"style" | "content" | "behavior"> = ["style", "content", "behavior"];
+  const sections: Array<"style" | "content" | "behavior" | "data"> = [
+    "style",
+    "content",
+    "behavior",
+    "data",
+  ];
 
   return (
     <div className="space-y-4">
@@ -146,6 +158,34 @@ export function PropertiesPanel({
           ))}
         </select>
       </div>
+
+      {onChangeLayout && block.layout ? (
+        <div>
+          <h4 className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-[#888]">
+            Сетка
+          </h4>
+          <div className="grid grid-cols-4 gap-2">
+            {(["x", "y", "w", "h"] as const).map((key) => (
+              <div key={key}>
+                <label className="mb-1 block text-[10px] uppercase text-[#888]">{key}</label>
+                <input
+                  type="number"
+                  min={key === "w" || key === "h" ? 1 : 0}
+                  max={key === "x" || key === "w" ? gridCols : undefined}
+                  className={`${inputClass} text-xs`}
+                  style={{ background: FIGMA.inputBg }}
+                  value={block.layout![key]}
+                  onChange={(e) => {
+                    const n = Number(e.target.value);
+                    if (!Number.isFinite(n)) return;
+                    onChangeLayout({ ...block.layout!, [key]: n });
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       {sections.map((section) => {
         const fields = schema.fields.filter((f: BlockFieldSchema) => f.section === section);

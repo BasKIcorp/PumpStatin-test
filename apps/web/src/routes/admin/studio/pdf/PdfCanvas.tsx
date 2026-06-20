@@ -1,10 +1,14 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef } from "react";
+import { Rnd } from "react-rnd";
+import { useDroppable } from "@dnd-kit/core";
 import { FloatingZoom } from "../figma/FloatingZoom";
 import { FIGMA } from "../figma/figmaTokens";
 import { useCanvasNavigation } from "../figma/useCanvasNavigation";
 
 const A4 = { width: 595, height: 842 };
 const SNAP = 8;
+
+const snap = (v: number) => Math.max(0, Math.round(v / SNAP) * SNAP);
 
 export interface PdfBlock {
   id: string;
@@ -22,7 +26,7 @@ export function PdfCanvas({
   onSelect,
   onMove: onMoveBlock,
   onResize,
-  onDropBlock,
+  dropZoneId = "pdf-canvas-drop",
   mode,
 }: {
   blocks: PdfBlock[];
@@ -30,11 +34,13 @@ export function PdfCanvas({
   onSelect: (id: string | null) => void;
   onMove: (id: string, x: number, y: number) => void;
   onResize: (id: string, w: number, h: number) => void;
-  onDropBlock?: (type: string) => void;
+  dropZoneId?: string;
   mode: "auto" | "free";
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isDragOver, setIsDragOver] = useState(false);
+  const { setNodeRef: setDropRef, isOver: dndOver } = useDroppable({
+    id: dropZoneId,
+  });
   const { zoom, pan, handActive, startPan, handleWheel, zoomIn, zoomOut, resetView, spaceHeld } =
     useCanvasNavigation(0.7);
 
@@ -53,63 +59,7 @@ export function PdfCanvas({
     [onSelect, spaceHeld, startPan],
   );
 
-  const handleBlockMouseDown = useCallback(
-    (e: React.MouseEvent, block: PdfBlock) => {
-      if (mode !== "free" || spaceHeld) return;
-      e.stopPropagation();
-      onSelect(block.id);
-      const startX = e.clientX;
-      const startY = e.clientY;
-      const origX = block.x;
-      const origY = block.y;
-
-      const handleMouseMove = (me: MouseEvent) => {
-        const dx = (me.clientX - startX) / zoom;
-        const dy = (me.clientY - startY) / zoom;
-        onMoveBlock(
-          block.id,
-          Math.max(0, Math.round((origX + dx) / SNAP) * SNAP),
-          Math.max(0, Math.round((origY + dy) / SNAP) * SNAP),
-        );
-      };
-      const onUp = () => {
-        document.removeEventListener("mousemove", handleMouseMove);
-        document.removeEventListener("mouseup", onUp);
-      };
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", onUp);
-    },
-    [mode, zoom, onSelect, onMoveBlock, spaceHeld],
-  );
-
-  const handleResizeMouseDown = useCallback(
-    (e: React.MouseEvent, block: PdfBlock) => {
-      if (mode !== "free") return;
-      e.stopPropagation();
-      e.preventDefault();
-      const startX = e.clientX;
-      const startY = e.clientY;
-      const origW = block.w;
-      const origH = block.h;
-
-      const onMove = (me: MouseEvent) => {
-        const dw = (me.clientX - startX) / zoom;
-        const dh = (me.clientY - startY) / zoom;
-        onResize(
-          block.id,
-          Math.round(Math.max(40, origW + dw) / SNAP) * SNAP,
-          Math.round(Math.max(20, origH + dh) / SNAP) * SNAP,
-        );
-      };
-      const onUp = () => {
-        document.removeEventListener("mousemove", onMove);
-        document.removeEventListener("mouseup", onUp);
-      };
-      document.addEventListener("mousemove", onMove);
-      document.addEventListener("mouseup", onUp);
-    },
-    [mode, zoom, onResize],
-  );
+  const freeMode = mode === "free" && !spaceHeld;
 
   return (
     <div className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden">
@@ -119,7 +69,9 @@ export function PdfCanvas({
       >
         <span className="text-[11px] text-[#888]">Режим:</span>
         <span className="text-[11px] text-[#b3b3b3]">
-          {mode === "auto" ? "Поток (сверху вниз)" : "Свободное размещение"}
+          {mode === "auto"
+            ? "Поток (сверху вниз) — порядок слоёв = порядок в PDF"
+            : "Свободное размещение — drag/resize на холсте; в PDF порядок по Y"}
         </span>
       </div>
 
@@ -134,19 +86,6 @@ export function PdfCanvas({
         }}
         onWheel={handleWheel}
         onMouseDown={handleMouseDown}
-        onDragOver={(e) => {
-          if (e.dataTransfer.types.includes("text/plain")) {
-            e.preventDefault();
-            setIsDragOver(true);
-          }
-        }}
-        onDragLeave={() => setIsDragOver(false)}
-        onDrop={(e) => {
-          e.preventDefault();
-          setIsDragOver(false);
-          const type = e.dataTransfer.getData("text/plain");
-          if (type && onDropBlock) onDropBlock(type);
-        }}
         onContextMenu={(e) => e.preventDefault()}
       >
         <div
@@ -161,13 +100,14 @@ export function PdfCanvas({
             <span className="font-mono text-[10px] text-[#666]">595 × 842 pt</span>
           </div>
           <div
+            ref={setDropRef}
             data-canvas-bg
             className="relative overflow-hidden bg-white"
             style={{
               width: A4.width,
               height: A4.height,
               boxShadow: FIGMA.artboardShadow,
-              outline: isDragOver ? `2px solid ${FIGMA.accent}` : undefined,
+              outline: dndOver ? `2px solid ${FIGMA.accent}` : undefined,
             }}
           >
             {mode === "free" && (
@@ -206,36 +146,69 @@ export function PdfCanvas({
 
             {blocks.map((block) => {
               const isSelected = selectedId === block.id;
-              const style: React.CSSProperties =
-                mode === "free"
-                  ? { position: "absolute", left: block.x, top: block.y, width: block.w, minHeight: block.h }
-                  : { width: "100%" };
+
+              if (!freeMode) {
+                return (
+                  <div
+                    key={block.id}
+                    className="relative w-full"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelect(block.id);
+                    }}
+                  >
+                    {isSelected && (
+                      <div
+                        className="pointer-events-none absolute inset-0 z-10"
+                        style={{ boxShadow: `inset 0 0 0 2px ${FIGMA.accent}` }}
+                      />
+                    )}
+                    <PdfBlockPreview block={block} />
+                  </div>
+                );
+              }
 
               return (
-                <div
+                <Rnd
                   key={block.id}
-                  className="relative"
-                  style={style}
-                  onMouseDown={(e) => handleBlockMouseDown(e, block)}
-                  onClick={(e) => {
+                  size={{ width: block.w, height: block.h }}
+                  position={{ x: block.x, y: block.y }}
+                  bounds="parent"
+                  dragGrid={[SNAP, SNAP]}
+                  resizeGrid={[SNAP, SNAP]}
+                  disableDragging={!freeMode}
+                  enableResizing={freeMode}
+                  onDragStart={(e) => {
                     e.stopPropagation();
                     onSelect(block.id);
                   }}
+                  onResizeStart={(e) => {
+                    e.stopPropagation();
+                    onSelect(block.id);
+                  }}
+                  onDragStop={(_e, d) => {
+                    onMoveBlock(block.id, snap(d.x), snap(d.y));
+                  }}
+                  onResizeStop={(_e, _dir, ref, _delta, position) => {
+                    onMoveBlock(block.id, snap(position.x), snap(position.y));
+                    onResize(
+                      block.id,
+                      snap(parseInt(ref.style.width, 10)),
+                      snap(parseInt(ref.style.height, 10)),
+                    );
+                  }}
+                  style={{ zIndex: isSelected ? 20 : 1 }}
                 >
-                  {isSelected && (
-                    <div
-                      className="pointer-events-none absolute inset-0 z-10"
-                      style={{ boxShadow: `inset 0 0 0 2px ${FIGMA.accent}` }}
-                    />
-                  )}
-                  <PdfBlockPreview block={block} />
-                  {isSelected && mode === "free" && (
-                    <div
-                      className="absolute bottom-0 right-0 z-20 h-2.5 w-2.5 cursor-se-resize border border-[#0d99ff] bg-white"
-                      onMouseDown={(e) => handleResizeMouseDown(e, block)}
-                    />
-                  )}
-                </div>
+                  <div className="relative h-full w-full">
+                    {isSelected && (
+                      <div
+                        className="pointer-events-none absolute inset-0 z-10"
+                        style={{ boxShadow: `inset 0 0 0 2px ${FIGMA.accent}` }}
+                      />
+                    )}
+                    <PdfBlockPreview block={block} />
+                  </div>
+                </Rnd>
               );
             })}
           </div>
@@ -251,7 +224,7 @@ function PdfBlockPreview({ block }: { block: PdfBlock }) {
   switch (block.type) {
     case "header":
       return (
-        <div className="flex items-center gap-3 border-b bg-neutral-50 p-3">
+        <div className="flex h-full items-center gap-3 border-b bg-neutral-50 p-3">
           <div className="h-8 w-20 rounded bg-neutral-300" />
           <div>
             <div className="text-xs font-bold text-neutral-700">
@@ -265,19 +238,38 @@ function PdfBlockPreview({ block }: { block: PdfBlock }) {
       );
     case "footer":
       return (
-        <div className="border-t bg-neutral-50 p-2 text-center text-[9px] text-neutral-500">
+        <div className="flex h-full items-center justify-center border-t bg-neutral-50 p-2 text-center text-[9px] text-neutral-500">
           {(block.props.text as string) ?? "Подвал документа"}
         </div>
       );
     case "text":
       return (
-        <div className="p-3 text-[10px] leading-relaxed text-neutral-700">
+        <div className="h-full p-3 text-[10px] leading-relaxed text-neutral-700">
           {(block.props.content as string) ?? "Текстовый блок"}
+        </div>
+      );
+    case "bom-table":
+      return (
+        <div className="h-full p-2 text-[9px]">
+          <div className="mb-1 font-bold text-neutral-600">Спецификация (BOM)</div>
+          <div className="text-neutral-500">{"{{bom.items}}"}</div>
+        </div>
+      );
+    case "dn-info":
+      return (
+        <div className="h-full p-2 text-[9px]">
+          <div className="font-medium text-neutral-700">DN: {"{{station.DN}}"}</div>
+        </div>
+      );
+    case "curves-chart":
+      return (
+        <div className="flex h-full items-center justify-center bg-neutral-50 text-[9px] text-neutral-400">
+          График Q-H {"{{curves.qh}}"}
         </div>
       );
     case "image":
       return (
-        <div className="flex items-center justify-center bg-neutral-100 p-3">
+        <div className="flex h-full items-center justify-center bg-neutral-100 p-3">
           <div className="text-center text-[10px] text-neutral-400">
             🖼️ {(block.props.caption as string) ?? "Изображение"}
           </div>
@@ -287,7 +279,7 @@ function PdfBlockPreview({ block }: { block: PdfBlock }) {
       return <hr className="my-2 border-neutral-300" />;
     case "equipment-table":
       return (
-        <div className="p-2">
+        <div className="h-full p-2">
           <div className="mb-1 text-[9px] font-bold text-neutral-600">Таблица оборудования</div>
           <div className="grid grid-cols-4 gap-px bg-neutral-300 text-[8px]">
             {["Модель", "Q, м³/ч", "H, м", "N, кВт"].map((h) => (
@@ -297,7 +289,7 @@ function PdfBlockPreview({ block }: { block: PdfBlock }) {
             ))}
             {[1, 2, 3].map((i) => (
               <div key={i} className="contents">
-                <div className="bg-white p-1">BPS-W {i}</div>
+                <div className="bg-white p-1">{"{{pump.name}}"}</div>
                 <div className="bg-white p-1">{15 + i * 10}</div>
                 <div className="bg-white p-1">{30 + i * 5}</div>
                 <div className="bg-white p-1">{(2.2 + i * 0.5).toFixed(1)}</div>
@@ -308,7 +300,7 @@ function PdfBlockPreview({ block }: { block: PdfBlock }) {
       );
     case "spec-sheet":
       return (
-        <div className="p-2 text-[9px]">
+        <div className="h-full p-2 text-[9px]">
           <div className="mb-1 font-bold text-neutral-600">Характеристики</div>
           {["Макс. расход", "Напор", "Мощность", "Напряжение"].map((spec) => (
             <div key={spec} className="flex justify-between border-b py-0.5">
@@ -320,7 +312,7 @@ function PdfBlockPreview({ block }: { block: PdfBlock }) {
       );
     case "customer-info":
       return (
-        <div className="p-2 text-[9px]">
+        <div className="h-full p-2 text-[9px]">
           <div className="font-medium text-neutral-700">
             {(block.props.organization as string) ?? "Организация"}
           </div>
@@ -329,11 +321,11 @@ function PdfBlockPreview({ block }: { block: PdfBlock }) {
       );
     case "signature":
       return (
-        <div className="border-t pt-6 text-center text-[9px] text-neutral-400">
+        <div className="flex h-full items-end justify-center border-t pt-6 text-center text-[9px] text-neutral-400">
           ___________ / {(block.props.name as string) ?? "Подпись"} /
         </div>
       );
     default:
-      return <div className="p-2 text-[9px] text-neutral-400">{block.type}</div>;
+      return <div className="h-full p-2 text-[9px] text-neutral-400">{block.type}</div>;
   }
 }

@@ -1,0 +1,166 @@
+layout:
+  header:
+    logo:
+      src: /logo.svg
+      width: 180
+      link: /home
+    menu:
+    - label: Главная
+      pageId: home
+    - label: О компании
+      pageId: about
+    - label: Каталог
+      pageId: catalog
+    - label: Подбор насосов
+      pageId: wizard
+    loginButton: true
+  footer:
+    columns:
+    - title: Продукты
+      links:
+      - label: Подбор насосов
+        pageId: wizard
+      - label: Каталог
+        pageId: catalog
+    - title: Компания
+      links:
+      - label: О нас
+        pageId: about
+      - label: Контакты
+        pageId: contact
+    - title: Помощь
+      links:
+      - label: Кабинет
+        pageId: cabinet
+    copyright: © PumpStation. Все права защищены.
+routing:
+  landingPageId: home
+pages:
+- id: login
+  title: Вход
+  route: /login
+  inMenu: false
+  type: auth
+  pageProfile: auth-minimal
+  grid:
+    cols: 12
+    rowHeight: 40
+  blocks:
+  - id: login-brand
+    type: auth/brand-panel
+    layout: { x: 0, y: 0, w: 8, h: 16 }
+    props: {}
+  - id: login-form
+    type: auth/login-form
+    layout: { x: 8, y: 0, w: 4, h: 8 }
+    props:
+      title: Вход
+  - id: login-quick
+    type: auth/quick-login
+    layout: { x: 8, y: 8, w: 4, h: 6 }
+    props: {}
+  - id: login-admin
+    type: auth/admin-entry
+    layout: { x: 8, y: 14, w: 4, h: 2 }
+    props: {}
+  - id: login-back
+    type: auth/back-link
+    layout: { x: 8, y: 16, w: 4, h: 1 }
+    props: {}
+- id: home
+  title: Главная
+  route: /home
+  inMenu: true
+  type: page
+  pageProfile: cms-default
+  blocks:
+  - id: home-hero
+    type: hero
+    layout: { x: 0, y: 0, w: 12, h: 8 }
+    props:
+      background: '#1e4a8c'
+      heading: Подбор насосных станций
+      subheading: Стрела — инженерный сервис подбора оборудования
+      cta:
+        label: Подобрать
+        pageId: wizard
+- id: about
+  title: О компании
+  route: /about
+  inMenu: true
+  type: page
+  pageProfile: cms-default
+  blocks:
+  - id: block-1781956390091
+    type: divider
+    layout: { x: 0, y: 0, w: 12, h: 1 }
+    props:
+      style: solid
+      color: '#e5e7eb'
+- id: catalog
+  title: Каталог
+  route: /catalog
+  inMenu: true
+  type: page
+  blocks:
+  - id: catalog-grid
+    type: product-grid
+    layout: { x: 0, y: 0, w: 12, h: 10 }
+    props:
+      columns: 3
+      filter: true
+- id: contact
+  title: Контакты
+  route: /contact
+  inMenu: false
+  type: page
+  blocks:
+  - id: contact-form
+    type: contact-form
+    layout: { x: 0, y: 0, w: 6, h: 8 }
+    props:
+      title: Свяжитесь с нами
+  - id: contact-map
+    type: map
+    layout: { x: 6, y: 0, w: 6, h: 8 }
+    props:
+      address: Москва, Россия
+      lat: 55.75
+      lng: 37.62
+- id: cabinet
+  title: Кабинет
+  route: /cabinet
+  inMenu: false
+  type: cabinet
+  pageProfile: strela-funnel
+  blocks:
+  - id: cabinet-main
+    type: cabinet/workspace
+    layout: { x: 0, y: 0, w: 12, h: 20 }
+    props: {}
+- id: wizard
+  title: Подбор насосов
+  route: /wizard
+  inMenu: true
+  type: wizard
+  pageProfile: sidebar-gradient
+  wizardRef: wizard/navigation.yaml
+  frames:
+    product-class:
+      blocks:
+      - id: w-step-product
+        type: wizard/step-heading
+        layout: { x: 0, y: 0, w: 12, h: 2 }
+        props:
+          stepId: product-class
+      - id: w-cards-product
+        type: wizard/card-grid-simple
+        layout: { x: 0, y: 2, w: 12, h: 12 }
+        props:
+          stepId: product-class
+    selection-form:
+      blocks:
+      - id: w-legacy-form
+        type: wizard/legacy-selection
+        layout: { x: 0, y: 0, w: 12, h: 24 }
+        props: {}

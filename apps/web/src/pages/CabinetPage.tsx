@@ -11,6 +11,7 @@ import {
 } from "@/api/selection";
 import { AppShell } from "@/components/layout/AppShell";
 import { useAuthStore } from "@/stores/authStore";
+import { useWizardRoute } from "@/providers/SiteConfigProvider";
 
 function formatDate(value: string): string {
   const d = new Date(value);
@@ -20,6 +21,7 @@ function formatDate(value: string): string {
 
 export function CabinetPage() {
   const [, navigate] = useLocation();
+  const wizardRoute = useWizardRoute();
   const logout = useAuthStore((s) => s.logout);
   const [history, setHistory] = useState<SelectionHistoryItem[]>([]);
   const [projects, setProjects] = useState<SelectionProjectItem[]>([]);
@@ -172,7 +174,7 @@ export function CabinetPage() {
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Личный кабинет: проекты и история подборов</h1>
         <div className="flex items-center gap-2">
-          <Link href="/" className="rounded border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-50">
+          <Link href={wizardRoute} className="rounded border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-50">
             К подбору
           </Link>
           <button

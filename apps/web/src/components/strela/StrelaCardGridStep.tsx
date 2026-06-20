@@ -17,6 +17,8 @@ interface Props {
   titleKey?: string;
   subtitleKey?: string;
   cards: WizardCard[];
+  selectedCardId?: string | null;
+  onSelectCard?: (cardId: string) => void;
 }
 
 function cardImageSrc(card: WizardCard, index: number): string {
@@ -49,6 +51,8 @@ export function StrelaCardGridStep({
   titleKey,
   subtitleKey,
   cards,
+  selectedCardId,
+  onSelectCard,
 }: Props) {
   const { branding } = useProfile();
   const selectCard = useWizardStore((s) => s.selectCard);
@@ -73,6 +77,8 @@ export function StrelaCardGridStep({
             : ["—"];
           const disabled = card.enabled === false;
 
+          const studioMode = Boolean(onSelectCard);
+
           return (
             <MockupCard
               key={card.id}
@@ -82,15 +88,18 @@ export function StrelaCardGridStep({
               image={<CardImage src={cardImageSrc(card, index)} title={card.title} />}
               captionLogoSrc={captionLogo}
               imageHoverVariant={CARD_HOVER_VARIANTS[index % CARD_HOVER_VARIANTS.length]}
-              disabled={disabled}
+              disabled={!studioMode && disabled}
+              selected={studioMode && selectedCardId === card.id}
               onClick={
-                disabled
-                  ? undefined
-                  : () =>
-                      selectCard(stepId, card.id, {
-                        next: card.next,
-                        flow: card.flow,
-                      })
+                studioMode
+                  ? () => onSelectCard!(card.id)
+                  : disabled
+                    ? undefined
+                    : () =>
+                        selectCard(stepId, card.id, {
+                          next: card.next,
+                          flow: card.flow,
+                        })
               }
             />
           );

@@ -1,5 +1,6 @@
 import { useProfile } from "@/providers/ProfileProvider";
 import { useWizardStore } from "@/stores/wizardStore";
+import { cn } from "@/lib/cn";
 import type { WizardStepId } from "@/stores/wizardStore";
 import type { WizardCard } from "@/types/wizard";
 
@@ -11,6 +12,8 @@ interface Props {
   subtitleKey?: string;
   cards: WizardCard[];
   backLabel?: string;
+  selectedCardId?: string | null;
+  onSelectCard?: (cardId: string) => void;
 }
 
 export function CardGridStep({
@@ -21,6 +24,8 @@ export function CardGridStep({
   subtitleKey,
   cards,
   backLabel,
+  selectedCardId,
+  onSelectCard,
 }: Props) {
   const { branding } = useProfile();
   const selectCard = useWizardStore((s) => s.selectCard);
@@ -37,7 +42,7 @@ export function CardGridStep({
       {backLabel && (
         <button
           type="button"
-          onClick={goBack}
+          onClick={() => goBack()}
           className="mb-4 text-sm text-neutral-600 hover:text-[var(--color-primary)]"
         >
           {backLabel}
@@ -50,26 +55,43 @@ export function CardGridStep({
         )}
       </header>
       <div className="mx-auto grid max-w-5xl gap-6 sm:grid-cols-2">
-        {cards.map((card) => (
-          <button
-            key={card.id}
-            type="button"
-            disabled={card.enabled === false}
-            onClick={() =>
-              selectCard(stepId, card.id, {
-                next: card.next,
-                flow: card.flow,
-              })
-            }
-            className="group overflow-hidden rounded-xl border border-neutral-200 bg-[var(--color-surface,white)] text-left shadow-sm transition hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <div className="aspect-[4/3] bg-neutral-100 dark:bg-neutral-800" />
+        {cards.map((card) => {
+          const studioMode = Boolean(onSelectCard);
+          const disabled = !studioMode && card.enabled === false;
+          return (
+            <button
+              key={card.id}
+              type="button"
+              disabled={disabled}
+              onClick={() =>
+                studioMode
+                  ? onSelectCard!(card.id)
+                  : selectCard(stepId, card.id, {
+                      next: card.next,
+                      flow: card.flow,
+                    })
+              }
+              className={cn(
+                "group overflow-hidden rounded-xl border border-neutral-200 bg-[var(--color-surface,white)] text-left shadow-sm transition hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50",
+                studioMode && selectedCardId === card.id && "ring-2 ring-[#0d99ff]",
+              )}
+            >
+            {card.image ? (
+              <img
+                src={card.image}
+                alt=""
+                className="aspect-[4/3] w-full object-cover bg-neutral-100"
+              />
+            ) : (
+              <div className="aspect-[4/3] bg-neutral-100 dark:bg-neutral-800" />
+            )}
             <div className="bg-[var(--color-card-footer)] p-4 text-white">
               <h3 className="text-lg font-semibold">{card.title}</h3>
               <p className="mt-1 text-sm opacity-90">{card.description}</p>
             </div>
-          </button>
-        ))}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

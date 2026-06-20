@@ -1,9 +1,11 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Redirect } from "wouter";
 import { fetchMe } from "@/api/auth";
+import { useLandingRoute } from "@/providers/SiteConfigProvider";
 import { useAuthStore } from "@/stores/authStore";
 
 export function RequireAdmin({ children }: { children: ReactNode }) {
+  const landingRoute = useLandingRoute();
   const token = useAuthStore((s) => s.token);
   const user = useAuthStore((s) => s.user);
   const setSession = useAuthStore((s) => s.setSession);
@@ -45,7 +47,7 @@ export function RequireAdmin({ children }: { children: ReactNode }) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-neutral-100 p-6">
         <p className="text-sm text-neutral-700">Нет прав администратора.</p>
-        <a href="/" className="text-sm font-medium text-[#13347f] hover:underline">
+        <a href={landingRoute} className="text-sm font-medium text-[#13347f] hover:underline">
           ← К подбору
         </a>
       </div>

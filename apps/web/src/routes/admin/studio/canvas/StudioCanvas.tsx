@@ -1,15 +1,20 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { FloatingZoom } from "../figma/FloatingZoom";
 import { FIGMA } from "../figma/figmaTokens";
+import { StudioCanvasZoomContext } from "./studioCanvasContext";
 
 export function StudioCanvas({
   children,
   artboardLabel,
+  artboardWidth = 1440,
+  artboardMinHeight = 700,
   onSelect,
   onDropBlock,
 }: {
   children: ReactNode;
   artboardLabel?: string;
+  artboardWidth?: number;
+  artboardMinHeight?: number;
   onSelect: (id: string | null) => void;
   onDropBlock?: (type: string) => void;
 }) {
@@ -86,33 +91,41 @@ export function StudioCanvas({
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
-      const onBg =
-        e.target === containerRef.current ||
-        (e.target as HTMLElement).closest("[data-canvas-bg]");
-
       if (spaceHeld || e.button === 1) {
         e.preventDefault();
         startPan(e.clientX, e.clientY);
         return;
       }
-      if (onBg && e.button === 0) onSelect(null);
+
+      // Only deselect on dotted outer background — not on artboard/blocks (breaks Rnd drag)
+      if (e.target === containerRef.current && e.button === 0) {
+        onSelect(null);
+      }
     },
     [onSelect, spaceHeld, startPan],
   );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
-    if (e.dataTransfer.types.includes("text/plain")) {
+    if (e.dataTransfer.types.includes("text/plain") || e.dataTransfer.types.includes("block-type")) {
       e.preventDefault();
+      e.stopPropagation();
       e.dataTransfer.dropEffect = "copy";
       setIsDragOver(true);
     }
   }, []);
 
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+    setIsDragOver(false);
+  }, []);
+
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
+      e.stopPropagation();
       setIsDragOver(false);
-      const type = e.dataTransfer.getData("text/plain");
+      const type =
+        e.dataTransfer.getData("text/plain") || e.dataTransfer.getData("block-type");
       if (type && onDropBlock) onDropBlock(type);
     },
     [onDropBlock],
@@ -140,9 +153,6 @@ export function StudioCanvas({
         }}
         onWheel={handleWheel}
         onMouseDown={handleMouseDown}
-        onDragOver={handleDragOver}
-        onDragLeave={() => setIsDragOver(false)}
-        onDrop={handleDrop}
         onContextMenu={(e) => e.preventDefault()}
       >
         <div
@@ -155,20 +165,27 @@ export function StudioCanvas({
           {artboardLabel && (
             <div className="mb-1.5 flex items-center gap-2 pl-0.5">
               <span className="text-[11px] font-medium text-[#b3b3b3]">{artboardLabel}</span>
-              <span className="font-mono text-[10px] text-[#666]">1440 × auto</span>
+              <span className="font-mono text-[10px] text-[#666]">
+                {artboardWidth} × auto
+              </span>
             </div>
           )}
           <div
             data-canvas-bg
             className="overflow-hidden bg-white transition-shadow"
             style={{
-              width: 1024,
-              minHeight: 700,
+              width: artboardWidth,
+              minHeight: artboardMinHeight,
               boxShadow: FIGMA.artboardShadow,
               outline: isDragOver ? `2px solid ${FIGMA.accent}` : undefined,
             }}
+            onDragOver={onDropBlock ? handleDragOver : undefined}
+            onDragLeave={onDropBlock ? handleDragLeave : undefined}
+            onDrop={onDropBlock ? handleDrop : undefined}
           >
-            {children}
+            <StudioCanvasZoomContext.Provider value={zoom}>
+              {children}
+            </StudioCanvasZoomContext.Provider>
           </div>
         </div>
 

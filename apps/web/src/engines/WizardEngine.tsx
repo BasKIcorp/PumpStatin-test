@@ -1,14 +1,14 @@
+import { useEffect, useMemo } from "react";
 import { useProfile } from "@/providers/ProfileProvider";
 import { useWizardStore } from "@/stores/wizardStore";
+import { evaluateWhen } from "@/lib/evaluateWhen";
 import { CardGridStep } from "@/components/wizard/CardGridStep";
 import { SelectionFormStep } from "@/components/wizard/SelectionFormStep";
 import { StrelaCardGridStep } from "@/components/strela/StrelaCardGridStep";
 import { StrelaSelectionFormStep } from "@/components/strela/StrelaSelectionFormStep";
-import type { NavigationConfig } from "@/types/wizard";
-import type { WizardStepId } from "@/stores/wizardStore";
+import type { NavigationConfig, WizardStepDef } from "@/types/wizard";
 
-function stepMeta(nav: NavigationConfig, stepId: WizardStepId) {
-  const def = nav.steps?.find((s) => s.id === stepId);
+function stepMeta(def?: WizardStepDef) {
   return {
     title: def?.title,
     subtitle: def?.subtitle,
@@ -17,53 +17,91 @@ function stepMeta(nav: NavigationConfig, stepId: WizardStepId) {
   };
 }
 
-export function WizardEngine() {
+function wizardContext() {
+  const s = useWizardStore.getState();
+  return {
+    productClass: s.productClass,
+    puLine: s.puLine,
+    hmLine: s.hmLine,
+    simpelLine: s.simpelLine,
+    installationType: s.installationType,
+    ...s.formValues,
+  };
+}
+
+function isStepVisible(def: WizardStepDef): boolean {
+  if (!def.when) return true;
+  return evaluateWhen(wizardContext(), def.when as Record<string, unknown>);
+}
+
+export function WizardEngine({
+  previewStep,
+  selectedCardId,
+  onSelectCard,
+}: {
+  previewStep?: string;
+  selectedCardId?: string | null;
+  onSelectCard?: (cardId: string) => void;
+}) {
   const { wizard, branding } = useProfile();
   const step = useWizardStore((s) => s.step);
+  const initFromNavigation = useWizardStore((s) => s.initFromNavigation);
   const nav = wizard.navigation as NavigationConfig;
   const isStrela = branding.layoutVariant === "strela-funnel";
 
-  if (isStrela && step === "selection-form") {
+  const activeStepId = previewStep ?? step;
+  const stepDef = useMemo(
+    () => nav.steps?.find((s) => s.id === activeStepId),
+    [nav.steps, activeStepId]
+  );
+
+  useEffect(() => {
+    const first = nav.steps?.[0]?.id;
+    if (first && step === "product-class") {
+      initFromNavigation(first);
+    }
+  }, [nav.steps, initFromNavigation, step]);
+
+  if (!stepDef || !isStepVisible(stepDef)) {
+    return null;
+  }
+
+  if (isStrela && stepDef.type === "selection-form") {
     return <StrelaSelectionFormStep />;
   }
 
-  const cardSteps: WizardStepId[] = [
-    "product-class",
-    "product-line",
-    "hm-line",
-    "pu-line",
-    "simpel-line",
-    "installation-type",
-  ];
-
-  if (cardSteps.includes(step)) {
-    const cards = nav.cards[step] ?? [];
-    const meta = stepMeta(nav, step);
+  if (stepDef.type === "card-grid") {
+    const cards = nav.cards[activeStepId] ?? [];
+    const meta = stepMeta(stepDef);
     if (isStrela) {
       return (
         <StrelaCardGridStep
-          stepId={step}
+          stepId={activeStepId}
           title={meta.title}
           subtitle={meta.subtitle}
           titleKey={meta.titleKey}
           subtitleKey={meta.subtitleKey}
           cards={cards}
+          selectedCardId={onSelectCard ? selectedCardId : undefined}
+          onSelectCard={onSelectCard}
         />
       );
     }
     return (
       <CardGridStep
-        stepId={step}
+        stepId={activeStepId}
         title={meta.title}
         subtitle={meta.subtitle}
         titleKey={meta.titleKey}
         subtitleKey={meta.subtitleKey}
         cards={cards}
+        selectedCardId={onSelectCard ? selectedCardId : undefined}
+        onSelectCard={onSelectCard}
       />
     );
   }
 
-  if (step === "selection-form") {
+  if (stepDef.type === "selection-form") {
     return <SelectionFormStep />;
   }
 

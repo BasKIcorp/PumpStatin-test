@@ -1,0 +1,6 @@
+bom:
+  default_items:
+    - { id: pump, label: Насос }
+    - { id: valve, label: Запорная арматура }
+    - { id: check_valve, label: Обратный клапан }
+    - { id: collector, label: Коллектор }

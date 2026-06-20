@@ -1,16 +1,66 @@
 export type {
   SiteConfig,
+  SiteRoutingConfig,
   LayoutConfig,
   HeaderConfig,
   FooterConfig,
   PageConfig,
+  PageType,
+  PageGridConfig,
   BlockConfig,
+  BlockGridLayout,
+  BlockBindings,
+  WizardFrameConfig,
   BlockProps,
   BlockRegistry,
   MenuItem,
   FooterColumn,
   FooterLink,
 } from "./site.js";
+export {
+  defaultBlockLayout,
+  ensureBlockLayout,
+  ensurePageBlocksLayout,
+  findPageById,
+  resolvePageRoute,
+  resolveLandingRoute,
+  resolveWizardRoute,
+  validatePageRoute,
+  DEFAULT_GRID_COLS,
+  DEFAULT_ROW_HEIGHT,
+} from "./site.js";
+
+export type {
+  AlgorithmWiring,
+  WiringAction,
+  WiringSource,
+  WiringFrom,
+  FieldMapping,
+  DisplayCatalogEntry,
+  BlockRoleSpec,
+} from "./algorithm-wiring.js";
+
+export type {
+  StationType,
+  PumpTypeV2,
+  SelectionParametersV2,
+  WorkingPoint,
+  CurvePoint,
+  CurveSet,
+  PumpMatchResultV2,
+  StationBuildResultV2,
+} from "./selection.js";
+
+export type {
+  FieldType,
+  ValidationRule,
+  WhenRule,
+  WizardFieldBinding,
+  CatalogSource,
+} from "./wizard.js";
+
+export type { ChartLineStyle, ChartAxisStyle, ChartStyle } from "./charts.js";
+export { DEFAULT_CHART_STYLE } from "./charts.js";
 
 /** Общие типы API (синхронизировать с OpenAPI при внедрении) */
 

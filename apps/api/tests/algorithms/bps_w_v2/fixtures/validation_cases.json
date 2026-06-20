@@ -1,0 +1,33 @@
+[
+  {
+    "id": "water_pro_valid",
+    "input": {
+      "station_type": "BPS-W",
+      "series": "Pro",
+      "Q": 15,
+      "H": 20,
+      "n1": 2,
+      "n2": 1,
+      "med": "вода",
+      "c": 100,
+      "t": 20,
+      "pump_type": "COMOS"
+    }
+  },
+  {
+    "id": "lite_min_pumps",
+    "input": {
+      "station_type": "BPS-W",
+      "series": "Lite",
+      "Q": 15,
+      "H": 20,
+      "n1": 1,
+      "n2": 0,
+      "med": "вода",
+      "c": 100,
+      "t": 20,
+      "pump_type": "COMOS"
+    },
+    "expect_error": "n must be"
+  }
+]

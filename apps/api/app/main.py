@@ -40,10 +40,24 @@ app.include_router(admin_site.router, prefix="/api/v1/admin", tags=["admin"])
 
 @app.get("/health")
 def health():
+    from app.services.config_store import load_profile_yaml
     from app.db.dialect import database_mode
+
+    profile = load_profile_yaml(settings.app_profile_id)
+    rules = {}
+    try:
+        from app.algorithms.bps_w_v2.rules_loader import load_algorithm_rules
+        from app.core.config import PROFILES_DIR
+
+        rules = load_algorithm_rules(PROFILES_DIR / settings.app_profile_id)
+    except Exception:
+        pass
 
     return {
         "status": "ok",
         "mockDb": settings.use_mock_db,
         "database": database_mode(),
+        "profileId": settings.app_profile_id,
+        "algorithm": profile.get("algorithm"),
+        "rulesVersion": rules.get("version"),
     }

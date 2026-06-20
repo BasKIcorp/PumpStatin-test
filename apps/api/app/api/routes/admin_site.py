@@ -2,12 +2,14 @@
 
 import datetime
 import shutil
+import uuid
 from pathlib import Path
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
 from app.api.deps import require_admin
+from app.core.config import WEB_PUBLIC_DIR
 from app.core.profile_loader import load_profile_bundle
 from app.services import config_store
 from app.schemas.site import get_default_site
@@ -119,6 +121,52 @@ async def admin_upload(
     }
 
 
+ALLOWED_IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg"}
+MAX_IMAGE_UPLOAD_BYTES = 5 * 1024 * 1024
+
+
+@router.post("/profiles/{profile_id}/media/upload")
+async def admin_upload_media(
+    profile_id: str,
+    file: Annotated[UploadFile, File(...)],
+    _: Annotated[dict, Depends(require_admin)],
+):
+    """Загрузить изображение для визарда/CMS в public/selection-assets/uploads/."""
+    if profile_id not in config_store.list_profile_ids():
+        raise HTTPException(404, "Profile not found")
+    if not file.filename:
+        raise HTTPException(400, "No filename provided")
+
+    content_type = (file.content_type or "").lower()
+    if not content_type.startswith("image/"):
+        raise HTTPException(400, "Only image uploads are allowed")
+
+    suffix = Path(file.filename).suffix.lower()
+    if suffix not in ALLOWED_IMAGE_SUFFIXES:
+        raise HTTPException(400, f"Unsupported image type: {suffix or 'unknown'}")
+
+    content = await file.read()
+    if len(content) > MAX_IMAGE_UPLOAD_BYTES:
+        raise HTTPException(400, "File too large (max 5 MB)")
+
+    upload_dir = WEB_PUBLIC_DIR / "selection-assets" / "uploads" / profile_id
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
+    safe_name = f"{uuid.uuid4().hex[:12]}{suffix}"
+    dest = (upload_dir / safe_name).resolve()
+    upload_dir_resolved = upload_dir.resolve()
+    if not str(dest).startswith(str(upload_dir_resolved)):
+        raise HTTPException(400, "Invalid file path")
+
+    dest.write_bytes(content)
+
+    return {
+        "filename": safe_name,
+        "url": f"/selection-assets/uploads/{profile_id}/{safe_name}",
+        "size": len(content),
+    }
+
+
 # --- Wizard config ---
 
 
@@ -208,9 +256,16 @@ def admin_pdf_preview(
     branding = body.get("branding", {})
 
     tpl_path = config_store.PROFILES_DIR / profile_id / "pdf" / "template.json"
-    if tpl_path.is_file():
+    if body.get("blocks") is not None:
+        template = {
+            "templateName": body.get("templateName", "custom"),
+            "mode": body.get("mode", "auto"),
+            "blocks": body["blocks"],
+        }
+    elif tpl_path.is_file():
         with tpl_path.open("r", encoding="utf-8") as f:
             import json
+
             template = json.load(f)
     else:
         template = {"blocks": body.get("blocks", [])}

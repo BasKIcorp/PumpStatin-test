@@ -1,0 +1,12 @@
+# Эталонный проект Studio — порт текущего default-профиля Strela
+version: 1
+referenceProfile: default
+importedAt: "2026-06-17"
+sources:
+  navigation: wizard/navigation.yaml
+  flows: wizard/flows/
+  branding: branding.yaml
+  site: site.yaml
+  pdf: pdf/template.json
+  algorithm: algorithm/rules.yaml
+notes: "Базовый эталон для Figma-style конструктора и алгоритма bps_w_v2"

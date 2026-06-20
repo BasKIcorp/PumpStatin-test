@@ -1,0 +1,8 @@
+# ТЗ 2.2.5
+pump_filters:
+  flow_range_by_pump_type:
+    COMOS: { q_min_factor: 0.2, q_max_factor: 0.9 }
+    CIVOS: { q_min_factor: 0.2, q_max_factor: 0.9 }
+    VMIP: { q_min_factor: 0.1, q_max_factor: 0.9 }
+    HMIP: { q_min_factor: 0.1, q_max_factor: 0.9 }
+  head_tolerance: 0.3

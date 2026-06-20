@@ -1,0 +1,159 @@
+version: 1
+algorithmId: bps_w_v2
+
+state:
+  inputs:
+    formValues:
+      source: wizard.flow
+      flowRef: profile.wizard.defaultFlow
+    wizardContext:
+      source: wizard.navigation
+  outputs:
+    matchedPumps:
+      from: actions.match-pumps.response.pumps
+    stationResult:
+      from: actions.build-station.response
+    selectionId:
+      from: actions.build-station.response.selectionId
+
+actions:
+  match-pumps:
+    method: POST
+    path: /api/v1/selection/match-pumps
+    input: parameters.v2
+    loadingKey: matching
+  build-station:
+    method: POST
+    path: /api/v1/selection/build-station
+    input:
+      pumpId:
+        from: state.selectedPumpId
+      parameters: parameters.v2
+    requires:
+      - matchedPumps
+  generate-pdf:
+    method: POST
+    path: /api/v1/selection/generate-pdf
+    input:
+      selectionId:
+        from: state.selectionId
+    requires:
+      - stationResult
+
+parameters:
+  schema: SelectionParametersV2
+  mapping:
+    Q:
+      from: formValues.flowRate
+      type: number
+      default: 15
+    H:
+      from: formValues.head
+      type: number
+      default: 20
+    Hst:
+      from: formValues.staticHead
+      default: 0
+    Hgr:
+      from: formValues.guaranteedHead
+      default: 0
+    n1:
+      from: formValues.workingPumps
+      default: 1
+    n2:
+      from: formValues.reservePumps
+      default: 1
+    med:
+      from: formValues.fluidType
+      default: вода
+    c:
+      from: formValues.concentration
+      when:
+        med:
+          not: вода
+      default: 100
+    t:
+      from: formValues.temperature
+      default: 20
+    pump_type:
+      from: formValues.pumpType
+      lookup: pumpTypeMap
+    station_type:
+      from: wizardContext.puLine
+      lookup: cardStationMap
+    series:
+      from: wizardContext.puLine
+      lookup: cardSeriesMap
+    mf:
+      from: profile.algorithmConfig.manufacturer
+
+lookups:
+  cardStationMap:
+    bps-w-pro:
+      station_type: BPS-W
+    bps-w-lite:
+      station_type: BPS-W
+    bps-c-pro:
+      station_type: BPS-C
+    bps-c-lite:
+      station_type: BPS-C
+  cardSeriesMap:
+    bps-w-pro:
+      series: Pro
+    bps-w-lite:
+      series: Lite
+    bps-c-pro:
+      series: Pro
+    bps-c-lite:
+      series: Lite
+  pumpTypeMap:
+    civos: CIVOS
+    inline: COMOS
+    end: HMIP
+
+displayCatalog:
+  matchedPumps:
+    columns:
+      - path: name
+        label: Насос
+      - path: score
+        label: Оценка
+      - path: powerKw
+        label: Мощность, кВт
+    charts:
+      - path: curves.qh
+        preset: qh-five-curves
+        label: Кривая Q-H
+      - path: curves.p2
+        preset: power-npsh
+        label: Мощность / NPSH
+  stationResult:
+    columns:
+      - path: summary
+        label: Итог
+      - path: DN
+        label: DN
+
+blockRoles:
+  input:
+    types:
+      - wizard/form-section
+      - wizard/form-field
+    requiredBinding:
+      - sectionId
+      - fieldId
+  action:
+    types:
+      - wizard/match-actions
+      - wizard/build-action
+      - wizard/pdf-actions
+    requiredBinding:
+      - action
+  output:
+    types:
+      - wizard/results-table
+      - wizard/chart-v2
+      - wizard/station-result
+      - wizard/readonly-fields
+    requiredBinding:
+      - readFrom

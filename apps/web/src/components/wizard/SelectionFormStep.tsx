@@ -3,6 +3,7 @@ import { useProfile } from "@/providers/ProfileProvider";
 import { useWizardStore } from "@/stores/wizardStore";
 import { matchPumps, buildStation, generatePdf } from "@/api/selection";
 import { FormField } from "@/components/wizard/FormField";
+import { evaluateWhen, mapLegacyParameters } from "@/lib/evaluateWhen";
 import type { FlowConfig } from "@/types/wizard";
 
 interface PumpCandidate {
@@ -16,6 +17,9 @@ export function SelectionFormStep() {
   const { wizard, branding } = useProfile();
   const flowId = useWizardStore((s) => s.flowId) ?? "bps-w-domestic";
   const productLine = useWizardStore((s) => s.productLine);
+  const puLine = useWizardStore((s) => s.puLine);
+  const hmLine = useWizardStore((s) => s.hmLine);
+  const productClass = useWizardStore((s) => s.productClass);
   const formValues = useWizardStore((s) => s.formValues);
   const matchedPumps = useWizardStore((s) => s.matchedPumps);
   const stationResult = useWizardStore((s) => s.stationResult);
@@ -56,14 +60,23 @@ export function SelectionFormStep() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- только при смене flow
   }, [flowId]);
 
+  const wizardCtx = { productLine: flow.productLine ?? productLine, puLine, hmLine, productClass, ...formValues };
+
   const handleMatch = async () => {
     setBusy(true);
     setError("");
     try {
+      const apiProductLine = flow.productLine ?? productLine ?? "bps-w";
+      const parameters = mapLegacyParameters(formValues, {
+        productLine: apiProductLine,
+        puLine,
+        hmLine,
+        productClass,
+      });
       const res = await matchPumps({
-        productLine: productLine ?? "bps-w",
+        productLine: apiProductLine,
         flowId,
-        parameters: formValues,
+        parameters,
       });
       const pumps = res.pumps as PumpCandidate[];
       setMatchResult(pumps);
@@ -80,10 +93,17 @@ export function SelectionFormStep() {
     setBusy(true);
     setError("");
     try {
+      const apiProductLine = flow.productLine ?? productLine ?? "bps-w";
+      const parameters = mapLegacyParameters(formValues, {
+        productLine: apiProductLine,
+        puLine,
+        hmLine,
+        productClass,
+      });
       const res = await buildStation({
-        productLine: productLine ?? "bps-w",
+        productLine: apiProductLine,
         flowId,
-        parameters: formValues,
+        parameters,
         selectedPumpId: pumpId,
       });
       setStationResult(res);
@@ -160,7 +180,7 @@ export function SelectionFormStep() {
     <div>
       <button
         type="button"
-        onClick={goBack}
+        onClick={() => goBack()}
         className="mb-4 text-sm text-neutral-600 hover:text-[var(--color-primary)]"
       >
         Назад
@@ -184,7 +204,9 @@ export function SelectionFormStep() {
             >
               <h3 className="mb-3 font-semibold">{section.title}</h3>
               <div className="grid gap-3 sm:grid-cols-2">
-                {section.fields.map((field) => (
+                {section.fields
+                  .filter((field) => evaluateWhen(wizardCtx, field.visibleWhen))
+                  .map((field) => (
                   <FormField
                     key={field.id}
                     field={field}

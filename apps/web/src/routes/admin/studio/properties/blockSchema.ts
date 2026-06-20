@@ -5,9 +5,9 @@
 export interface BlockFieldSchema {
   key: string;
   label: string;
-  section: "style" | "content" | "behavior";
+  section: "style" | "content" | "behavior" | "data";
   type: "text" | "color" | "number" | "select" | "textarea" | "json" | "checkbox";
-  options?: string[];         // для select
+  options?: string[];
   placeholder?: string;
   defaultValue?: unknown;
 }
@@ -17,7 +17,8 @@ export interface BlockTypeInfo {
   type: string;
   label: string;
   icon: string;
-  category: "content" | "media" | "data" | "special" | "layout";
+  category: "content" | "media" | "data" | "special" | "layout" | "auth" | "cabinet" | "wizard";
+  ioRole?: "input" | "action" | "output" | "nav" | "content";
   fields: BlockFieldSchema[];
 }
 
@@ -147,6 +148,98 @@ const BLOCK_SCHEMAS: BlockTypeInfo[] = [
     fields: [
       { key: "url", label: "URL видео", section: "content", type: "text", defaultValue: "" },
       { key: "title", label: "Заголовок", section: "content", type: "text", defaultValue: "Видео" },
+    ],
+  },
+  {
+    type: "auth/brand-panel",
+    label: "Бренд (login)",
+    icon: "🖼️",
+    category: "auth",
+    fields: [
+      { key: "src", label: "URL логотипа", section: "content", type: "text", defaultValue: "" },
+      { key: "alt", label: "Alt-текст", section: "content", type: "text", defaultValue: "" },
+    ],
+  },
+  {
+    type: "auth/login-form",
+    label: "Форма входа",
+    icon: "🔐",
+    category: "auth",
+    fields: [{ key: "title", label: "Заголовок", section: "content", type: "text", defaultValue: "Вход" }],
+  },
+  {
+    type: "auth/quick-login",
+    label: "Быстрый вход",
+    icon: "⚡",
+    category: "auth",
+    fields: [],
+  },
+  {
+    type: "auth/admin-entry",
+    label: "Вход admin",
+    icon: "🛠️",
+    category: "auth",
+    fields: [],
+  },
+  {
+    type: "auth/back-link",
+    label: "Ссылка назад",
+    icon: "↩️",
+    category: "auth",
+    fields: [
+      { key: "label", label: "Текст", section: "content", type: "text", defaultValue: "← На главную" },
+      { key: "href", label: "URL", section: "behavior", type: "text", defaultValue: "/" },
+    ],
+  },
+  {
+    type: "cabinet/workspace",
+    label: "Кабинет (полный)",
+    icon: "📁",
+    category: "cabinet",
+    fields: [],
+  },
+  {
+    type: "wizard/step-heading",
+    label: "Заголовок шага",
+    icon: "📋",
+    category: "wizard",
+    ioRole: "nav",
+    fields: [
+      { key: "stepId", label: "ID шага", section: "behavior", type: "text", defaultValue: "product-class" },
+      { key: "title", label: "Заголовок", section: "content", type: "text" },
+      { key: "subtitle", label: "Подзаголовок", section: "content", type: "text" },
+    ],
+  },
+  {
+    type: "wizard/card-grid-strela",
+    label: "Карточки Strela",
+    icon: "🎴",
+    category: "wizard",
+    ioRole: "nav",
+    fields: [{ key: "stepId", label: "ID шага", section: "behavior", type: "text", defaultValue: "product-class" }],
+  },
+  {
+    type: "wizard/card-grid-simple",
+    label: "Карточки простые",
+    icon: "🃏",
+    category: "wizard",
+    ioRole: "nav",
+    fields: [{ key: "stepId", label: "ID шага", section: "behavior", type: "text", defaultValue: "product-class" }],
+  },
+  {
+    type: "wizard/legacy-selection",
+    label: "Форма подбора (legacy)",
+    icon: "⚙️",
+    category: "wizard",
+    ioRole: "input",
+    fields: [
+      {
+        key: "_dataStub",
+        label: "Привязка к алгоритму",
+        section: "data",
+        type: "text",
+        defaultValue: "Настраивается отдельно через Cursor",
+      },
     ],
   },
 ];

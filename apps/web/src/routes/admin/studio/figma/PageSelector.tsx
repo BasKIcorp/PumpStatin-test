@@ -1,6 +1,38 @@
 import { useRef, useState } from "react";
 import type { PageConfig } from "@pumpstation/contracts";
+import { listPagesForSelector } from "@/routes/admin/studio/studioPages";
 import { FIGMA } from "./figmaTokens";
+
+const TYPE_BADGE: Record<string, { label: string; className: string }> = {
+  auth: { label: "Вход", className: "bg-blue-900/50 text-blue-300" },
+  wizard: { label: "Подбор", className: "bg-yellow-900/50 text-yellow-400" },
+  cabinet: { label: "Кабинет", className: "bg-purple-900/50 text-purple-300" },
+  page: { label: "Сайт", className: "bg-neutral-700/80 text-neutral-300" },
+};
+
+const TYPE_ORDER: Record<string, number> = {
+  auth: 0,
+  wizard: 1,
+  cabinet: 2,
+  page: 3,
+};
+
+function sortPages(pages: PageConfig[]): PageConfig[] {
+  return [...pages].sort((a, b) => {
+    const ta = TYPE_ORDER[a.type ?? "page"] ?? 9;
+    const tb = TYPE_ORDER[b.type ?? "page"] ?? 9;
+    if (ta !== tb) return ta - tb;
+    return a.title.localeCompare(b.title, "ru");
+  });
+}
+
+function typeBadge(page: PageConfig) {
+  const key = page.type ?? "page";
+  const badge = TYPE_BADGE[key] ?? TYPE_BADGE.page;
+  return (
+    <span className={`shrink-0 rounded px-1 text-[9px] ${badge.className}`}>{badge.label}</span>
+  );
+}
 
 export function PageSelector({
   pages,
@@ -18,6 +50,7 @@ export function PageSelector({
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const selected = pages.find((p) => p.id === selectedId);
+  const sortedPages = sortPages(listPagesForSelector(pages));
 
   return (
     <div ref={ref} className="relative">
@@ -54,7 +87,7 @@ export function PageSelector({
               </button>
             </div>
             <div className="max-h-64 overflow-y-auto py-1">
-              {pages.map((p) => (
+              {sortedPages.map((p) => (
                 <div
                   key={p.id}
                   className="group flex cursor-pointer items-center justify-between px-3 py-2 hover:bg-[#383838]"
@@ -70,16 +103,12 @@ export function PageSelector({
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 text-sm">
-                      {p.type === "wizard" && (
-                        <span className="rounded bg-yellow-900/50 px-1 text-[9px] text-yellow-400">
-                          Wizard
-                        </span>
-                      )}
+                      {typeBadge(p)}
                       <span className="truncate">{p.title}</span>
                     </div>
                     <div className="truncate font-mono text-[10px] text-[#666]">{p.route}</div>
                   </div>
-                  {p.type !== "wizard" && (
+                  {p.type !== "wizard" && p.type !== "auth" && (
                     <button
                       type="button"
                       onClick={(e) => {

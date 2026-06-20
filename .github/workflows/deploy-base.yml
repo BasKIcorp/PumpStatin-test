@@ -18,6 +18,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: CI gate
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.info('Deploy runs after merge to base; run CI workflow on PR first.')
+
+      - name: CI gate — lint and test
+        working-directory: apps/api
+        env:
+          USE_MOCK_DB: "true"
+          JWT_SECRET: test-secret
+        run: |
+          pip install -U pip wheel
+          pip install -e ".[dev]"
+          python -m app.tools.validate_profile_config
+          pytest -q
+
       - name: Create deployment archive
         run: |
           # Exit code 1 = "file changed as we read it" (harmless on CI checkout)

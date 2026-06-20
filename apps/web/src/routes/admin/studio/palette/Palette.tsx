@@ -1,3 +1,4 @@
+import { useDraggable } from "@dnd-kit/core";
 import { getBlockSchemas } from "@/routes/admin/studio/properties/blockSchema";
 import { useState } from "react";
 import { FIGMA } from "../figma/figmaTokens";
@@ -10,8 +11,63 @@ const CATEGORIES: Record<string, string> = {
   layout: "Разметка",
 };
 
-export function Palette({ onAddBlock }: { onAddBlock: (type: string) => void }) {
-  const schemas = getBlockSchemas();
+function DraggableBlockItem({
+  type,
+  icon,
+  label,
+  onAdd,
+}: {
+  type: string;
+  icon: string;
+  label: string;
+  onAdd: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: `palette-${type}`,
+    data: { blockType: type, source: "palette" },
+  });
+
+  const style = transform
+    ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`, opacity: isDragging ? 0.5 : 1 }
+    : undefined;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs hover:bg-[#383838]"
+    >
+      <span
+        {...listeners}
+        {...attributes}
+        className="cursor-grab text-[10px] text-[#555] active:cursor-grabbing"
+        aria-label={`Перетащить ${label}`}
+      >
+        ⠿
+      </span>
+      <button
+        type="button"
+        onClick={onAdd}
+        className="flex min-w-0 flex-1 items-center gap-2 text-left"
+      >
+        <span className="text-sm">{icon}</span>
+        <span style={{ color: FIGMA.textMuted }}>{label}</span>
+      </button>
+    </div>
+  );
+}
+
+export function Palette({
+  onAddBlock,
+  categoryFilter,
+}: {
+  onAddBlock: (type: string) => void;
+  /** Только блоки этой категории (например wizard) */
+  categoryFilter?: string;
+}) {
+  const schemas = getBlockSchemas().filter((s) =>
+    categoryFilter ? s.category === categoryFilter : true,
+  );
   const [filter, setFilter] = useState("");
   const [category, setCategory] = useState<string | null>(null);
 
@@ -22,11 +78,6 @@ export function Palette({ onAddBlock }: { onAddBlock: (type: string) => void }) 
   });
 
   const categories = [...new Set(schemas.map((s) => s.category))];
-
-  const handleDragStart = (e: React.DragEvent, type: string) => {
-    e.dataTransfer.setData("text/plain", type);
-    e.dataTransfer.effectAllowed = "copy";
-  };
 
   return (
     <div className="space-y-2">
@@ -73,17 +124,13 @@ export function Palette({ onAddBlock }: { onAddBlock: (type: string) => void }) 
 
       <div className="space-y-0.5">
         {filtered.map((s) => (
-          <div
+          <DraggableBlockItem
             key={s.type}
-            draggable
-            onDragStart={(e) => handleDragStart(e, s.type)}
-            onClick={() => onAddBlock(s.type)}
-            className="flex w-full cursor-grab items-center gap-2 rounded px-2 py-1.5 text-left text-xs active:cursor-grabbing hover:bg-[#383838]"
-            style={{ color: FIGMA.textMuted }}
-          >
-            <span className="text-sm">{s.icon}</span>
-            <span>{s.label}</span>
-          </div>
+            type={s.type}
+            icon={s.icon}
+            label={s.label}
+            onAdd={() => onAddBlock(s.type)}
+          />
         ))}
         {filtered.length === 0 && (
           <p className="py-2 text-center text-[11px] text-[#666]">Нет блоков</p>

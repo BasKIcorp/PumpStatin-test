@@ -1,0 +1,61 @@
+version: 1
+blocks:
+  - type: hero
+    label: Hero (заголовок + CTA)
+    icon: "🎯"
+    category: content
+  - type: divider
+    label: Разделитель
+    icon: "➖"
+    category: layout
+  - type: rich-text
+    label: Rich Text
+    icon: "📝"
+    category: content
+  - type: auth/login-form
+    label: Форма входа
+    icon: "🔐"
+    category: auth
+  - type: wizard/card-grid-strela
+    label: Карточки Strela
+    icon: "🎴"
+    category: wizard
+    ioRole: nav
+  - type: wizard/card-grid-simple
+    label: Карточки простые
+    icon: "🃏"
+    category: wizard
+    ioRole: nav
+  - type: wizard/legacy-selection
+    label: Форма подбора
+    icon: "⚙️"
+    category: wizard
+    ioRole: input
+  - type: cabinet/workspace
+    label: Кабинет
+    icon: "📁"
+    category: cabinet
+  - type: product-grid
+    label: Каталог товаров
+    icon: "🏷️"
+    category: data
+
+fieldTypes:
+  - text
+  - number
+  - select
+  - checkbox
+  - readonly
+
+layoutVariants:
+  - strela-funnel
+  - sidebar-brand
+  - topbar-dark
+  - minimal-light
+  - sidebar-gradient
+  - auth-minimal
+  - cms-default
+
+chartPresets:
+  - qh-five-curves
+  - power-npsh

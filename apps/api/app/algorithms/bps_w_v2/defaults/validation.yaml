@@ -1,0 +1,17 @@
+# ТЗ 2.1 — валидация входных данных
+validation:
+  pump_count_rules:
+    - when: { station_type: ["BPS-C", "BPS-W"], series: Lite }
+      n: { min: 2, max: 3 }
+    - when: { station_type: ["BPS-C", "BPS-W"], series: ["E", "Pro"] }
+      n: { min: 1, max: 6 }
+    - when: { station_type: ["FPS", "Pump"], series: Pro }
+      n: { min: 2, max: 6 }
+    - when: { station_type: ["FPS", "Pump"], series: Lite }
+      n: { min: 2, max: 3 }
+  field_constraints:
+    Q: { gt: 0 }
+    H: { gt: 0 }
+    c: { min: 20, max: 55, when_med_not: вода }
+    t: { min: 5, max: 70 }
+    Hgr: { force_zero_when: { station_type: BPS-C } }

@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SelectionParametersV2",
+  "type": "object",
+  "required": ["station_type", "series", "Q", "H", "n1", "n2", "med", "c", "t", "pump_type"],
+  "properties": {
+    "station_type": { "type": "string", "enum": ["BPS-C", "BPS-W", "FPS", "Pump"] },
+    "series": { "type": "string" },
+    "Q": { "type": "number", "exclusiveMinimum": 0 },
+    "H": { "type": "number", "exclusiveMinimum": 0 },
+    "Hst": { "type": "number", "minimum": 0 },
+    "Hgr": { "type": "number", "minimum": 0 },
+    "n1": { "type": "integer", "minimum": 1 },
+    "n2": { "type": "integer", "minimum": 0 },
+    "med": { "type": "string" },
+    "c": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "t": { "type": "integer", "minimum": 5, "maximum": 70 },
+    "pump_type": { "type": "string" },
+    "mf": { "type": "string" },
+    "include_piping_losses": { "type": "boolean" }
+  }
+}

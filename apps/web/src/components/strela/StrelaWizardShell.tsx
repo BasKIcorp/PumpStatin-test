@@ -7,6 +7,7 @@ import { useWizardStore } from "@/stores/wizardStore";
 import { FUNNEL_SIDEBAR_WORDMARK_DEFAULT } from "@/lib/strela/selectionAssets";
 
 import { resolveStrelaStageHeading } from "@/lib/strela/stageHeadings";
+import type { NavigationConfig } from "@/types/wizard";
 
 import { FunnelHeaderRight } from "./FunnelHeaderRight";
 
@@ -24,27 +25,51 @@ const BACK_LABELS: Partial<Record<string, string>> = {
 
 
 
-export function StrelaWizardShell({ children }: { children: ReactNode }) {
-
-  const { branding } = useProfile();
-
-  const step = useWizardStore((s) => s.step);
+export function StrelaWizardShell({
+  children,
+  embedded = false,
+  previewStepId,
+}: {
+  children: ReactNode;
+  embedded?: boolean;
+  /** Studio: заголовок funnel по выбранному шагу превью */
+  previewStepId?: string;
+}) {
+  const { branding, wizard } = useProfile();
+  const storeStep = useWizardStore((s) => s.step);
+  const step = previewStepId ?? storeStep;
 
   const goBack = useWizardStore((s) => s.goBack);
 
   const appearance = branding.appearance;
 
-  const meta = resolveStrelaStageHeading(step, branding);
+  const nav = wizard.navigation as NavigationConfig;
+  const stepDef = nav.steps?.find((s) => s.id === step);
+  const fallback = resolveStrelaStageHeading(step, branding);
+  const meta =
+    stepDef?.title || stepDef?.subtitle
+      ? {
+          title: stepDef.title ?? fallback.title,
+          subtitle: stepDef.subtitle ?? fallback.subtitle,
+        }
+      : fallback;
 
   const backLabel = BACK_LABELS[step];
+  const sidebarWidth = appearance?.funnel_sidebar_width;
 
 
 
   return (
 
-    <div className="flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden">
-
+    <div
+      className={
+        embedded
+          ? "flex h-full min-h-0 flex-col overflow-hidden"
+          : "flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden"
+      }
+    >
       <SelectionFlowFunnel
+        embedded={embedded}
 
         sidebarWordmarkSrc={
 
@@ -52,7 +77,9 @@ export function StrelaWizardShell({ children }: { children: ReactNode }) {
 
         }
 
-        sidebarText={undefined}
+        sidebarText={appearance?.sidebar_text}
+
+        sidebarWidth={sidebarWidth}
 
         title={meta.title}
 

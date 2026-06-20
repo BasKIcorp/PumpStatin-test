@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { fetchDemoAccounts, login, type DemoAccount } from "@/api/auth";
 import { LOGIN_PAGE_BRAND_SRC } from "@/lib/strela/selectionAssets";
 import { useAuthStore } from "@/stores/authStore";
+import { useLandingRoute } from "@/providers/SiteConfigProvider";
 
 const DEMO_PASSWORD = "demo123";
 
@@ -12,6 +13,7 @@ const labelCls = "mb-[3px] block text-[10.5px] leading-tight text-[#757575]";
 
 /** Страница входа — layout и ассеты из pump_station (group-1-brand.svg) */
 export function StrelaLoginPage() {
+  const landingRoute = useLandingRoute();
   const setSession = useAuthStore((s) => s.setSession);
   const [accounts, setAccounts] = useState<DemoAccount[]>([]);
   const [email, setEmail] = useState("");
@@ -152,7 +154,7 @@ export function StrelaLoginPage() {
       </div>
 
       <p className="mt-[16px] text-center text-[10.5px] text-[#757575]">
-        <Link href="/" className="text-[#1a3d8f] hover:underline">
+        <Link href={landingRoute} className="text-[#1a3d8f] hover:underline">
           ← На главную
         </Link>
       </p>

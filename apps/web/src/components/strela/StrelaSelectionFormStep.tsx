@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useProfile } from "@/providers/ProfileProvider";
+import { mapLegacyParameters } from "@/lib/evaluateWhen";
 import { useWizardStore } from "@/stores/wizardStore";
 import { matchPumps, buildStation, generatePdf } from "@/api/selection";
 import type { FlowConfig } from "@/types/wizard";
@@ -10,6 +11,7 @@ import { StrelaFormField } from "./StrelaFormField";
 import { panelClass, panelHeadClass, WorkPanel } from "./panels";
 import { PumpCurveChart } from "./charts/PumpCurveChart";
 import { PowerNpshChart } from "./charts/PowerNpshChart";
+import { PumpCurvesChartV2 } from "@/components/charts/PumpCurvesChartV2";
 
 interface PumpCandidate {
   id: string;
@@ -25,6 +27,8 @@ interface PumpCandidate {
   p2_s?: Array<number | null>;
   q_npsh?: Array<number | null>;
   npsh_s?: Array<number | null>;
+  parabola?: Array<{ Q: number; H: number }>;
+  parabola_intersection?: { Q: number; H: number };
 }
 
 const focusRing =
@@ -35,6 +39,9 @@ export function StrelaSelectionFormStep() {
   const appearance = branding.appearance;
   const flowId = useWizardStore((s) => s.flowId) ?? "bps-w-domestic";
   const productLine = useWizardStore((s) => s.productLine);
+  const puLine = useWizardStore((s) => s.puLine);
+  const hmLine = useWizardStore((s) => s.hmLine);
+  const productClass = useWizardStore((s) => s.productClass);
   const formValues = useWizardStore((s) => s.formValues);
   const matchedPumps = useWizardStore((s) => s.matchedPumps);
   const stationResult = useWizardStore((s) => s.stationResult);
@@ -75,10 +82,17 @@ export function StrelaSelectionFormStep() {
     setBusy(true);
     setError("");
     try {
+      const apiProductLine = flow.productLine ?? productLine ?? "bps-w";
+      const parameters = mapLegacyParameters(formValues, {
+        productLine: apiProductLine,
+        puLine,
+        hmLine,
+        productClass,
+      });
       const res = await matchPumps({
-        productLine: productLine ?? "bps-w",
+        productLine: apiProductLine,
         flowId,
-        parameters: formValues,
+        parameters,
       });
       const pumps = res.pumps as PumpCandidate[];
       setMatchResult(pumps);
@@ -95,10 +109,17 @@ export function StrelaSelectionFormStep() {
     setBusy(true);
     setError("");
     try {
+      const apiProductLine = flow.productLine ?? productLine ?? "bps-w";
+      const parameters = mapLegacyParameters(formValues, {
+        productLine: apiProductLine,
+        puLine,
+        hmLine,
+        productClass,
+      });
       const res = await buildStation({
-        productLine: productLine ?? "bps-w",
+        productLine: apiProductLine,
         flowId,
-        parameters: formValues,
+        parameters,
         selectedPumpId: pumpId,
       });
       setStationResult(res);
@@ -161,7 +182,7 @@ export function StrelaSelectionFormStep() {
   const reserve = Number(formValues.reservePumps ?? 1);
   const headerLogo =
     appearance?.selection_flow_header_logo_url ?? SELECTION_FLOW_HEADER_BRAND_DEFAULT_SRC;
-  const pageTitle = `Подбор насосной установки ${(productLine ?? "BPS-W").toUpperCase()}`;
+  const pageTitle = `Подбор насосной установки ${(puLine ?? hmLine ?? productLine ?? flow.productLine ?? "BPS-W").toUpperCase()}`;
 
   return (
     <div
@@ -174,7 +195,7 @@ export function StrelaSelectionFormStep() {
         leftSlot={
           <button
             type="button"
-            onClick={goBack}
+            onClick={() => goBack()}
             className="inline-flex max-w-full items-center gap-1.5 rounded-lg bg-[#E6E6E6] px-3 py-1.5 text-sm font-medium text-black transition-colors hover:bg-[#d9d9d9]"
           >
             ← Назад
@@ -196,6 +217,7 @@ export function StrelaSelectionFormStep() {
             selectedPump={pumps.find((p) => p.id === selectedPumpId) ?? null}
             flowRate={Number(formValues.flowRate ?? 0)}
             head={Number(formValues.head ?? 0)}
+            guaranteedHead={Number(formValues.guaranteedHead ?? formValues.head ?? 0)}
           />
           <TechSpecsPanel
             working={working}
@@ -249,6 +271,7 @@ export function StrelaSelectionFormStep() {
                 selectedPump={pumps.find((p) => p.id === selectedPumpId) ?? null}
                 flowRate={Number(formValues.flowRate ?? 0)}
                 head={Number(formValues.head ?? 0)}
+                guaranteedHead={Number(formValues.guaranteedHead ?? formValues.head ?? 0)}
               />
               <TechSpecsPanel
                 working={working}
@@ -340,12 +363,44 @@ function CurvesPanel({
   selectedPump,
   flowRate,
   head,
+  guaranteedHead,
 }: {
   className?: string;
   selectedPump: PumpCandidate | null;
   flowRate: number;
   head: number;
+  guaranteedHead?: number;
 }) {
+  const curvesV2 = selectedPump
+    ? {
+        qh_main: selectedPump.curve?.map((p) => ({ Q: p.Q, H: p.H })),
+        system: selectedPump.parabola,
+        eta: selectedPump.q_eta
+          ?.map((q, i) =>
+            q != null && selectedPump.eta_s?.[i] != null
+              ? { Q: q, eta: selectedPump.eta_s![i]! }
+              : null,
+          )
+          .filter((p): p is { Q: number; eta: number } => p != null),
+        p2: selectedPump.q_p2
+          ?.map((q, i) =>
+            q != null && selectedPump.p2_s?.[i] != null
+              ? { Q: q, P2: selectedPump.p2_s![i]! }
+              : null,
+          )
+          .filter((p): p is { Q: number; P2: number } => p != null),
+        npsh: selectedPump.q_npsh
+          ?.map((q, i) =>
+            q != null && selectedPump.npsh_s?.[i] != null
+              ? { Q: q, NPSH: selectedPump.npsh_s![i]! }
+              : null,
+          )
+          .filter((p): p is { Q: number; NPSH: number } => p != null),
+      }
+    : null;
+
+  const wp = selectedPump?.parabola_intersection;
+
   return (
     <WorkPanel title="Кривые характеристик" className={cn("h-full", className)}>
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-2">
@@ -353,17 +408,26 @@ function CurvesPanel({
           {selectedPump ? (
             <>
               <div className="min-h-0 border-b border-[var(--funnel-panel-border)] bg-white">
-                <PumpCurveChart
-                  pump={{
-                    nominalFlow: selectedPump.nominal_flow,
-                    nominalHead: selectedPump.nominal_head,
-                    curve: selectedPump.curve,
-                    q_eta: selectedPump.q_eta,
-                    eta_s: selectedPump.eta_s,
-                  }}
-                  flowRate={Math.max(flowRate, 0)}
-                  head={Math.max(head, 0)}
-                />
+                {curvesV2?.qh_main?.length ? (
+                  <PumpCurvesChartV2
+                    curves={curvesV2}
+                    workingPoint={wp ? { Q: wp.Q, H: wp.H } : undefined}
+                    guaranteedHead={guaranteedHead}
+                    height={220}
+                  />
+                ) : (
+                  <PumpCurveChart
+                    pump={{
+                      nominalFlow: selectedPump.nominal_flow,
+                      nominalHead: selectedPump.nominal_head,
+                      curve: selectedPump.curve,
+                      q_eta: selectedPump.q_eta,
+                      eta_s: selectedPump.eta_s,
+                    }}
+                    flowRate={Math.max(flowRate, 0)}
+                    head={Math.max(head, 0)}
+                  />
+                )}
               </div>
               <div className="min-h-0 bg-white">
                 <PowerNpshChart

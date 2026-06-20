@@ -1,0 +1,7 @@
+# ТЗ 2.2.3
+viscosity:
+  a_by_pump_type:
+    CIVOS: 0.1
+    VMIP: 0.1
+    COMOS: 0.5
+    HMIP: 0.5

@@ -78,11 +78,25 @@ sections:
   - id: fluidType
     type: select
     label: Тип перекачиваемой жидкости
+    bind: med
     source: catalog.fluidTypes
+  - id: concentration
+    type: number
+    label: Концентрация, %
+    bind: c
+    default: 30
+    min: 20
+    max: 55
+    visibleWhen:
+      fluidType:
+        not: вода
   - id: temperature
     type: number
     label: Температура, °С
-    default: 1
+    bind: t
+    default: 20
+    min: 5
+    max: 70
 options:
   title: Дополнительные опции насосной установки
   fields:

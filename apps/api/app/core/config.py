@@ -6,6 +6,7 @@ REPO_ROOT = Path(__file__).resolve().parents[4]
 PROFILES_DIR = REPO_ROOT / "config" / "profiles"
 ACCOUNTS_DIR = REPO_ROOT / "config" / "accounts"
 DATA_DIR = REPO_ROOT / "data"
+WEB_PUBLIC_DIR = REPO_ROOT / "apps" / "web" / "public"
 SQLITE_DB_PATH = DATA_DIR / "pumpstation.db"
 
 

@@ -1,5 +1,16 @@
-import type { PageConfig } from "@pumpstation/contracts";
+import type { PageConfig, SiteConfig } from "@pumpstation/contracts";
+import { validatePageRoute } from "@pumpstation/contracts";
 import { FIGMA } from "../figma/figmaTokens";
+
+const LAYOUT_VARIANTS = [
+  "strela-funnel",
+  "sidebar-brand",
+  "topbar-dark",
+  "minimal-light",
+  "sidebar-gradient",
+  "auth-minimal",
+  "cms-default",
+];
 
 function Field({
   label,
@@ -21,11 +32,15 @@ const inputClass =
 
 export function PagePropertiesPanel({
   page,
+  site,
   onChange,
 }: {
   page: PageConfig;
+  site?: SiteConfig;
   onChange: (patch: Partial<PageConfig>) => void;
 }) {
+  const routeError = site ? validatePageRoute(site, page.id, page.route) : null;
+
   return (
     <div className="space-y-4">
       <div>
@@ -46,6 +61,39 @@ export function PagePropertiesPanel({
               value={page.route}
               onChange={(e) => onChange({ route: e.target.value })}
             />
+            {routeError ? (
+              <p className="mt-1 text-[10px] text-red-400">{routeError}</p>
+            ) : null}
+          </Field>
+          <Field label="Профиль страницы">
+            <select
+              className={inputClass}
+              style={{ background: FIGMA.inputBg }}
+              value={page.pageProfile ?? ""}
+              onChange={(e) => onChange({ pageProfile: e.target.value || undefined })}
+            >
+              <option value="">— по умолчанию —</option>
+              {LAYOUT_VARIANTS.map((v) => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Тип страницы">
+            <select
+              className={inputClass}
+              style={{ background: FIGMA.inputBg }}
+              value={page.type ?? "page"}
+              onChange={(e) =>
+                onChange({ type: e.target.value as PageConfig["type"] })
+              }
+            >
+              <option value="page">CMS</option>
+              <option value="wizard">Визард</option>
+              <option value="auth">Авторизация</option>
+              <option value="cabinet">Кабинет</option>
+            </select>
           </Field>
           <label className="flex cursor-pointer items-center gap-2 text-xs text-[#b3b3b3]">
             <input
@@ -59,7 +107,7 @@ export function PagePropertiesPanel({
         </div>
       </div>
       <p className="text-[11px] leading-relaxed text-[#666]">
-        Выберите блок на холсте или в панели «Слои», чтобы редактировать его свойства.
+        Выберите блок на сетке или в «Слоях». Перетаскивание и resize — при выбранном блоке.
       </p>
     </div>
   );

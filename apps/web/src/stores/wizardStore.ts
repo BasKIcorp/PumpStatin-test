@@ -1,13 +1,6 @@
 import { create } from "zustand";
 
-export type WizardStepId =
-  | "product-class"
-  | "product-line"
-  | "hm-line"
-  | "pu-line"
-  | "simpel-line"
-  | "installation-type"
-  | "selection-form";
+export type WizardStepId = string;
 
 interface WizardState {
   step: WizardStepId;
@@ -27,16 +20,9 @@ interface WizardState {
   resetForm: () => void;
   setMatchResult: (pumps: unknown[]) => void;
   setStationResult: (result: unknown) => void;
-  goBack: () => void;
+  goBack: (nav?: { steps?: Array<{ id: string; parent?: string }> }) => void;
+  initFromNavigation: (firstStepId: string) => void;
 }
-
-const BACK_MAP: Partial<Record<WizardStepId, WizardStepId>> = {
-  "product-line": "product-class",
-  "hm-line": "product-class",
-  "pu-line": "product-class",
-  "simpel-line": "product-class",
-  "selection-form": "installation-type",
-};
 
 export const useWizardStore = create<WizardState>((set, get) => ({
   step: "product-class",
@@ -44,13 +30,13 @@ export const useWizardStore = create<WizardState>((set, get) => ({
   matchedPumps: null,
   stationResult: null,
   setStep: (step) => set({ step }),
+  initFromNavigation: (firstStepId) => set({ step: firstStepId }),
   selectCard: (step, cardId, meta = {}) => {
     const patch: Partial<WizardState> = { ...meta };
     if (step === "product-class") patch.productClass = cardId;
     if (step === "hm-line") patch.hmLine = cardId;
     if (step === "pu-line") {
       patch.puLine = cardId;
-      patch.productLine = cardId;
     }
     if (step === "product-line") patch.productLine = cardId;
     if (step === "simpel-line") patch.simpelLine = cardId;
@@ -71,25 +57,24 @@ export const useWizardStore = create<WizardState>((set, get) => ({
     set({ formValues: {}, matchedPumps: null, stationResult: null }),
   setMatchResult: (pumps) => set({ matchedPumps: pumps }),
   setStationResult: (result) => set({ stationResult: result }),
-  goBack: () => {
-    const { step, productClass, puLine } = get();
-    if (step === "selection-form") {
-      if (productClass === "hydromodules") {
-        set({ step: "hm-line" });
+  goBack: (nav) => {
+    const { step } = get();
+    if (nav?.steps) {
+      const current = nav.steps.find((s) => s.id === step);
+      if (current?.parent) {
+        set({ step: current.parent });
         return;
       }
-      if (productClass === "simpel") {
-        set({ step: "simpel-line" });
-        return;
-      }
-      set({ step: puLine ? "pu-line" : "product-line" });
-      return;
     }
-    if (step === "installation-type") {
-      set({ step: puLine ? "pu-line" : "product-line" });
-      return;
-    }
-    const prev = BACK_MAP[step];
+    const legacy: Record<string, WizardStepId> = {
+      "selection-form": "installation-type",
+      "installation-type": "pu-line",
+      "pu-line": "product-class",
+      "hm-line": "product-class",
+      "simpel-line": "product-class",
+      "product-line": "product-class",
+    };
+    const prev = legacy[step];
     if (prev) set({ step: prev });
   },
 }));

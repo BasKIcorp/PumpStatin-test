@@ -3,6 +3,7 @@
 from app.algorithms.base import AlgorithmProtocol
 from app.algorithms.bps_w_stub import BpsWStubAlgorithm
 from app.algorithms.bps_w_v1 import BpsWV1Algorithm
+from app.algorithms.bps_w_v2 import BpsWV2Algorithm
 from app.db.adapters.mock import MockDatabaseAdapter
 from app.db.adapters.postgres import PostgresDatabaseAdapter
 from app.db.base import DatabaseAdapter
@@ -12,6 +13,7 @@ from app.pdf.jinja_renderer import JinjaThemePdf
 _ALGORITHMS: dict[str, AlgorithmProtocol] = {
     "bps_w_stub": BpsWStubAlgorithm(),
     "bps_w_v1": BpsWV1Algorithm(),
+    "bps_w_v2": BpsWV2Algorithm(),
 }
 
 _DATABASES: dict[str, DatabaseAdapter] = {

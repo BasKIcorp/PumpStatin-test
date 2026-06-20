@@ -1,0 +1,16 @@
+version: 1
+top_n: 5
+enabled_steps:
+  match_pumps:
+    - validate_input
+    - filter_catalog
+    - resolve_fluid_properties
+    - build_pump_curves
+    - apply_viscosity_correction
+    - find_working_point
+    - filter_by_operating_range
+    - rank_results
+  build_station:
+    - calculate_dn
+    - generate_bom
+    - assemble_result

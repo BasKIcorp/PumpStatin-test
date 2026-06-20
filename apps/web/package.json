@@ -11,6 +11,9 @@
     "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@pumpstation/contracts": "workspace:*",
     "@pumpstation/theme-acme": "workspace:*",
     "@pumpstation/theme-aqua": "workspace:*",
@@ -25,6 +28,7 @@
     "lucide-react": "^0.475.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-rnd": "^10.5.3",
     "recharts": "^3.8.1",
     "tailwind-merge": "^3.0.1",
     "wouter": "^3.3.5",

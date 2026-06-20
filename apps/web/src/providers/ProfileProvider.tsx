@@ -12,6 +12,7 @@ import { loadTheme } from "@/lib/themeRegistry";
 import { useAuthStore } from "@/stores/authStore";
 import { useWizardStore } from "@/stores/wizardStore";
 import { ThemeProvider } from "./ThemeProvider";
+import { StudioProfileContext } from "./StudioProfileProvider";
 
 const ProfileContext = createContext<ProfileBundle | null>(null);
 
@@ -72,9 +73,11 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 }
 
 export function useProfile() {
+  const studio = useContext(StudioProfileContext);
   const ctx = useContext(ProfileContext);
-  if (!ctx) throw new Error("useProfile must be used within ProfileProvider");
-  return ctx;
+  const bundle = studio ?? ctx;
+  if (!bundle) throw new Error("useProfile must be used within ProfileProvider");
+  return bundle;
 }
 
 /** Перезагрузить профиль после входа */

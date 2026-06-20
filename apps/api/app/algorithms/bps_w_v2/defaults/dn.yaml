@@ -1,0 +1,8 @@
+# ТЗ 2.3.1
+dn:
+  formulas:
+    BPS-C: { divisor: 1800 }
+    FPS: { divisor: 1800 }
+    BPS-W: { divisor: 1350 }
+    Pump: { divisor: 1350 }
+  round_up: pipe_dn_series

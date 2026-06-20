@@ -2,22 +2,26 @@ export interface WizardCard {
   id: string;
   title: string;
   description: string;
-  /** URL изображения на карточке (например /selection-assets/podbor-001.png) */
   image?: string;
   enabled?: boolean;
   next?: string;
   flow?: string;
 }
 
+export interface WizardStepDef {
+  id: string;
+  type: string;
+  title?: string;
+  subtitle?: string;
+  titleKey?: string;
+  subtitleKey?: string;
+  parent?: string;
+  when?: Record<string, unknown>;
+  flowRef?: string;
+}
+
 export interface NavigationConfig {
-  steps: Array<{
-    id: string;
-    type: string;
-    title?: string;
-    subtitle?: string;
-    titleKey?: string;
-    subtitleKey?: string;
-  }>;
+  steps: WizardStepDef[];
   cards: Record<string, WizardCard[]>;
 }
 
@@ -30,10 +34,14 @@ export interface FlowField {
   max?: number;
   required?: boolean;
   source?: string;
+  bind?: string;
+  visibleWhen?: Record<string, unknown>;
 }
 
 export interface FlowConfig {
   id: string;
+  productLine?: string;
+  installationType?: string;
   sections: Array<{ id: string; title: string; fields: FlowField[] }>;
   options?: { title: string; fields: FlowField[] };
   actions: Record<string, { label: string; api?: string; requires?: string }>;

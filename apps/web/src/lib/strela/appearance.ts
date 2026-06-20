@@ -18,6 +18,8 @@ export interface StrelaAppearance {
   funnel_table_row_selected_background_color?: string;
   sidebar_text?: string;
   funnel_sidebar_wordmark_url?: string;
+  /** CSS width, e.g. 13.5rem or clamp(...) */
+  funnel_sidebar_width?: string;
   selection_card_caption_logo_url?: string;
   selection_flow_header_logo_url?: string;
   stage_headings?: Partial<Record<"category" | "hm_line" | "pu_line" | "pu_subtype", string>>;
@@ -102,6 +104,9 @@ export function applyStrelaAppearance(appearance: StrelaAppearance | undefined):
     pickColor(a.funnel_table_row_selected_background_color, "#e8eef7"),
   );
   root.style.setProperty("--funnel-input-bg", pickColor(a.funnel_surface_color, "#ffffff"));
+  if (a.funnel_sidebar_width?.trim()) {
+    root.style.setProperty("--funnel-sidebar-width", a.funnel_sidebar_width.trim());
+  }
 }
 
 export function stageBackdropUrl(stage: number): string {

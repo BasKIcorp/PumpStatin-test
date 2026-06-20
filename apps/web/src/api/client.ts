@@ -1,4 +1,4 @@
-import { getAuthHeader } from "@/stores/authStore";
+import { getAuthHeader, useAuthStore } from "@/stores/authStore";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
@@ -16,6 +16,9 @@ export async function apiFetch<T>(
   });
   if (!res.ok) {
     const text = await res.text();
+    if (res.status === 401 && useAuthStore.getState().token) {
+      useAuthStore.getState().logout();
+    }
     throw new Error(text || res.statusText);
   }
   return res.json() as Promise<T>;

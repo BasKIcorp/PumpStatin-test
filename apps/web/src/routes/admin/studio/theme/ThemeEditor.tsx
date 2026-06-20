@@ -10,6 +10,7 @@ export function ThemeEditor({ branding, onSave }: ThemeEditorProps) {
   const colors: Record<string, string> = b.colors ?? {};
   const fonts: Record<string, string> = b.fonts ?? {};
   const assets: Record<string, string> = b.assets ?? {};
+  const appearance: Record<string, unknown> = b.appearance ?? {};
 
   const [form, setForm] = useState({
     appTitle: String(b.appTitle ?? ""),
@@ -22,6 +23,8 @@ export function ThemeEditor({ branding, onSave }: ThemeEditorProps) {
     fontBody: fonts.body ?? '"Segoe UI", system-ui, sans-serif',
     fontAccent: fonts.accent ?? "Caveat, cursive",
     logoUrl: assets.logoUrl ?? "",
+    funnelBg: String(appearance.funnelBackground ?? "#f5f7fa"),
+    panelBorder: String(appearance.panelBorder ?? "#d1d5db"),
   });
 
   const layoutOptions = [
@@ -50,6 +53,11 @@ export function ThemeEditor({ branding, onSave }: ThemeEditorProps) {
       assets: {
         logoUrl: form.logoUrl,
         favicon: "/favicon.ico",
+      },
+      appearance: {
+        ...appearance,
+        funnelBackground: form.funnelBg,
+        panelBorder: form.panelBorder,
       },
     });
   };
@@ -157,6 +165,22 @@ export function ThemeEditor({ branding, onSave }: ThemeEditorProps) {
             label="Text"
             value={form.text}
             onChange={(v) => setForm({ ...form, text: v })}
+          />
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <h4 className="text-xs font-semibold uppercase text-neutral-500">appearance.* (воронка)</h4>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <ColorPicker
+            label="funnelBackground"
+            value={form.funnelBg}
+            onChange={(v) => setForm({ ...form, funnelBg: v })}
+          />
+          <ColorPicker
+            label="panelBorder"
+            value={form.panelBorder}
+            onChange={(v) => setForm({ ...form, panelBorder: v })}
           />
         </div>
       </section>

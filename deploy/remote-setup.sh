@@ -7,11 +7,25 @@ cd "$APP_ROOT"
 echo "==> System fonts for PDF (Cyrillic)"
 apt-get install -y -qq fonts-dejavu-core 2>/dev/null || true
 
+echo "==> Backup previous release"
+if [ -d "$APP_ROOT" ] && [ "$(ls -A "$APP_ROOT" 2>/dev/null)" ]; then
+  rm -rf "${APP_ROOT}.prev"
+  cp -a "$APP_ROOT" "${APP_ROOT}.prev"
+fi
+
 echo "==> Python venv + API deps"
 cd apps/api
 python3 -m venv .venv
 .venv/bin/pip install -U pip wheel
 .venv/bin/pip install -e .
+
+echo "==> Database migrations (Alembic)"
+cd "$APP_ROOT/apps/api"
+if [ -f alembic.ini ]; then
+  .venv/bin/pip install alembic >/dev/null 2>&1 || true
+  .venv/bin/alembic upgrade head 2>/dev/null || echo "Alembic upgrade skipped (fresh DB uses init_db)"
+fi
+cd "$APP_ROOT"
 
 echo "==> Frontend build"
 cd "$APP_ROOT"

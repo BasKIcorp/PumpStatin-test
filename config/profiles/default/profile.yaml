@@ -7,9 +7,15 @@ active: true
 
 # Плагины backend (имена должны быть зарегистрированы в registry)
 theme: theme-strela
-algorithm: bps_w_v1
+algorithm: bps_w_v2
 database: postgres
 pdfTemplate: strela-standard
+
+algorithmRules: algorithm/
+algorithmWiring: algorithm/wiring.yaml
+algorithmConfig:
+  manufacturer: WL
+  topN: 5
 
 # Корень навигации визарда (относительно этой папки профиля)
 wizard:

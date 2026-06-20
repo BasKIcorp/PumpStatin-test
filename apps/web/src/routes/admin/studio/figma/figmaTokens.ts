@@ -10,5 +10,7 @@ export const FIGMA = {
   accent: "#0d99ff",
   accentSoft: "rgba(13, 153, 255, 0.15)",
   canvasDot: "#444444",
+  canvasBg: "#1e1e1e",
+  gridLine: "rgba(255,255,255,0.06)",
   artboardShadow: "0 2px 8px rgba(0,0,0,0.45)",
 } as const;
