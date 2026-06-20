@@ -46,7 +46,7 @@ import {
   wizardNavFingerprint,
   wizardPageFramesFingerprint,
 } from "@/routes/admin/studio/studioDraftUtils";
-import { StrelaWizardShell } from "@/components/strela/StrelaWizardShell";
+import { WizardLiveCanvas } from "./WizardLiveCanvas";
 import { StudioProfileProvider } from "@/providers/StudioProfileProvider";
 import type { ProfileBundle } from "@/api/config";
 import { useUndoRedo } from "@/hooks/useUndoRedo";
@@ -187,6 +187,7 @@ export function WizardVisualEditor({
   onDraftPageChange,
   onNavDraftChange,
   onPreviewStepChange,
+  onAppearanceDraftChange,
 }: {
   page: PageConfig;
   site: SiteConfig;
@@ -202,6 +203,7 @@ export function WizardVisualEditor({
   onDraftPageChange?: (page: PageConfig) => void;
   onNavDraftChange?: (nav: WizardNavState) => void;
   onPreviewStepChange?: (stepId: string) => void;
+  onAppearanceDraftChange?: (appearance: StrelaAppearance) => void;
 }) {
   const { state: nav, setState: setNav, undo, redo, canUndo, canRedo, reset } = useUndoRedo(initialNav);
   const serverNavKeyRef = useRef<string>("");
@@ -251,6 +253,10 @@ export function WizardVisualEditor({
   useEffect(() => {
     onPreviewStepChange?.(previewStep);
   }, [previewStep, onPreviewStepChange]);
+
+  useEffect(() => {
+    onAppearanceDraftChange?.(appearanceDraft);
+  }, [appearanceDraft, onAppearanceDraftChange]);
 
   useEffect(() => {
     const key = JSON.stringify(initialNav);
@@ -949,8 +955,8 @@ export function WizardVisualEditor({
             >
               <span className="text-[#888]">
                 {showStrelaChrome
-                  ? "Превью с оболочкой Strela (сайдбар + шапка)"
-                  : "Режим сетки: перетаскивайте блоки; сайдбар — справа в «Оболочка Strela»"}
+                  ? "Как на сайте и в «Превью» — оболочка Strela + карточки"
+                  : "Режим сетки: drag/resize блоков; для WYSIWYG — «Оболочка Strela»"}
               </span>
               <div className="flex shrink-0 gap-1">
                 <button
@@ -979,6 +985,18 @@ export function WizardVisualEditor({
             </div>
           )}
 
+          {isStrelaFunnel && showStrelaChrome ? (
+            <div className="relative min-h-0 flex-1 overflow-auto" style={{ background: FIGMA.appBg }}>
+              <WizardLiveCanvas
+                page={draftPage}
+                site={site}
+                bundle={draftBundle}
+                previewStepId={previewStep}
+                selectedCardId={selectedChildId}
+                onSelectCard={setSelectedChildId}
+              />
+            </div>
+          ) : (
           <StudioCanvas
             artboardLabel={`${page.title} — ${selectedStep?.title ?? previewStep}`}
             artboardWidth={gridMetrics.artboardWidth}
@@ -990,7 +1008,7 @@ export function WizardVisualEditor({
             onDropBlock={previewUsesFrames ? addFrameBlock : undefined}
           >
             <div className="relative h-full min-h-[500px] w-full">
-              {isStrelaFunnel && !showStrelaChrome && (
+              {isStrelaFunnel && (
                 <div
                   className="pointer-events-none absolute bottom-0 left-0 top-0 z-10 border-r border-dashed border-sky-400/50 bg-sky-500/[0.06]"
                   style={{ width: `var(--funnel-sidebar-width, ${STRELA_SIDEBAR_WIDTH})` }}
@@ -1007,44 +1025,29 @@ export function WizardVisualEditor({
                     },
                   }}
                 >
-                  {isStrelaFunnel && showStrelaChrome ? (
-                    <div className="flex h-full min-h-[620px] flex-col overflow-hidden">
-                      <StrelaWizardShell embedded previewStepId={previewStep}>
-                        <WizardStepRenderer
-                          page={draftPage}
-                          stepId={previewStep}
-                          stepDef={previewStepDef}
-                          strela={isStrelaFunnel}
-                          site={site}
-                          selectedCardId={selectedChildId}
-                          onSelectCard={setSelectedChildId}
-                        />
-                      </StrelaWizardShell>
-                    </div>
-                  ) : (
-                    <WizardStepRenderer
-                      page={draftPage}
-                      stepId={previewStep}
-                      stepDef={previewStepDef}
-                      strela={isStrelaFunnel}
-                      site={site}
-                      editor={{
-                        selectedId: selectedFrameBlockId,
-                        onSelect: (id) => {
-                          setSelectedFrameBlockId(id);
-                          if (id) setSelectedChildId(null);
-                        },
-                        onFrameBlocksChange: (updater) => patchFrameBlocks(previewStep, updater),
-                        profileId: profileBundle.profile.id,
-                      }}
-                      selectedCardId={selectedChildId}
-                      onSelectCard={setSelectedChildId}
-                    />
-                  )}
+                  <WizardStepRenderer
+                    page={draftPage}
+                    stepId={previewStep}
+                    stepDef={previewStepDef}
+                    strela={isStrelaFunnel}
+                    site={site}
+                    editor={{
+                      selectedId: selectedFrameBlockId,
+                      onSelect: (id) => {
+                        setSelectedFrameBlockId(id);
+                        if (id) setSelectedChildId(null);
+                      },
+                      onFrameBlocksChange: (updater) => patchFrameBlocks(previewStep, updater),
+                      profileId: profileBundle.profile.id,
+                    }}
+                    selectedCardId={selectedChildId}
+                    onSelectCard={setSelectedChildId}
+                  />
                 </WizardStudioContext.Provider>
               </StudioProfileProvider>
             </div>
           </StudioCanvas>
+          )}
         </div>
 
         <StudioRightSidebar>

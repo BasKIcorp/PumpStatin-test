@@ -12,11 +12,16 @@ export function WizardGridPage({
   page,
   site,
   previewStepId,
+  selectedCardId,
+  onSelectCard,
 }: {
   page: PageConfig;
   site?: SiteConfig;
   /** Studio site preview: не читать/не писать wizardStore */
   previewStepId?: string;
+  /** Studio: выбор карточки на live-канвасе */
+  selectedCardId?: string | null;
+  onSelectCard?: (cardId: string) => void;
 }) {
   const { branding, wizard } = useProfile();
   const storeStep = useWizardStore((s) => s.step);
@@ -41,6 +46,8 @@ export function WizardGridPage({
       stepDef={stepDef}
       strela={isStrela}
       site={site}
+      selectedCardId={selectedCardId}
+      onSelectCard={onSelectCard}
     />
   );
 

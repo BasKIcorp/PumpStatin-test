@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { PageConfig, SiteConfig } from "@pumpstation/contracts";
 import type { ProfileBundle } from "@/api/config";
 import { SitePage } from "@/engine/SitePage";
-import { StudioProfileProvider } from "@/providers/StudioProfileProvider";
+import { WizardLiveCanvas } from "@/routes/admin/studio/wizard/WizardLiveCanvas";
 import { FIGMA } from "../figma/figmaTokens";
 import { PreviewToolbar } from "./PreviewToolbar";
 import { PreviewViewport, type PreviewViewportId } from "./previewViewport";
@@ -23,6 +23,7 @@ export function DraftPagePreview({
   onClose: () => void;
 }) {
   const [viewportId, setViewportId] = useState<PreviewViewportId>("full");
+  const wizardStepId = previewWizardStepId ?? "product-class";
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -32,13 +33,17 @@ export function DraftPagePreview({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onClose]);
 
-  const content = (
-    <SitePage
-      page={page}
-      site={site}
-      previewWizardStepId={page.type === "wizard" ? previewWizardStepId : undefined}
-    />
-  );
+  const content =
+    page.type === "wizard" && bundle ? (
+      <WizardLiveCanvas
+        page={page}
+        site={site}
+        bundle={bundle}
+        previewStepId={wizardStepId}
+      />
+    ) : (
+      <SitePage page={page} site={site} />
+    );
 
   return (
     <div
@@ -55,7 +60,7 @@ export function DraftPagePreview({
       />
       <PreviewViewport viewportId={viewportId}>
         <div className={page.type === "wizard" ? "min-h-[100dvh] w-full" : "min-h-full w-full"}>
-          {bundle ? <StudioProfileProvider bundle={bundle}>{content}</StudioProfileProvider> : content}
+          {content}
         </div>
       </PreviewViewport>
     </div>

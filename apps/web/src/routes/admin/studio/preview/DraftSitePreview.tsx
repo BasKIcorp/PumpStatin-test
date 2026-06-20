@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import type { PageConfig, SiteConfig } from "@pumpstation/contracts";
 import type { ProfileBundle } from "@/api/config";
 import { SitePage } from "@/engine/SitePage";
+import { WizardLiveCanvas } from "@/routes/admin/studio/wizard/WizardLiveCanvas";
 import { StudioProfileProvider } from "@/providers/StudioProfileProvider";
 import { FIGMA } from "../figma/figmaTokens";
 import { PreviewToolbar } from "./PreviewToolbar";
@@ -87,14 +88,20 @@ export function DraftSitePreview({
         </nav>
 
         <PreviewViewport viewportId={viewportId}>
-          <StudioProfileProvider bundle={bundle}>
-            <SitePage
-              key={page.id}
-              page={page}
-              site={site}
-              previewWizardStepId={wizardPreviewStepId(page, bundle)}
-            />
-          </StudioProfileProvider>
+          <div className="min-h-[100dvh] w-full">
+            {page.type === "wizard" ? (
+              <WizardLiveCanvas
+                page={page}
+                site={site}
+                bundle={bundle}
+                previewStepId={wizardPreviewStepId(page, bundle) ?? "product-class"}
+              />
+            ) : (
+              <StudioProfileProvider bundle={bundle}>
+                <SitePage page={page} site={site} />
+              </StudioProfileProvider>
+            )}
+          </div>
         </PreviewViewport>
       </div>
     </div>

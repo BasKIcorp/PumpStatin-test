@@ -50,6 +50,7 @@ export function AdminProfileStudio() {
   const [sitePreview, setSitePreview] = useState(false);
   const [pdfPreview, setPdfPreview] = useState(false);
   const [wizardPreviewStep, setWizardPreviewStep] = useState("product-class");
+  const [wizardAppearanceDraft, setWizardAppearanceDraft] = useState<StrelaAppearance | null>(null);
   const pdfSaveRef = useRef<(() => Promise<void>) | null>(null);
   const wizardSaveRef = useRef<(() => Promise<void>) | null>(null);
   const savedSiteFpRef = useRef("");
@@ -298,16 +299,25 @@ export function AdminProfileStudio() {
 
   const previewBundle = useMemo((): ProfileBundle | null => {
     if (!profileBundle) return null;
-    if (!wizardDraftNav) return profileBundle;
+    const withNav = wizardDraftNav
+      ? {
+          ...profileBundle,
+          wizard: {
+            ...profileBundle.wizard,
+            navigation: { steps: wizardDraftNav.steps, cards: wizardDraftNav.cards },
+            flows: wizardDraftNav.flows ?? {},
+          },
+        }
+      : profileBundle;
+    if (!wizardAppearanceDraft) return withNav;
     return {
-      ...profileBundle,
-      wizard: {
-        ...profileBundle.wizard,
-        navigation: { steps: wizardDraftNav.steps, cards: wizardDraftNav.cards },
-        flows: wizardDraftNav.flows ?? {},
+      ...withNav,
+      branding: {
+        ...withNav.branding,
+        appearance: wizardAppearanceDraft,
       },
     };
-  }, [profileBundle, wizardDraftNav]);
+  }, [profileBundle, wizardDraftNav, wizardAppearanceDraft]);
 
   const selectedPage = pages.find((p) => p.id === selectedPageId);
   const studioPages = filterStudioPages(pages);
@@ -459,6 +469,7 @@ export function AdminProfileStudio() {
               onDraftPageChange={handleWizardDraftPageChange}
               onNavDraftChange={handleWizardDraftNavChange}
               onPreviewStepChange={setWizardPreviewStep}
+              onAppearanceDraftChange={setWizardAppearanceDraft}
             />
           )}
 
