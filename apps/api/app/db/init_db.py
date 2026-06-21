@@ -131,6 +131,38 @@ async def _backfill_pump_v2_fields(session) -> None:
         await session.commit()
 
 
+async def _backfill_pump_curves(session) -> None:
+    """Генерирует демо-кривые для насосов без pump_curve_points."""
+    result = await session.execute(select(PumpModel))
+    pumps = result.scalars().all()
+    if not pumps:
+        return
+    changed = False
+    for pump in pumps:
+        existing = await session.execute(
+            select(PumpCurvePointModel.id)
+            .where(PumpCurvePointModel.pump_id == pump.id)
+            .limit(1)
+        )
+        if existing.scalar_one_or_none():
+            continue
+        flow = float(pump.nominal_flow or 15)
+        head = float(pump.nominal_head or 20)
+        power = float(pump.power_kw or 2.2)
+        for pump_id, kind, idx, val in _curve_points(pump.id, flow, head, power):
+            session.add(
+                PumpCurvePointModel(
+                    pump_id=pump_id,
+                    curve_kind=kind,
+                    point_index=idx,
+                    value=val,
+                )
+            )
+        changed = True
+    if changed:
+        await session.commit()
+
+
 async def init_database() -> None:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -138,6 +170,7 @@ async def init_database() -> None:
 
     async with SessionLocal() as session:
         await _backfill_pump_v2_fields(session)
+        await _backfill_pump_curves(session)
 
         existing = await session.execute(select(PumpModel.id).limit(1))
         if existing.scalar_one_or_none():
