@@ -23,7 +23,9 @@ echo "==> Database migrations (Alembic)"
 cd "$APP_ROOT/apps/api"
 if [ -f alembic.ini ]; then
   .venv/bin/pip install alembic >/dev/null 2>&1 || true
-  .venv/bin/alembic upgrade head 2>/dev/null || echo "Alembic upgrade skipped (fresh DB uses init_db)"
+  if ! .venv/bin/alembic upgrade head; then
+    echo "Alembic upgrade failed — init_db will still sync v2 columns on API start"
+  fi
 fi
 cd "$APP_ROOT"
 

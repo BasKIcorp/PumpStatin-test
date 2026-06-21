@@ -12,7 +12,27 @@ PROFILES_DIR = REPO_ROOT / "config" / "profiles"
 DEFAULT_COLS = 12
 
 
-def _validate_block(block: dict, *, page_id: str, idx: int) -> list[str]:
+def _effective_cols(page: dict, blocks: list[dict]) -> int:
+    """Wizard Strela cards expand grid horizontally — match runtime gridContentCols()."""
+    min_cols = (page.get("grid") or {}).get("cols") or DEFAULT_COLS
+    max_col = min_cols
+    for block in blocks:
+        layout = block.get("layout")
+        if not isinstance(layout, dict):
+            continue
+        x, w = layout.get("x"), layout.get("w")
+        if isinstance(x, int) and isinstance(w, int):
+            max_col = max(max_col, x + w)
+    return max_col
+
+
+def _validate_block(
+    block: dict,
+    *,
+    page_id: str,
+    idx: int,
+    cols: int,
+) -> list[str]:
     errors: list[str] = []
     bid = block.get("id", f"#{idx}")
     if not block.get("type"):
@@ -30,8 +50,8 @@ def _validate_block(block: dict, *, page_id: str, idx: int) -> list[str]:
     if isinstance(x, int) and isinstance(w, int):
         if x < 0 or w < 1:
             errors.append(f"page {page_id} block {bid}: invalid x/w")
-        if x + w > DEFAULT_COLS:
-            errors.append(f"page {page_id} block {bid}: x+w={x + w} exceeds {DEFAULT_COLS}")
+        if x + w > cols:
+            errors.append(f"page {page_id} block {bid}: x+w={x + w} exceeds {cols}")
     return errors
 
 
@@ -48,13 +68,24 @@ def validate_site_grid() -> int:
         pages = site.get("pages") or []
         for page in pages:
             pid = page.get("id", "?")
-            for i, block in enumerate(page.get("blocks") or []):
-                errors.extend(_validate_block(block, page_id=pid, idx=i))
+            page_blocks = list(page.get("blocks") or [])
+            page_cols = _effective_cols(page, page_blocks)
+            for i, block in enumerate(page_blocks):
+                errors.extend(
+                    _validate_block(block, page_id=pid, idx=i, cols=page_cols)
+                )
             frames = page.get("frames") or {}
             for frame_id, frame in frames.items():
-                for i, block in enumerate((frame or {}).get("blocks") or []):
+                frame_blocks = list((frame or {}).get("blocks") or [])
+                frame_cols = _effective_cols(page, frame_blocks)
+                for i, block in enumerate(frame_blocks):
                     errors.extend(
-                        _validate_block(block, page_id=f"{pid}/{frame_id}", idx=i)
+                        _validate_block(
+                            block,
+                            page_id=f"{pid}/{frame_id}",
+                            idx=i,
+                            cols=frame_cols,
+                        )
                     )
     if errors:
         for e in errors:

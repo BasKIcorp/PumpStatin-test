@@ -69,8 +69,23 @@ jobs:
           script: |
             set -eu
             APP_ROOT=/opt/pumpstation-base
+            STAGING=/tmp/pumpstation-stage-$$
+            ENV_FILE="$APP_ROOT/deploy/production.env"
+            ENV_BACKUP=""
+            if [ -f "$ENV_FILE" ]; then
+              ENV_BACKUP="$(cat "$ENV_FILE")"
+            fi
+            rm -rf "$STAGING"
+            mkdir -p "$STAGING"
+            tar -xzf /tmp/pumpstation-base.tar.gz -C "$STAGING"
+            rm -rf "$APP_ROOT"
             mkdir -p "$APP_ROOT"
-            tar -xzf /tmp/pumpstation-base.tar.gz -C "$APP_ROOT"
+            cp -a "$STAGING/." "$APP_ROOT/"
+            rm -rf "$STAGING"
+            if [ -n "$ENV_BACKUP" ]; then
+              mkdir -p "$APP_ROOT/deploy"
+              printf '%s' "$ENV_BACKUP" > "$ENV_FILE"
+            fi
             sed -i 's/\r$//' "$APP_ROOT"/deploy/*.sh
             bash "$APP_ROOT/deploy/remote-setup.sh"
             rm -f /tmp/pumpstation-base.tar.gz

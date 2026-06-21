@@ -83,16 +83,18 @@ def _curve_points(pump_id: str, qn: float, hn: float, power: float) -> list[tupl
     return rows
 
 
-def _sync_sqlite_schema(connection) -> None:
-    """Добавляет v2-колонки в существующую SQLite-БД без Alembic."""
-    if not is_sqlite():
-        return
+def _sync_pump_v2_schema(connection) -> None:
+    """Добавляет v2-колонки в существующую БД без Alembic (SQLite + Postgres)."""
     insp = inspect(connection)
     if "pumps" not in insp.get_table_names():
         return
     existing = {c["name"] for c in insp.get_columns("pumps")}
     for col, col_type in _PUMP_V2_COLUMNS:
-        if col not in existing:
+        if col in existing:
+            continue
+        if is_sqlite():
+            connection.execute(text(f"ALTER TABLE pumps ADD COLUMN {col} {col_type}"))
+        else:
             connection.execute(text(f"ALTER TABLE pumps ADD COLUMN {col} {col_type}"))
 
 
@@ -166,7 +168,7 @@ async def _backfill_pump_curves(session) -> None:
 async def init_database() -> None:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-        await conn.run_sync(_sync_sqlite_schema)
+        await conn.run_sync(_sync_pump_v2_schema)
 
     async with SessionLocal() as session:
         await _backfill_pump_v2_fields(session)
