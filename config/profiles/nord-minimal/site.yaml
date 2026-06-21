@@ -48,24 +48,44 @@ pages:
   blocks:
   - id: login-brand
     type: auth/brand-panel
-    layout: { x: 0, y: 0, w: 8, h: 16 }
+    layout:
+      x: 0
+      y: 0
+      w: 8
+      h: 16
     props: {}
   - id: login-form
     type: auth/login-form
-    layout: { x: 8, y: 0, w: 4, h: 8 }
+    layout:
+      x: 8
+      y: 0
+      w: 4
+      h: 8
     props:
       title: Вход
   - id: login-quick
     type: auth/quick-login
-    layout: { x: 8, y: 8, w: 4, h: 6 }
+    layout:
+      x: 8
+      y: 8
+      w: 4
+      h: 6
     props: {}
   - id: login-admin
     type: auth/admin-entry
-    layout: { x: 8, y: 14, w: 4, h: 2 }
+    layout:
+      x: 8
+      y: 14
+      w: 4
+      h: 2
     props: {}
   - id: login-back
     type: auth/back-link
-    layout: { x: 8, y: 16, w: 4, h: 1 }
+    layout:
+      x: 8
+      y: 16
+      w: 4
+      h: 1
     props: {}
 - id: home
   title: Главная
@@ -76,7 +96,11 @@ pages:
   blocks:
   - id: home-hero
     type: hero
-    layout: { x: 0, y: 0, w: 12, h: 8 }
+    layout:
+      x: 0
+      y: 0
+      w: 12
+      h: 8
     props:
       background: '#1e4a8c'
       heading: Подбор насосных станций
@@ -93,7 +117,11 @@ pages:
   blocks:
   - id: block-1781956390091
     type: divider
-    layout: { x: 0, y: 0, w: 12, h: 1 }
+    layout:
+      x: 0
+      y: 0
+      w: 12
+      h: 1
     props:
       style: solid
       color: '#e5e7eb'
@@ -105,7 +133,11 @@ pages:
   blocks:
   - id: catalog-grid
     type: product-grid
-    layout: { x: 0, y: 0, w: 12, h: 10 }
+    layout:
+      x: 0
+      y: 0
+      w: 12
+      h: 10
     props:
       columns: 3
       filter: true
@@ -117,12 +149,20 @@ pages:
   blocks:
   - id: contact-form
     type: contact-form
-    layout: { x: 0, y: 0, w: 6, h: 8 }
+    layout:
+      x: 0
+      y: 0
+      w: 6
+      h: 8
     props:
       title: Свяжитесь с нами
   - id: contact-map
     type: map
-    layout: { x: 6, y: 0, w: 6, h: 8 }
+    layout:
+      x: 6
+      y: 0
+      w: 6
+      h: 8
     props:
       address: Москва, Россия
       lat: 55.75
@@ -136,7 +176,11 @@ pages:
   blocks:
   - id: cabinet-main
     type: cabinet/workspace
-    layout: { x: 0, y: 0, w: 12, h: 20 }
+    layout:
+      x: 0
+      y: 0
+      w: 12
+      h: 20
     props: {}
 - id: wizard
   title: Подбор насосов
@@ -145,22 +189,147 @@ pages:
   type: wizard
   pageProfile: minimal-light
   wizardRef: wizard/navigation.yaml
-  frames:
-    product-class:
-      blocks:
-      - id: w-step-product
-        type: wizard/step-heading
-        layout: { x: 0, y: 0, w: 12, h: 2 }
-        props:
-          stepId: product-class
-      - id: w-cards-product
-        type: wizard/card-grid-simple
-        layout: { x: 0, y: 2, w: 12, h: 12 }
-        props:
-          stepId: product-class
-    selection-form:
-      blocks:
-      - id: w-legacy-form
-        type: wizard/legacy-selection
-        layout: { x: 0, y: 0, w: 12, h: 24 }
-        props: {}
+  blocks:
+  - id: w-legacy-form
+    type: wizard/legacy-selection
+    layout:
+      x: 0
+      y: 0
+      w: 12
+      h: 24
+    props:
+      stepId: selection-form
+  - id: w-heading-product-class
+    type: wizard/step-heading
+    layout:
+      x: 0
+      y: 0
+      w: 12
+      h: 2
+    props:
+      stepId: product-class
+      title: null
+      subtitle: null
+  - id: w-card-product-class-hydromodules
+    type: wizard/selection-card
+    layout:
+      x: 0
+      y: 2
+      w: 4
+      h: 8
+    props:
+      stepId: product-class
+      cardId: hydromodules
+      title: Гидромодули
+      description: 'Для закрытых систем вентиляции и кондиционирования. Циркуляция теплоносителя между чиллером и теплообменниками.
+
+        '
+      next: product-line
+      enabled: true
+  - id: w-card-product-class-pump-stations
+    type: wizard/selection-card
+    layout:
+      x: 4
+      y: 2
+      w: 4
+      h: 8
+    props:
+      stepId: product-class
+      cardId: pump-stations
+      title: Насосные установки
+      description: 'Перекачка и повышение давления воды в системах хозяйственно-питьевого водоснабжения и пожаротушения.
+
+        '
+      next: product-line
+      enabled: true
+  - id: w-card-product-class-aupd
+    type: wizard/selection-card
+    layout:
+      x: 8
+      y: 2
+      w: 4
+      h: 8
+    props:
+      stepId: product-class
+      cardId: aupd
+      title: АУПД и АУПДЗ
+      description: В разработке
+      enabled: false
+  - id: w-card-product-class-simpel
+    type: wizard/selection-card
+    layout:
+      x: 0
+      y: 10
+      w: 4
+      h: 8
+    props:
+      stepId: product-class
+      cardId: simpel
+      title: Насосы Simpel
+      description: Подбор серийных насосов COMOS, CIVOS, VMIP, HMIP.
+      enabled: true
+  - id: w-heading-product-line
+    type: wizard/step-heading
+    layout:
+      x: 0
+      y: 0
+      w: 12
+      h: 2
+    props:
+      stepId: product-line
+      title: Линейка насосных установок
+      subtitle: Далее уточните тип сети — хоз-пит или ПНС
+  - id: w-card-product-line-bps-w
+    type: wizard/selection-card
+    layout:
+      x: 0
+      y: 2
+      w: 4
+      h: 8
+    props:
+      stepId: product-line
+      cardId: bps-w
+      title: BPS-W
+      description: —
+      next: installation-type
+      enabled: true
+  - id: w-heading-installation-type
+    type: wizard/step-heading
+    layout:
+      x: 0
+      y: 0
+      w: 12
+      h: 2
+    props:
+      stepId: installation-type
+      title: Тип установки
+      subtitle: Выберите назначение установки
+  - id: w-card-installation-type-domestic
+    type: wizard/selection-card
+    layout:
+      x: 0
+      y: 2
+      w: 4
+      h: 8
+    props:
+      stepId: installation-type
+      cardId: domestic
+      title: Хозяйственно-питьевая
+      description: Водоснабжение, повышение давления в тупиковой сети.
+      next: selection-form
+      flow: bps-w-domestic
+  - id: w-card-installation-type-fire-pns
+    type: wizard/selection-card
+    layout:
+      x: 4
+      y: 2
+      w: 4
+      h: 8
+    props:
+      stepId: installation-type
+      cardId: fire-pns
+      title: Пожарная насосная станция (ПНС)
+      description: 'Пожаротушение: ВПВ, дренчерная, спринклерная.'
+      next: selection-form
+      flow: bps-w-fire
+      enabled: false

@@ -4,6 +4,23 @@ import type { LayoutConfig, SiteConfig } from "@pumpstation/contracts";
 import type { ProfileBundle } from "@/api/config";
 import { useAuthStore } from "@/stores/authStore";
 
+/** Bundled header logo — site.yaml defaults to missing `/logo.svg`. */
+const SITE_HEADER_LOGO_FALLBACK = "/assets/strela-logo.png";
+
+/** Placeholder paths in profile YAML that are not shipped in `public/`. */
+const MISSING_SITE_LOGO_PATHS = new Set([
+  "/logo.svg",
+  "/assets/selection-flow-header-brand.png",
+]);
+
+function resolveSiteHeaderLogoSrc(layoutSrc: string, brandingLogoUrl?: string): string {
+  for (const candidate of [layoutSrc, brandingLogoUrl, SITE_HEADER_LOGO_FALLBACK]) {
+    const src = candidate?.trim();
+    if (src && !MISSING_SITE_LOGO_PATHS.has(src)) return src;
+  }
+  return SITE_HEADER_LOGO_FALLBACK;
+}
+
 interface SiteLayoutProps {
   layout: LayoutConfig;
   site?: SiteConfig;
@@ -17,16 +34,20 @@ function SiteHeader({ layout, site, profile }: { layout: LayoutConfig; site?: Si
   const { header } = layout;
   const user = profile.user;
   const branding = profile.branding;
+  const logoSrc = resolveSiteHeaderLogoSrc(
+    header.logo.src,
+    branding.assets?.logoUrl,
+  );
 
   return (
     <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b bg-background px-6 shadow-sm">
-      {/* Лого */}
+      {/* Логотип */}
       <Link
         href={header.logo.link ?? "/"}
         className="flex shrink-0 items-center gap-2"
       >
         <img
-          src={header.logo.src}
+          src={logoSrc}
           alt={branding.appTitle ?? "Логотип"}
           width={header.logo.width}
           height="auto"

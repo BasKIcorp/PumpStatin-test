@@ -44,6 +44,22 @@
 
 **Поток** — порядок блоков = порядок в массиве / панели «Слои».
 
+### Унификация с редактором страниц (2026-06-21)
+
+| Элемент | Статус |
+|---------|--------|
+| `StudioCanvas` (zoom/pan, FloatingZoom) | OK — вместо собственного `useCanvasNavigation` |
+| `STUDIO_CANVAS_DROP_ZONE_ID` | OK — drop palette → canvas |
+| `StudioLeftSidebar` (Слои \| Блоки) | OK |
+| `StudioRightSidebar` + `PdfPropertiesPanel` | OK |
+| Undo/redo (Ctrl+Z) + `UndoRedoButtons` | OK |
+| Delete/Escape для выбранного блока | OK |
+| `PdfLayersPanel` с reorder (свой DndContext) | OK |
+| Dirty hint в toolbar (`pdfTemplateFingerprint`) | OK |
+| `useStudioCanvasZoom` для react-rnd в free mode | OK |
+
+Остаётся: нет grid-layout/rotation как у CMS-блоков (PDF — pixel coords); WYSIWYG free-layout в PDF — см. ограничение выше.
+
 ## Сохранение
 
 - Страницы: «Сохранить» → PUT `/site`

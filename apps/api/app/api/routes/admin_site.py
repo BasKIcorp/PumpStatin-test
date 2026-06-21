@@ -260,8 +260,10 @@ def admin_pdf_preview(
         template = {
             "templateName": body.get("templateName", "custom"),
             "mode": body.get("mode", "auto"),
-            "blocks": body["blocks"],
+            "blocks": body.get("blocks", []),
         }
+        if body.get("pages") is not None:
+            template["pages"] = body["pages"]
     elif tpl_path.is_file():
         with tpl_path.open("r", encoding="utf-8") as f:
             import json

@@ -16,6 +16,51 @@ blocks:
     label: Форма входа
     icon: "🔐"
     category: auth
+  - type: wizard/funnel-sidebar
+    label: Сайдбар Strela
+    icon: "▌"
+    category: wizard
+    ioRole: nav
+  - type: wizard/funnel-heading
+    label: Заголовок funnel
+    icon: "📰"
+    category: wizard
+    ioRole: nav
+  - type: wizard/selection-card
+    label: Карточка подбора
+    icon: "🃏"
+    category: wizard
+    ioRole: nav
+  - type: wizard/selection-work-header
+    label: Шапка формы подбора
+    icon: "📋"
+    category: wizard
+    ioRole: nav
+  - type: wizard/selection-params-panel
+    label: Параметры подбора
+    icon: "📝"
+    category: wizard
+    ioRole: input
+  - type: wizard/selection-curves-panel
+    label: Кривые характеристик
+    icon: "📈"
+    category: wizard
+    ioRole: output
+  - type: wizard/selection-tech-specs-panel
+    label: Тех. характеристики
+    icon: "📊"
+    category: wizard
+    ioRole: output
+  - type: wizard/selection-options-panel
+    label: Опции и действия
+    icon: "⚙️"
+    category: wizard
+    ioRole: input
+  - type: wizard/selection-results-panel
+    label: Результаты подбора
+    icon: "📑"
+    category: wizard
+    ioRole: output
   - type: wizard/card-grid-strela
     label: Карточки Strela
     icon: "🎴"

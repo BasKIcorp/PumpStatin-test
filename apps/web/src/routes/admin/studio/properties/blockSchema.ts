@@ -10,6 +10,7 @@ export interface BlockFieldSchema {
   options?: string[];
   placeholder?: string;
   defaultValue?: unknown;
+  source?: "props" | "bindings";
 }
 
 /** Описание блока для Palette */
@@ -209,6 +210,138 @@ const BLOCK_SCHEMAS: BlockTypeInfo[] = [
       { key: "title", label: "Заголовок", section: "content", type: "text" },
       { key: "subtitle", label: "Подзаголовок", section: "content", type: "text" },
     ],
+  },
+  {
+    type: "wizard/funnel-sidebar",
+    label: "Сайдбар Strela",
+    icon: "▌",
+    category: "wizard",
+    ioRole: "nav",
+    fields: [
+      { key: "sidebarText", label: "Текст под логотипом", section: "content", type: "text", defaultValue: "стрела" },
+      {
+        key: "wordmarkUrl",
+        label: "Wordmark (URL)",
+        section: "content",
+        type: "text",
+        defaultValue: "/attached_assets/strela-wordmark.svg",
+      },
+      {
+        key: "sidebarWidth",
+        label: "Ширина (CSS, опционально)",
+        section: "style",
+        type: "text",
+      },
+    ],
+  },
+  {
+    type: "wizard/funnel-heading",
+    label: "Заголовок funnel",
+    icon: "📰",
+    category: "wizard",
+    ioRole: "nav",
+    fields: [
+      { key: "stepId", label: "ID шага", section: "behavior", type: "text", defaultValue: "product-class" },
+      { key: "title", label: "Заголовок", section: "content", type: "text" },
+      { key: "subtitle", label: "Подзаголовок", section: "content", type: "text" },
+    ],
+  },
+  {
+    type: "wizard/selection-card",
+    label: "Карточка подбора",
+    icon: "🃏",
+    category: "wizard",
+    ioRole: "nav",
+    fields: [
+      { key: "stepId", label: "ID шага", section: "behavior", type: "text", defaultValue: "product-class" },
+      { key: "cardId", label: "ID карточки", section: "behavior", type: "text" },
+      { key: "title", label: "Заголовок", section: "content", type: "text" },
+      { key: "description", label: "Описание", section: "content", type: "textarea" },
+      { key: "image", label: "Изображение", section: "content", type: "text" },
+      { key: "next", label: "Следующий шаг", section: "behavior", type: "text" },
+      { key: "flow", label: "Flow ID", section: "behavior", type: "text" },
+      { key: "enabled", label: "Активна", section: "behavior", type: "checkbox" },
+    ],
+  },
+  {
+    type: "wizard/selection-work-header",
+    label: "Шапка формы подбора",
+    icon: "📋",
+    category: "wizard",
+    ioRole: "nav",
+    fields: [
+      { key: "title", label: "Заголовок (override)", section: "content", type: "text" },
+      { key: "logoUrl", label: "Логотип в шапке", section: "content", type: "text" },
+    ],
+  },
+  {
+    type: "wizard/selection-params-panel",
+    label: "Параметры подбора",
+    icon: "📝",
+    category: "wizard",
+    ioRole: "input",
+    fields: [{ key: "title", label: "Заголовок панели", section: "content", type: "text" }],
+  },
+  {
+    type: "wizard/selection-curves-panel",
+    label: "Кривые характеристик",
+    icon: "📈",
+    category: "wizard",
+    ioRole: "output",
+    fields: [
+      { key: "title", label: "Заголовок панели", section: "content", type: "text" },
+      {
+        key: "chartPreset",
+        label: "Пресет графика",
+        section: "data",
+        type: "select",
+        source: "bindings",
+        defaultValue: "qh-five-curves",
+        options: ["qh-five-curves", "power-npsh"],
+      },
+      {
+        key: "readFrom",
+        label: "Источник данных",
+        section: "data",
+        type: "select",
+        source: "bindings",
+        defaultValue: "matchedPumps",
+        options: ["matchedPumps", "stationResult"],
+      },
+      {
+        key: "readPath",
+        label: "Путь к данным",
+        section: "data",
+        type: "select",
+        source: "bindings",
+        defaultValue: "curves.qh",
+        options: ["curves.qh", "curves.p2", "curves.npsh", "curves.qh_main"],
+      },
+    ],
+  },
+  {
+    type: "wizard/selection-tech-specs-panel",
+    label: "Тех. характеристики",
+    icon: "📊",
+    category: "wizard",
+    ioRole: "output",
+    fields: [{ key: "title", label: "Заголовок панели", section: "content", type: "text" }],
+  },
+  {
+    type: "wizard/selection-options-panel",
+    label: "Опции и действия",
+    icon: "⚙️",
+    category: "wizard",
+    ioRole: "input",
+    fields: [{ key: "title", label: "Заголовок панели", section: "content", type: "text" }],
+  },
+  {
+    type: "wizard/selection-results-panel",
+    label: "Результаты подбора",
+    icon: "📑",
+    category: "wizard",
+    ioRole: "output",
+    fields: [{ key: "title", label: "Заголовок панели", section: "content", type: "text" }],
   },
   {
     type: "wizard/card-grid-strela",

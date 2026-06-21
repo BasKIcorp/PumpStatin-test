@@ -9,6 +9,7 @@ export type {
   PageGridConfig,
   BlockConfig,
   BlockGridLayout,
+  BlockCropInset,
   BlockBindings,
   WizardFrameConfig,
   BlockProps,

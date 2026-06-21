@@ -5,8 +5,8 @@ import { StudioProfileProvider } from "@/providers/StudioProfileProvider";
 import { WizardStudioContext } from "./WizardStudioContext";
 
 /**
- * Единый WYSIWYG-канvas визарда для Studio и DraftPagePreview.
- * Тот же путь рендеринга, что на live `/wizard`.
+ * WYSIWYG-канvas визарда для Studio и DraftPagePreview.
+ * embedded=true — сайдбар внутри контейнера, не поверх UI редактора.
  */
 export function WizardLiveCanvas({
   page,
@@ -15,7 +15,7 @@ export function WizardLiveCanvas({
   previewStepId,
   selectedCardId,
   onSelectCard,
-  minHeight = "100dvh",
+  minHeight = "min(100dvh, 900px)",
 }: {
   page: PageConfig;
   site: SiteConfig;
@@ -28,13 +28,17 @@ export function WizardLiveCanvas({
   return (
     <StudioProfileProvider bundle={bundle}>
       <WizardStudioContext.Provider value={{ selectedCardId, onSelectCard }}>
-        <div className="w-full bg-white" style={{ minHeight }}>
+        <div
+          className="relative isolate h-full w-full overflow-hidden bg-white"
+          style={{ minHeight }}
+        >
           <WizardGridPage
             page={page}
             site={site}
             previewStepId={previewStepId}
             selectedCardId={selectedCardId}
             onSelectCard={onSelectCard}
+            embedded
           />
         </div>
       </WizardStudioContext.Provider>

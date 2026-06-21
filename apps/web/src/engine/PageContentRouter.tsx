@@ -20,7 +20,7 @@ export interface PageContentRouterProps {
 
 /**
  * Единая разметка страницы для live, preview и studio.
- * Wizard — отдельный поток (WizardGridPage / WizardVisualEditor).
+ * Wizard — отдельный поток (WizardGridPage / WizardUnifiedStudioEditor).
  */
 export function PageContentRouter({ page, blocks, site, editor }: PageContentRouterProps) {
   const profile = useProfile();

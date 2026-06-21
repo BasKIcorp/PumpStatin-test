@@ -5,6 +5,14 @@ import { useWizardStore } from "@/stores/wizardStore";
 import { AppShell } from "@/components/layout/AppShell";
 import { StrelaWizardShell } from "@/components/strela/StrelaWizardShell";
 import { WizardStepRenderer } from "@/engine/WizardStepRenderer";
+import {
+  blocksForWizardStep,
+  normalizeWizardPage,
+} from "@/routes/admin/studio/wizard/wizardUnifiedBlocks";
+import {
+  frameBlocksForStep,
+  usesDecomposedWizardFrames,
+} from "@/routes/admin/studio/wizard/wizardFrameUtils";
 import type { NavigationConfig } from "@/types/wizard";
 
 /** Wizard page — shell + WizardStepRenderer (frames или WizardEngine) */
@@ -14,6 +22,7 @@ export function WizardGridPage({
   previewStepId,
   selectedCardId,
   onSelectCard,
+  embedded = false,
 }: {
   page: PageConfig;
   site?: SiteConfig;
@@ -22,6 +31,8 @@ export function WizardGridPage({
   /** Studio: выбор карточки на live-канвасе */
   selectedCardId?: string | null;
   onSelectCard?: (cardId: string) => void;
+  /** Studio/preview: сайдбар absolute внутри контейнера, не fixed на viewport */
+  embedded?: boolean;
 }) {
   const { branding, wizard } = useProfile();
   const storeStep = useWizardStore((s) => s.step);
@@ -30,6 +41,20 @@ export function WizardGridPage({
   const isStrela = branding.layoutVariant === "strela-funnel";
   const nav = wizard.navigation as NavigationConfig;
   const stepDef = nav.steps?.find((s) => s.id === step);
+  const cards = nav.cards?.[step] ?? [];
+  const normalizedPage = normalizeWizardPage(page);
+  const frameBlocks =
+    (normalizedPage.blocks ?? []).some((b) => b.props?.stepId)
+      ? blocksForWizardStep(normalizedPage, step)
+      : frameBlocksForStep(
+          page,
+          step,
+          stepDef,
+          isStrela,
+          cards,
+          branding.appearance,
+        );
+  const decomposed = isStrela && usesDecomposedWizardFrames(frameBlocks);
 
   useEffect(() => {
     if (previewStepId) return;
@@ -41,7 +66,7 @@ export function WizardGridPage({
 
   const inner = (
     <WizardStepRenderer
-      page={page}
+      page={normalizedPage}
       stepId={step}
       stepDef={stepDef}
       strela={isStrela}
@@ -52,12 +77,30 @@ export function WizardGridPage({
   );
 
   if (isStrela) {
-    // Как в legacy WizardPage: форма подбора без funnel-оболочки
     if (step === "selection-form") {
-      return inner;
+      return (
+        <div className={embedded ? "h-full min-h-0 overflow-auto" : "min-h-[100dvh] overflow-auto"}>
+          {inner}
+        </div>
+      );
+    }
+    if (decomposed) {
+      return (
+        <div
+          className={
+            embedded
+              ? "h-full min-h-0 overflow-auto"
+              : "min-h-[100dvh] overflow-auto"
+          }
+        >
+          {inner}
+        </div>
+      );
     }
     return (
-      <StrelaWizardShell previewStepId={previewStepId}>{inner}</StrelaWizardShell>
+      <StrelaWizardShell embedded={embedded} previewStepId={previewStepId}>
+        {inner}
+      </StrelaWizardShell>
     );
   }
 

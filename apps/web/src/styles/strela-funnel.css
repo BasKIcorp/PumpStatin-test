@@ -43,6 +43,10 @@
 .selection-flow-funnel-root .selection-flow-funnel-heading{font-family:var(--funnel-font-heading)}
 .selection-flow-funnel-root{--selection-card-area-max-height: min(86dvh, calc(100dvh - 4.75rem) )}
 .selection-mockup-strip-outer,.selection-mockup-card-face{max-height:var(--selection-card-area-max-height)}
+.wizard-selection-card-grid{container-type:size}
+.wizard-selection-card-grid .selection-mockup-card-face{max-height:none;height:100%}
+.wizard-selection-card-grid .selection-mockup-card-face h3{font-size:clamp(0.8125rem,5.5cqh,1.25rem);line-height:1.3}
+.wizard-selection-card-grid .selection-mockup-card-face .font-sans{font-size:clamp(0.75rem,4.5cqh,1rem);line-height:1.35}
 .selection-pump-gallery{border-radius:0;border-width:0px;background-color:transparent;padding:0}
 .selection-pump-gallery{padding:0}
 .selection-funnel-stage-top{display:flex;min-height:0px;flex:1 1 0%;flex-direction:column;align-items:stretch;justify-content:flex-start}

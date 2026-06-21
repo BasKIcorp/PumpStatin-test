@@ -1,23 +1,52 @@
 import type { BlockConfig, BlockGridLayout, PageConfig } from "@pumpstation/contracts";
 import { DEFAULT_GRID_COLS, DEFAULT_ROW_HEIGHT } from "@pumpstation/contracts";
-import type { CSSProperties, ReactNode } from "react";
-
-/** Must match gap in pageGridStyle — shared by live and Studio canvas */
+import type { CSSProperties, ReactNode, Ref } from "react";
 export const GRID_GAP_PX = 8;
 
 export const CMS_GRID_MAX_WIDTH_PX = 1152;
 export const AUTH_GRID_WIDTH_PX = 1440;
 
-export function pageGridMetrics(page: PageConfig) {
-  const cols = page.grid?.cols ?? DEFAULT_GRID_COLS;
+/** Минимальное число колонок grid, чтобы вместить все блоки (для горизонтальной ленты карточек) */
+export function gridContentCols(
+  blocks: BlockConfig[],
+  minCols = DEFAULT_GRID_COLS,
+  trailingPad = 0,
+): number {
+  let maxCol = minCols;
+  for (const b of blocks) {
+    const l = b.layout;
+    if (!l) continue;
+    maxCol = Math.max(maxCol, l.x + l.w + trailingPad);
+  }
+  return maxCol;
+}
+
+/** Ширина artboard при расширенном grid (фиксированная ширина колонки) */
+export function artboardWidthForCols(
+  cols: number,
+  minCols = DEFAULT_GRID_COLS,
+  baseWidth = CMS_GRID_MAX_WIDTH_PX,
+): number {
+  if (cols <= minCols) return baseWidth;
+  const colWidth = (baseWidth - GRID_GAP_PX * (minCols - 1)) / minCols;
+  return Math.ceil(cols * colWidth + (cols - 1) * GRID_GAP_PX);
+}
+
+export function pageGridMetrics(page: PageConfig, blocks?: BlockConfig[]) {
+  const minCols = page.grid?.cols ?? DEFAULT_GRID_COLS;
   const rowHeight = page.grid?.rowHeight ?? DEFAULT_ROW_HEIGHT;
   const fullBleed = page.type === "auth";
+  const expandForWizard = page.type === "wizard" && blocks && blocks.length > 0;
+  const cols = expandForWizard ? gridContentCols(blocks, minCols) : minCols;
+  const baseWidth = fullBleed ? AUTH_GRID_WIDTH_PX : CMS_GRID_MAX_WIDTH_PX;
+  const artboardWidth = fullBleed ? baseWidth : artboardWidthForCols(cols, minCols, baseWidth);
   return {
     cols,
+    minCols,
     rowHeight,
     gap: GRID_GAP_PX,
     fullBleed,
-    artboardWidth: fullBleed ? AUTH_GRID_WIDTH_PX : CMS_GRID_MAX_WIDTH_PX,
+    artboardWidth,
   };
 }
 
@@ -31,13 +60,17 @@ export function pageGridContainerClass(page: PageConfig): string {
   return "page-grid mx-auto w-full max-w-6xl p-4";
 }
 
-export function gridContentHeight(blocks: BlockConfig[], rowHeight = DEFAULT_ROW_HEIGHT): number {
-  if (blocks.length === 0) return rowHeight * 4;
+export function gridContentHeight(
+  blocks: BlockConfig[],
+  rowHeight = DEFAULT_ROW_HEIGHT,
+  bottomPad = 48,
+): number {
+  if (blocks.length === 0) return rowHeight * 4 + bottomPad;
   const maxRow = blocks.reduce((max, b) => {
     const l = b.layout ?? { x: 0, y: 0, w: 12, h: 4 };
     return Math.max(max, l.y + l.h);
   }, 0);
-  return maxRow * rowHeight + Math.max(0, maxRow - 1) * GRID_GAP_PX + rowHeight * 2;
+  return maxRow * rowHeight + Math.max(0, maxRow - 1) * GRID_GAP_PX + bottomPad;
 }
 
 export function gridItemPixelRect(
@@ -103,6 +136,7 @@ export interface BlockShellProps {
   className?: string;
   style?: CSSProperties;
   children: ReactNode;
+  shellRef?: Ref<HTMLDivElement>;
   onClick?: (e: React.MouseEvent | React.KeyboardEvent) => void;
 }
 
@@ -113,11 +147,13 @@ export function BlockShell({
   className,
   style,
   children,
+  shellRef,
   onClick,
 }: BlockShellProps) {
   const layout = block.layout ?? { x: 0, y: 0, w: DEFAULT_GRID_COLS, h: 4 };
   return (
     <div
+      ref={shellRef}
       data-block-id={block.id}
       data-block-type={block.type}
       data-grid-x={layout.x}
@@ -154,7 +190,7 @@ export function clampLayout(
   const x = Math.max(0, Math.min(layout.x, cols - w));
   const y = Math.max(0, layout.y);
   const h = Math.max(1, layout.h);
-  return { x, y, w, h };
+  return { ...layout, x, y, w, h };
 }
 
 /** True when two blocks occupy the same grid cells */
@@ -216,10 +252,9 @@ export function layoutFromPixelDrag(
 ): BlockGridLayout {
   return clampLayout(
     {
+      ...start,
       x: start.x + deltaCols,
       y: start.y + deltaRows,
-      w: start.w,
-      h: start.h,
     },
     cols,
   );
@@ -233,8 +268,7 @@ export function layoutFromResize(
 ): BlockGridLayout {
   return clampLayout(
     {
-      x: start.x,
-      y: start.y,
+      ...start,
       w: start.w + deltaW,
       h: start.h + deltaH,
     },

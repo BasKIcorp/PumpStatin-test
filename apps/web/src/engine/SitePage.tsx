@@ -1,4 +1,5 @@
 import type { PageConfig, SiteConfig } from "@pumpstation/contracts";
+import { normalizeWizardPage } from "@/routes/admin/studio/wizard/wizardUnifiedBlocks";
 import { WizardGridPage } from "./WizardGridPage";
 import { PageContentRouter } from "./PageContentRouter";
 
@@ -11,11 +12,12 @@ interface SitePageProps {
 
 /** Live / draft preview entry from site.yaml */
 export function SitePage({ page, site, previewWizardStepId }: SitePageProps) {
-  const blocks = page.blocks ?? [];
+  const wizardPage = page.type === "wizard" ? normalizeWizardPage(page) : page;
+  const blocks = wizardPage.blocks ?? [];
 
   if (page.type === "wizard") {
     return (
-      <WizardGridPage page={page} site={site} previewStepId={previewWizardStepId} />
+      <WizardGridPage page={wizardPage} site={site} previewStepId={previewWizardStepId} />
     );
   }
 

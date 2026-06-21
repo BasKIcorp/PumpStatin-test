@@ -53,11 +53,23 @@ export interface PageGridConfig {
   rowHeight?: number;
 }
 
+export interface BlockCropInset {
+  /** Доля от размера ячейки, 0–100 */
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+
 export interface BlockGridLayout {
   x: number;
   y: number;
   w: number;
   h: number;
+  /** Градусы, по умолчанию 0 */
+  rotation?: number;
+  /** Inset-обрезка в локальных координатах блока; null/undefined = без обрезки */
+  crop?: BlockCropInset | null;
 }
 
 export interface BlockBindings {
@@ -119,6 +131,15 @@ const TYPE_HEIGHT: Record<string, number> = {
   "auth/login-form": 10,
   "auth/quick-login": 4,
   "wizard/step-heading": 2,
+  "wizard/funnel-sidebar": 22,
+  "wizard/funnel-heading": 2,
+  "wizard/selection-card": 12,
+  "wizard/selection-work-header": 2,
+  "wizard/selection-params-panel": 9,
+  "wizard/selection-curves-panel": 9,
+  "wizard/selection-tech-specs-panel": 9,
+  "wizard/selection-options-panel": 9,
+  "wizard/selection-results-panel": 9,
   "wizard/card-grid-strela": 10,
   "wizard/legacy-selection": 20,
 };

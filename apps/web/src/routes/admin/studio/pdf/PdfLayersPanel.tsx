@@ -1,9 +1,20 @@
 import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
   SortableContext,
+  sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { useMemo } from "react";
 import type { PdfBlock } from "./PdfCanvas";
 import { FIGMA } from "../figma/figmaTokens";
 
@@ -49,7 +60,7 @@ function SortablePdfLayerRow({
   onDelete: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: `pdf-layer:${block.id}`,
+    id: block.id,
   });
 
   const style = {
@@ -91,35 +102,54 @@ export function PdfLayersPanel({
   blocks,
   selectedId,
   onSelect,
+  onReorder,
   onDelete,
 }: {
   blocks: PdfBlock[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  onReorder: (from: number, to: number) => void;
   onDelete: (id: string) => void;
 }) {
-  const displayBlocks = [...blocks].reverse();
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const displayBlocks = useMemo(() => [...blocks].reverse(), [blocks]);
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const fromDisplay = displayBlocks.findIndex((b) => b.id === active.id);
+    const toDisplay = displayBlocks.findIndex((b) => b.id === over.id);
+    if (fromDisplay < 0 || toDisplay < 0) return;
+
+    const from = blocks.length - 1 - fromDisplay;
+    const to = blocks.length - 1 - toDisplay;
+    onReorder(from, to);
+  };
 
   if (blocks.length === 0) {
     return <p className="px-1 py-4 text-center text-[11px] text-[#666]">Нет слоёв</p>;
   }
 
   return (
-    <SortableContext
-      items={displayBlocks.map((b) => `pdf-layer:${b.id}`)}
-      strategy={verticalListSortingStrategy}
-    >
-      <div className="space-y-0.5">
-        {displayBlocks.map((block) => (
-          <SortablePdfLayerRow
-            key={block.id}
-            block={block}
-            isSelected={selectedId === block.id}
-            onSelect={() => onSelect(block.id)}
-            onDelete={() => onDelete(block.id)}
-          />
-        ))}
-      </div>
-    </SortableContext>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <SortableContext items={displayBlocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
+        <div className="space-y-0.5">
+          {displayBlocks.map((block) => (
+            <SortablePdfLayerRow
+              key={block.id}
+              block={block}
+              isSelected={selectedId === block.id}
+              onSelect={() => onSelect(block.id)}
+              onDelete={() => onDelete(block.id)}
+            />
+          ))}
+        </div>
+      </SortableContext>
+    </DndContext>
   );
 }

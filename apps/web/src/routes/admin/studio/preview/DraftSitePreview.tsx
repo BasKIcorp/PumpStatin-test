@@ -27,12 +27,15 @@ export function DraftSitePreview({
   bundle,
   onClose,
   initialPageId,
+  previewWizardStepId,
 }: {
   site: SiteConfig;
   bundle: ProfileBundle;
   onClose: () => void;
   /** С какой страницы начать (например wizard при превью из редактора) */
   initialPageId?: string;
+  /** Текущий шаг визарда из редактора Studio */
+  previewWizardStepId?: string;
 }) {
   const sorted = useMemo(() => sortPreviewPages(site.pages), [site.pages]);
   const [pageId, setPageId] = useState(
@@ -94,7 +97,11 @@ export function DraftSitePreview({
                 page={page}
                 site={site}
                 bundle={bundle}
-                previewStepId={wizardPreviewStepId(page, bundle) ?? "product-class"}
+                previewStepId={
+                  previewWizardStepId ??
+                  wizardPreviewStepId(page, bundle) ??
+                  "product-class"
+                }
               />
             ) : (
               <StudioProfileProvider bundle={bundle}>

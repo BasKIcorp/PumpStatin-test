@@ -33,8 +33,6 @@ layout:
       - label: Кабинет
         pageId: cabinet
     copyright: © PumpStation. Все права защищены.
-routing:
-  landingPageId: home
 pages:
 - id: login
   title: Вход
@@ -208,25 +206,689 @@ pages:
   type: wizard
   pageProfile: strela-funnel
   wizardRef: wizard/navigation.yaml
-  frames:
-    product-class:
-      blocks:
-      - id: w-cards-product
-        type: wizard/card-grid-strela
-        layout:
-          x: 0
-          y: 0
-          w: 12
-          h: 12
-        props:
-          stepId: product-class
-    selection-form:
-      blocks:
-      - id: w-legacy-form
-        type: wizard/legacy-selection
-        layout:
-          x: 0
-          y: 0
-          w: 12
-          h: 24
-        props: {}
+  blocks:
+  - id: w-sidebar-hm-line
+    type: wizard/funnel-sidebar
+    layout:
+      x: 0
+      y: 0
+      w: 2
+      h: 22
+      rotation: -90
+    props:
+      stepId: hm-line
+      sidebarText: стрела
+      wordmarkUrl: /attached_assets/strela-wordmark.svg
+      sidebarWidth: null
+  - id: w-fheading-hm-line
+    type: wizard/funnel-heading
+    layout:
+      x: 2
+      y: 0
+      w: 10
+      h: 2
+    props:
+      stepId: hm-line
+      title: Линейка гидромодулей BPS–C
+      subtitle: Выберите исполнение
+  - id: w-card-hm-line-bps-c-pro
+    type: wizard/selection-card
+    layout:
+      x: 2
+      y: 2
+      w: 4
+      h: 10
+    props:
+      stepId: hm-line
+      cardId: bps-c-pro
+      title: BPS–C Pro
+      image: /selection-assets/hm-cards/bps-c-pro.png
+      description: 'Автоматический и ручной режимы работы
+
+        Шкаф управления с сенсорным контроллером и встроенной диспетчеризацией
+
+        Защита от «сухого хода» по датчику давления
+
+        Максимальное количество насосов: 6 шт.
+
+        Максимальная мощность используемых насосов: 130 кВт.
+
+        Широкий спектр опционального исполнения
+
+        '
+      next: selection-form
+      flow: bps-w-domestic
+      enabled: true
+  - id: w-card-hm-line-bps-c-lite
+    type: wizard/selection-card
+    layout:
+      x: 6
+      y: 2
+      w: 4
+      h: 10
+    props:
+      stepId: hm-line
+      cardId: bps-c-lite
+      title: BPS–C Lite
+      image: /selection-assets/hm-cards/bps-c-lite.png
+      description: 'Автоматический и ручной режимы работы
+
+        Шкаф управления с сенсорным экраном управления и ПЧ по кол-ву насосов
+
+        Защита от «сухого хода» по датчику давления
+
+        Максимальное количество насосов: 3 шт.
+
+        Максимальная мощность используемых насосов: 22 кВт.
+
+        '
+      next: selection-form
+      flow: bps-w-domestic
+      enabled: true
+  - id: w-card-hm-line-bps-c-e
+    type: wizard/selection-card
+    layout:
+      x: 10
+      y: 2
+      w: 4
+      h: 10
+    props:
+      stepId: hm-line
+      cardId: bps-c-e
+      title: BPS–CE
+      image: /selection-assets/hm-cards/bps-c-e.png
+      description: 'Автоматический режим работы
+
+        Интеллектуальные частотные преобразователи со встроенной диспетчеризацией по кол-ву насосов
+
+        Защита от «сухого хода» по реле давления
+
+        Максимальное количество насосов: 3 шт.
+
+        Максимальная мощность используемых насосов: 18,5 кВт.
+
+        '
+      next: selection-form
+      flow: bps-w-domestic
+      enabled: true
+  - id: w-card-hm-line-bps-c-mini
+    type: wizard/selection-card
+    layout:
+      x: 14
+      y: 2
+      w: 4
+      h: 10
+    props:
+      stepId: hm-line
+      cardId: bps-c-mini
+      title: BPS–C mini
+      image: /selection-assets/hm-cards/bps-c-mini.png
+      description: 'Автоматический и ручной режимы работы
+
+        Шкаф управления со встроенной диспетчеризацией, сенсорным экраном управления и ПЧ по кол-ву насосов
+
+        Защита от «сухого хода» по датчику давления
+
+        Максимальное количество насосов: 2 шт.
+
+        Для моноблочных чиллеров мощность холодоснабжения: 66, 130, 150, 260 кВт.
+
+        '
+      next: selection-form
+      flow: bps-w-domestic
+      enabled: true
+  - id: w-card-hm-line-bps-c-j
+    type: wizard/selection-card
+    layout:
+      x: 18
+      y: 2
+      w: 4
+      h: 10
+    props:
+      stepId: hm-line
+      cardId: bps-c-j
+      title: BPS–CJ
+      image: /selection-assets/hm-cards/bps-c-j.png
+      description: 'Автоматический и ручной режимы работы
+
+        Шкаф управления со встроенной диспетчеризацией, сенсорным контроллером
+
+        Защита от «сухого хода» по реле протока
+
+        '
+      next: selection-form
+      flow: bps-w-domestic
+      enabled: true
+  - id: w-sidebar-pu-line
+    type: wizard/funnel-sidebar
+    layout:
+      x: 0
+      y: 0
+      w: 2
+      h: 22
+      rotation: -90
+    props:
+      stepId: pu-line
+      sidebarText: стрела
+      wordmarkUrl: /attached_assets/strela-wordmark.svg
+      sidebarWidth: null
+  - id: w-fheading-pu-line
+    type: wizard/funnel-heading
+    layout:
+      x: 2
+      y: 0
+      w: 10
+      h: 2
+    props:
+      stepId: pu-line
+      title: Линейка насосных установок
+      subtitle: Далее уточните тип сети — хоз-пит или ПНС
+  - id: w-card-pu-line-bps-w-pro
+    type: wizard/selection-card
+    layout:
+      x: 2
+      y: 2
+      w: 4
+      h: 10
+    props:
+      stepId: pu-line
+      cardId: bps-w-pro
+      title: BPS–W Pro
+      image: /selection-assets/pu-cards/bps-w-pro.png
+      description: 'Автоматический и ручной режимы работы
+
+        Шкаф управления со встроенной диспетчеризацией, сенсорным контроллером и ПЧ по кол-ву насосов
+
+        Защита от «сухого хода» по датчику давления
+
+        Максимальное количество насосов: 6 шт.
+
+        Максимальная мощность используемых насосов: 130 кВт.
+
+        Максимальная возможность опционального исполнения
+
+        '
+      next: installation-type
+      enabled: true
+  - id: w-card-pu-line-bps-w-lite
+    type: wizard/selection-card
+    layout:
+      x: 6
+      y: 2
+      w: 4
+      h: 10
+    props:
+      stepId: pu-line
+      cardId: bps-w-lite
+      title: BPS–W Lite
+      image: /selection-assets/pu-cards/bps-w-lite.png
+      description: 'Автоматический и ручной режимы работы
+
+        Шкаф управления со встроенной диспетчеризацией, сенсорным экраном управления и ПЧ по кол-ву насосов
+
+        Защита от «сухого хода» по датчику давления
+
+        Максимальное количество насосов: 3 шт.
+
+        Максимальная мощность используемых насосов: 22 кВт.
+
+        '
+      next: installation-type
+      enabled: true
+  - id: w-card-pu-line-bps-w-e
+    type: wizard/selection-card
+    layout:
+      x: 10
+      y: 2
+      w: 4
+      h: 10
+    props:
+      stepId: pu-line
+      cardId: bps-w-e
+      title: BPS–WE
+      image: /selection-assets/pu-cards/bps-w-e.png
+      description: 'Автоматический режим работы
+
+        Интеллектуальные частотные преобразователи со встроенной диспетчеризацией по кол-ву насосов
+
+        Защита от «сухого хода» по реле давления
+
+        Максимальное количество насосов: 3 шт.
+
+        Максимальная мощность используемых насосов: 18,5 кВт.
+
+        '
+      next: installation-type
+      enabled: true
+  - id: w-card-pu-line-fps-pro
+    type: wizard/selection-card
+    layout:
+      x: 14
+      y: 2
+      w: 4
+      h: 10
+    props:
+      stepId: pu-line
+      cardId: fps-pro
+      title: FPS–Pro
+      image: /selection-assets/pu-cards/fps-pro.png
+      description: 'Конструкция и автоматика соответствуют нормам СП 8, СП 10, СП 485
+
+        ППУ со встроенной диспетчеризацией
+
+        Инициирующее устройства – датчики давления
+
+        Максимальное количество насосов: 3 шт.
+
+        Максимальная мощность используемых насосов: 130 кВт.
+
+        '
+      next: selection-form
+      enabled: false
+  - id: w-card-pu-line-fps-pro-j
+    type: wizard/selection-card
+    layout:
+      x: 18
+      y: 2
+      w: 4
+      h: 10
+    props:
+      stepId: pu-line
+      cardId: fps-pro-j
+      title: FPS–Pro (J)
+      image: /selection-assets/pu-cards/fps-pro-j.png
+      description: 'Управление блоком жокей-насоса
+
+        Конструкция и автоматика соответствуют нормам СП 8, СП 10
+
+        ППУ со встроенной диспетчеризацией
+
+        Инициирующее устройство – датчик давления
+
+        Максимальное количество насосов: 3 шт.
+
+        Максимальная мощность используемых насосов: 22 кВт.
+
+        '
+      next: selection-form
+      enabled: false
+  - id: w-card-pu-line-fps-lite
+    type: wizard/selection-card
+    layout:
+      x: 22
+      y: 2
+      w: 4
+      h: 10
+    props:
+      stepId: pu-line
+      cardId: fps-lite
+      title: FPS–Lite
+      image: /selection-assets/pu-cards/fps-lite.png
+      description: 'Автоматический и ручной режимы работы
+
+        ППУ со встроенной диспетчеризацией, два управляющих контроллера
+
+        Инициирующее устройства – датчики давления
+
+        Защита от «сухого хода» по датчику давления в режиме ХВС
+
+        Максимальное количество насосов: 4 шт.
+
+        Подключение к ППУ насосной установки пожаротушения
+
+        '
+      next: selection-form
+      enabled: false
+  - id: w-card-pu-line-fps-w
+    type: wizard/selection-card
+    layout:
+      x: 26
+      y: 2
+      w: 4
+      h: 10
+    props:
+      stepId: pu-line
+      cardId: fps-w
+      title: FPS–W
+      image: /selection-assets/pu-cards/fps-w.png
+      description: 'Инициирующее устройство – датчик давления
+
+        Расширительный бак 80 л.
+
+        '
+      next: selection-form
+      enabled: false
+  - id: w-card-pu-line-bps-w-j
+    type: wizard/selection-card
+    layout:
+      x: 30
+      y: 2
+      w: 4
+      h: 10
+    props:
+      stepId: pu-line
+      cardId: bps-w-j
+      title: BPS–WJ
+      image: /selection-assets/pu-cards/bps-w-j.png
+      description: 'Автоматический и ручной режимы работы
+
+        Шкаф управления со встроенной диспетчеризацией, сенсорным контроллером
+
+        Защита от «сухого хода» по реле протока
+
+        '
+      next: selection-form
+      enabled: false
+  - id: w-sidebar-simpel-line
+    type: wizard/funnel-sidebar
+    layout:
+      x: 0
+      y: 0
+      w: 2
+      h: 22
+      rotation: -90
+    props:
+      stepId: simpel-line
+      sidebarText: стрела
+      wordmarkUrl: /attached_assets/strela-wordmark.svg
+      sidebarWidth: null
+  - id: w-fheading-simpel-line
+    type: wizard/funnel-heading
+    layout:
+      x: 2
+      y: 0
+      w: 10
+      h: 2
+    props:
+      stepId: simpel-line
+      title: Насосы Simpel
+      subtitle: Выберите серию
+  - id: w-card-simpel-line-comos
+    type: wizard/selection-card
+    layout:
+      x: 2
+      y: 2
+      w: 4
+      h: 10
+    props:
+      stepId: simpel-line
+      cardId: comos
+      title: COMOS
+      image: /selection-assets/simpel-cards/comos.png
+      description: 'Консольно-моноблочный насос
+
+        Для систем отопления, вентиляции, холодоснабжения, пожаротушения, технологии
+
+        Корпус двигателя, проточная часть, рабочее колесо – чугун НТ200 / нерж. сталь AISI 304; вал – нерж. сталь AISI 304
+
+        Оптимальное решение для перекачивания гликолевых растворов
+
+        '
+      enabled: false
+  - id: w-card-simpel-line-civos
+    type: wizard/selection-card
+    layout:
+      x: 6
+      y: 2
+      w: 4
+      h: 10
+    props:
+      stepId: simpel-line
+      cardId: civos
+      title: CIVOS
+      image: /selection-assets/simpel-cards/civos.png
+      description: 'Вертикальный одноступенчатый насос типа «in-line»
+
+        Для систем отопления, вентиляции, холодоснабжения, ГВС, пожаротушения, технологии
+
+        Корпус двигателя, проточная часть, рабочее колесо – чугун НТ200; вал – нерж. сталь AISI 304
+
+        Оптимальное решение для перекачивания гликолевых растворов
+
+        '
+      enabled: false
+  - id: w-card-simpel-line-vmip
+    type: wizard/selection-card
+    layout:
+      x: 10
+      y: 2
+      w: 4
+      h: 10
+    props:
+      stepId: simpel-line
+      cardId: vmip
+      title: VMIP
+      image: /selection-assets/simpel-cards/vmip.png
+      description: 'Вертикальный многоступенчатый центробежный насос
+
+        Для систем водоснабжения, ГВС, пожаротушения, технологии
+
+        Корпус двигателя, основание насоса – чугун; рабочие камеры, рабочие колеса, вал – нерж. сталь AISI 304
+
+        Класс эффективности двигателя: IE3
+
+        '
+      enabled: false
+  - id: w-card-simpel-line-hmip
+    type: wizard/selection-card
+    layout:
+      x: 14
+      y: 2
+      w: 4
+      h: 10
+    props:
+      stepId: simpel-line
+      cardId: hmip
+      title: HMIP
+      image: /selection-assets/simpel-cards/hmip.png
+      description: 'Горизонтальный многоступенчатый центробежный насос
+
+        Для систем водоснабжения, ГВС, пожаротушения, технологии
+
+        Корпус двигателя, основание насоса – чугун; проточная, рабочие колеса, вал – нерж. сталь AISI 304
+
+        Класс эффективности двигателя: IE2 / IE3
+
+        '
+      enabled: false
+  - id: w-sidebar-product-class
+    type: wizard/funnel-sidebar
+    layout:
+      x: 0
+      y: 0
+      w: 2
+      h: 22
+      rotation: 0
+      crop:
+        top: 0
+        right: 0
+        bottom: 22
+        left: 0
+    props:
+      sidebarText: стрела
+      stepId: product-class
+  - id: w-fheading-product-class
+    type: wizard/funnel-heading
+    layout:
+      x: 2
+      y: 0
+      w: 10
+      h: 2
+    props:
+      stepId: product-class
+  - id: w-card-product-class-hydromodules
+    type: wizard/selection-card
+    layout:
+      x: 2
+      y: 2
+      w: 4
+      h: 10
+    props:
+      stepId: product-class
+      cardId: hydromodules
+      title: Гидромодули
+      image: /selection-assets/podbor-001.png
+      description: 'Для закрытых систем вентиляции и кондиционирования.
+
+        Циркуляция теплоносителя между чиллером и местными теплообменниками в схемах «чиллер — фанкойл».
+
+        '
+      next: hm-line
+      enabled: true
+  - id: w-card-product-class-pump-stations
+    type: wizard/selection-card
+    layout:
+      x: 6
+      y: 2
+      w: 4
+      h: 10
+    props:
+      stepId: product-class
+      cardId: pump-stations
+      title: Насосные установки
+      image: /selection-assets/podbor-002.png
+      description: 'Перекачка и повышение давления воды в системах хозяйственно-питьевого водоснабжения и пожаротушения жилых,
+        административных и производственных зданий.
+
+        '
+      next: pu-line
+      enabled: true
+  - id: w-card-product-class-aupd
+    type: wizard/selection-card
+    layout:
+      x: 10
+      y: 2
+      w: 4
+      h: 10
+    props:
+      stepId: product-class
+      cardId: aupd
+      title: АУПД и АУПДЗ
+      image: /selection-assets/podbor-003.png
+      description: В разработке
+      enabled: false
+  - id: w-card-product-class-simpel
+    type: wizard/selection-card
+    layout:
+      x: 14
+      y: 2
+      w: 4
+      h: 10
+    props:
+      stepId: product-class
+      cardId: simpel
+      title: Насосы Simpel
+      image: /selection-assets/podbor-004.png
+      description: Подбор серийных насосов COMOS, CIVOS, VMIP, HMIP по параметрам.
+      next: simpel-line
+      enabled: true
+  - id: w-sel-header-selection-form
+    type: wizard/selection-work-header
+    layout:
+      x: 0
+      y: 0
+      w: 12
+      h: 2
+    props:
+      stepId: selection-form
+  - id: w-sel-params-selection-form
+    type: wizard/selection-params-panel
+    layout:
+      x: 0
+      y: 2
+      w: 5
+      h: 9
+    props:
+      stepId: selection-form
+  - id: w-sel-curves-selection-form
+    type: wizard/selection-curves-panel
+    layout:
+      x: 5
+      y: 2
+      w: 4
+      h: 8
+    props:
+      stepId: selection-form
+  - id: w-sel-tech-selection-form
+    type: wizard/selection-tech-specs-panel
+    layout:
+      x: 9
+      y: 2
+      w: 3
+      h: 9
+    props:
+      stepId: selection-form
+  - id: w-sel-options-selection-form
+    type: wizard/selection-options-panel
+    layout:
+      x: 0
+      y: 11
+      w: 5
+      h: 9
+    props:
+      stepId: selection-form
+  - id: w-sel-results-selection-form
+    type: wizard/selection-results-panel
+    layout:
+      x: 5
+      y: 11
+      w: 7
+      h: 9
+    props:
+      stepId: selection-form
+  - id: w-sidebar-installation-type
+    type: wizard/funnel-sidebar
+    layout:
+      x: 0
+      y: 0
+      w: 2
+      h: 22
+      rotation: -90
+    props:
+      stepId: installation-type
+      sidebarText: стрела
+      wordmarkUrl: /attached_assets/strela-wordmark.svg
+      sidebarWidth: null
+  - id: w-fheading-installation-type
+    type: wizard/funnel-heading
+    layout:
+      x: 2
+      y: 0
+      w: 10
+      h: 2
+    props:
+      stepId: installation-type
+      title: Тип установки
+      subtitle: Выберите назначение установки
+  - id: w-card-installation-type-domestic
+    type: wizard/selection-card
+    layout:
+      x: 2
+      y: 2
+      w: 4
+      h: 10
+    props:
+      stepId: installation-type
+      cardId: domestic
+      title: Хозяйственно-питьевая
+      description: Водоснабжение, повышение давления в тупиковой сети.
+      next: selection-form
+      flow: bps-w-domestic
+      enabled: true
+  - id: w-card-installation-type-fire-pns
+    type: wizard/selection-card
+    layout:
+      x: 6
+      y: 2
+      w: 4
+      h: 10
+    props:
+      stepId: installation-type
+      cardId: fire-pns
+      title: Пожарная насосная станция (ПНС)
+      description: 'Пожаротушение: ВПВ, дренчерная, спринклерная.'
+      next: selection-form
+      flow: bps-w-fire
+      enabled: false
+routing:
+  landingPageId: home

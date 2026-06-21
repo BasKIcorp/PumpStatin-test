@@ -3,7 +3,11 @@ import { useParams } from "wouter";
 import { apiFetch } from "@/api/client";
 import { VisualPageEditor } from "@/routes/admin/studio/canvas/VisualPageEditor";
 import { SiteSettingsEditor } from "@/routes/admin/studio/frontend/SiteSettingsEditor";
-import { WizardVisualEditor } from "@/routes/admin/studio/wizard/WizardVisualEditor";
+import { WizardUnifiedStudioEditor } from "@/routes/admin/studio/wizard/WizardUnifiedStudioEditor";
+import {
+  normalizeWizardPage,
+  persistNormalizedWizardPage,
+} from "@/routes/admin/studio/wizard/wizardUnifiedBlocks";
 import { navFromApi, type WizardNavState } from "@/routes/admin/studio/wizard/wizardTypes";
 import { PdfStudioEditor } from "@/routes/admin/studio/pdf/PdfStudioEditor";
 import { StudioEditorTopBar } from "@/routes/admin/studio/figma/StudioEditorTopBar";
@@ -20,12 +24,20 @@ import type { ProfileBundle } from "@/api/config";
 import { StudioProfileProvider } from "@/providers/StudioProfileProvider";
 import { DraftSitePreview } from "@/routes/admin/studio/preview/DraftSitePreview";
 import { DraftPagePreview } from "@/routes/admin/studio/preview/DraftPagePreview";
+import { WizardNavPanel } from "@/routes/admin/studio/wizard/panels/WizardNavPanel";
 import type { StrelaAppearance } from "@/lib/strela/appearance";
 import {
   siteConfigFingerprint,
+  wizardAppearanceFingerprint,
+  wizardBundleFingerprint,
   wizardNavFingerprint,
-  wizardPageFramesFingerprint,
+  wizardPageLayoutFingerprint,
 } from "@/routes/admin/studio/studioDraftUtils";
+import {
+  saveWizardBundle,
+  WizardSaveError,
+  wizardSavePhaseLabel,
+} from "@/routes/admin/studio/studioSaveUtils";
 
 interface ProfileData {
   profile: Record<string, unknown>;
@@ -56,7 +68,11 @@ export function AdminProfileStudio() {
   const savedSiteFpRef = useRef("");
   const savedWizardNavFpRef = useRef("");
   const savedWizardPageFpRef = useRef("");
-  const [wizardDirty, setWizardDirty] = useState({ nav: false, frames: false, appearance: false });
+  const savedWizardAppearanceFpRef = useRef("");
+  const savedWizardBundleFpRef = useRef("");
+  const [savedWizardBundleFp, setSavedWizardBundleFp] = useState("");
+  const [wizardDirty, setWizardDirty] = useState(false);
+  const [pdfDirty, setPdfDirty] = useState(false);
   const [wizardDraftPage, setWizardDraftPage] = useState<PageConfig | null>(null);
   const [wizardDraftNav, setWizardDraftNav] = useState<WizardNavState | null>(null);
 
@@ -80,7 +96,9 @@ export function AdminProfileStudio() {
       .then((d) => {
         setData(d);
         const siteConfig = (d.site ?? { layout, pages: [] }) as SiteConfig;
-        const loadedPages = siteConfig.pages ?? [];
+        const loadedPages = (siteConfig.pages ?? []).map((p) =>
+          p.type === "wizard" ? persistNormalizedWizardPage(normalizeWizardPage(p)) : p,
+        );
         setPages(loadedPages);
         setLayout(siteConfig.layout);
         setRouting(siteConfig.routing ?? { landingPageId: "home" });
@@ -92,10 +110,20 @@ export function AdminProfileStudio() {
         });
         const nav = navFromApi(d.wizard);
         savedWizardNavFpRef.current = wizardNavFingerprint(nav);
-        savedWizardPageFpRef.current = wizardPageFramesFingerprint(
-          loadedPages.find((p) => p.type === "wizard"),
+        const wizardPage = loadedPages.find((p) => p.type === "wizard");
+        savedWizardPageFpRef.current = wizardPageLayoutFingerprint(
+          wizardPage ? normalizeWizardPage(wizardPage) : undefined,
         );
-        setWizardDirty({ nav: false, frames: false, appearance: false });
+        savedWizardAppearanceFpRef.current = wizardAppearanceFingerprint(
+          (d.branding as { appearance?: unknown })?.appearance,
+        );
+        savedWizardBundleFpRef.current = wizardBundleFingerprint(
+          nav,
+          wizardPage ? normalizeWizardPage(wizardPage) : undefined,
+          (d.branding as { appearance?: unknown })?.appearance,
+        );
+        setSavedWizardBundleFp(savedWizardBundleFpRef.current);
+        setWizardDirty(false);
         setWizardDraftPage(null);
         setWizardDraftNav(null);
       })
@@ -151,6 +179,7 @@ export function AdminProfileStudio() {
     setSaveMsg("");
     try {
       await pdfSaveRef.current?.();
+      setPdfDirty(false);
       setSaveMsg("PDF сохранён");
       setTimeout(() => setSaveMsg(""), 2000);
     } catch (e) {
@@ -206,71 +235,93 @@ export function AdminProfileStudio() {
     nav: WizardNavState,
     wizardPageDraft?: PageConfig,
     appearanceDraft?: StrelaAppearance,
+    options?: { saveSite?: boolean; saveAppearance?: boolean },
   ) => {
-    if (!profileId) return;
+    if (!profileId || !data?.branding) return;
     setSaveMsg("");
+    setError("");
+    const saveSite = options?.saveSite ?? Boolean(wizardPageDraft);
+    const saveAppearance = options?.saveAppearance ?? Boolean(appearanceDraft);
+
     try {
-      await apiFetch(`/api/v1/admin/profiles/${encodeURIComponent(profileId)}/wizard`, {
-        method: "PUT",
-        body: JSON.stringify({
-          navigation: { steps: nav.steps, cards: nav.cards },
-          flows: nav.flows ?? {},
-        }),
+      const { nav: savedNav } = await saveWizardBundle({
+        profileId,
+        nav,
+        wizardPageDraft,
+        appearanceDraft,
+        layout,
+        pages,
+        routing,
+        branding: data.branding,
+        saveSite,
+        saveAppearance,
       });
+
       let nextPages = pages;
-      if (wizardPageDraft) {
-        nextPages = pages.map((p) => (p.id === wizardPageDraft.id ? wizardPageDraft : p));
+      if (saveSite && wizardPageDraft) {
+        const persisted = persistNormalizedWizardPage(wizardPageDraft);
+        nextPages = pages.map((p) => (p.id === wizardPageDraft.id ? persisted : p));
         setPages(nextPages);
-        await apiFetch(`/api/v1/admin/profiles/${encodeURIComponent(profileId)}/site`, {
-          method: "PUT",
-          body: JSON.stringify({ layout, pages: nextPages, routing }),
-        });
         savedSiteFpRef.current = siteConfigFingerprint({ layout, pages: nextPages, routing });
       }
-      if (appearanceDraft && data?.branding) {
-        const nextBranding = {
-          ...data.branding,
-          appearance: appearanceDraft,
-        };
-        await apiFetch(`/api/v1/admin/profiles/${encodeURIComponent(profileId)}/branding`, {
-          method: "PUT",
-          body: JSON.stringify({ branding: nextBranding }),
-        });
-        setData((prev) => (prev ? { ...prev, branding: nextBranding } : prev));
-      }
+
+      const nextBranding =
+        saveAppearance && appearanceDraft
+          ? { ...data.branding, appearance: appearanceDraft }
+          : data.branding;
+
+      setWizardDraftNav(savedNav);
+
       setData((prev) =>
         prev
           ? {
               ...prev,
+              branding: nextBranding,
               wizard: {
-                navigation: { steps: nav.steps, cards: nav.cards },
-                flows: nav.flows ?? {},
+                navigation: { steps: savedNav.steps, cards: savedNav.cards },
+                flows: savedNav.flows ?? {},
               },
             }
           : prev,
       );
-      savedWizardNavFpRef.current = wizardNavFingerprint(nav);
+
+      savedWizardNavFpRef.current = wizardNavFingerprint(savedNav);
       if (wizardPageDraft) {
-        savedWizardPageFpRef.current = wizardPageFramesFingerprint(wizardPageDraft);
+        savedWizardPageFpRef.current = wizardPageLayoutFingerprint(
+          normalizeWizardPage(wizardPageDraft),
+        );
       }
-      setWizardDirty({ nav: false, frames: false, appearance: false });
-      setSaveMsg(
-        wizardPageDraft && appearanceDraft
-          ? "Визард, frames и оболочка сохранены"
-          : wizardPageDraft
-            ? "Визард и frames сохранены"
-            : appearanceDraft
-              ? "Визард и оболочка сохранены"
-              : "Визард сохранён",
+      if (saveAppearance && appearanceDraft) {
+        savedWizardAppearanceFpRef.current = wizardAppearanceFingerprint(appearanceDraft);
+      }
+      savedWizardBundleFpRef.current = wizardBundleFingerprint(
+        savedNav,
+        wizardPageDraft
+          ? normalizeWizardPage(wizardPageDraft)
+          : pages.find((p) => p.type === "wizard")
+            ? normalizeWizardPage(pages.find((p) => p.type === "wizard")!)
+            : undefined,
+        saveAppearance && appearanceDraft
+          ? appearanceDraft
+          : (data.branding as { appearance?: StrelaAppearance }).appearance,
       );
+      setSavedWizardBundleFp(savedWizardBundleFpRef.current);
+      setWizardDirty(false);
+      setSaveMsg("Визард сохранён");
       setTimeout(() => setSaveMsg(""), 2000);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Ошибка сохранения визарда");
+      if (e instanceof WizardSaveError) {
+        setError(
+          `${e.message} (этап: ${wizardSavePhaseLabel(e.phase)})`,
+        );
+      } else {
+        setError(e instanceof Error ? e.message : "Ошибка сохранения визарда");
+      }
     }
   };
 
   const handleWizardDraftPageChange = useCallback((pageDraft: PageConfig) => {
-    setWizardDraftPage(pageDraft);
+    setWizardDraftPage(persistNormalizedWizardPage(normalizeWizardPage(pageDraft)));
   }, []);
 
   const handleWizardDraftNavChange = useCallback((nav: WizardNavState) => {
@@ -285,12 +336,32 @@ export function AdminProfileStudio() {
       }
     : null;
 
-  const wizardInitialNav = data ? navFromApi(data.wizard) : null;
+  const wizardInitialNav = useMemo(
+    () => (data ? navFromApi(data.wizard) : null),
+    [data?.wizard],
+  );
+
+  useEffect(() => {
+    if (wizardInitialNav) setWizardDraftNav(wizardInitialNav);
+  }, [wizardInitialNav]);
+
+  const wizardPageNormalized = useMemo(() => {
+    const raw = wizardDraftPage ?? pages.find((p) => p.type === "wizard");
+    return raw ? normalizeWizardPage(raw) : null;
+  }, [wizardDraftPage, pages]);
+
+  const handleSelectedPageBlocksChange = useCallback(
+    (nextBlocks: BlockConfig[]) => {
+      if (selectedPageId) updatePageBlocks(selectedPageId, nextBlocks);
+    },
+    [selectedPageId, updatePageBlocks],
+  );
 
   const previewPages = useMemo(() => {
-    if (!wizardDraftPage) return pages;
-    return pages.map((p) => (p.id === wizardDraftPage.id ? wizardDraftPage : p));
-  }, [pages, wizardDraftPage]);
+    const draft = wizardPageNormalized;
+    if (!draft) return pages;
+    return pages.map((p) => (p.id === draft.id ? draft : p));
+  }, [pages, wizardPageNormalized]);
 
   const previewSite = useMemo<SiteConfig>(
     () => ({ layout, pages: previewPages, routing }),
@@ -323,6 +394,13 @@ export function AdminProfileStudio() {
   const studioPages = filterStudioPages(pages);
   const selectorPages = listPagesForSelector(pages);
   const isWizardPageSelected = selectedPage?.type === "wizard";
+  /** Option C: unified editor for all wizard pages (legacy frames normalized at runtime). */
+  const wizardUsesUnified = isWizardPageSelected;
+
+  useEffect(() => {
+    if (!isWizardPageSelected) setWizardDirty(false);
+  }, [isWizardPageSelected]);
+
   const pageBlocks = selectedPage?.blocks ?? [];
   const profileTitle = (data?.branding as { appTitle?: string })?.appTitle ?? profileId ?? "";
 
@@ -337,19 +415,13 @@ export function AdminProfileStudio() {
     siteConfigFingerprint({ layout, pages, routing }) !== savedSiteFpRef.current;
 
   const dirtyHint =
-    activeTab === "frontend" &&
-    isWizardPageSelected &&
-    (wizardDirty.nav || wizardDirty.frames || wizardDirty.appearance)
-      ? `● ${[
-          wizardDirty.nav && "навигация",
-          wizardDirty.frames && "макет",
-          wizardDirty.appearance && "оболочка",
-        ]
-          .filter(Boolean)
-          .join(" + ")} не сохранены`
-      : activeTab === "frontend" && siteDirty
-        ? "● Сайт не сохранён"
-        : undefined;
+    activeTab === "pdf" && pdfDirty
+      ? "● PDF шаблон не сохранён"
+      : activeTab === "frontend" && isWizardPageSelected && wizardDirty
+        ? "● Визард не сохранён (навигация + макет + оболочка)"
+        : activeTab === "frontend" && siteDirty
+          ? "● Сайт не сохранён"
+          : undefined;
 
   const contextLabel =
     activeTab === "pdf"
@@ -412,6 +484,24 @@ export function AdminProfileStudio() {
                   : undefined
           }
           dirtyHint={dirtyHint}
+          wizardStepSwitcher={
+            activeTab === "frontend" &&
+            frontendMode === "pages" &&
+            isWizardPageSelected &&
+            wizardDraftNav ? (
+              <WizardNavPanel
+                nav={wizardDraftNav}
+                selectedStepId={wizardPreviewStep}
+                onSelectStep={setWizardPreviewStep}
+                onRemoveStep={() => {}}
+                canUndo={false}
+                canRedo={false}
+                onUndo={() => {}}
+                onRedo={() => {}}
+                compactStepSwitcher
+              />
+            ) : undefined
+          }
           onPreview={
             activeTab === "pdf"
               ? () => setPdfPreview(true)
@@ -437,6 +527,7 @@ export function AdminProfileStudio() {
             <DraftSitePreview
               site={previewSite}
               bundle={previewBundle}
+              previewWizardStepId={wizardPreviewStep}
               onClose={() => setSitePreview(false)}
             />
           ) : (
@@ -455,14 +546,17 @@ export function AdminProfileStudio() {
             frontendMode === "pages" &&
             isWizardPageSelected &&
             selectedPage &&
-            wizardInitialNav && (
-            <WizardVisualEditor
+            wizardInitialNav &&
+            wizardUsesUnified && (
+            <WizardUnifiedStudioEditor
               page={selectedPage}
-              site={{ layout, pages, routing }}
+              site={{ layout, pages: previewPages, routing }}
               profileBundle={profileBundle}
               initialNav={wizardInitialNav}
               onSave={handleSaveWizard}
               onDirtyChange={setWizardDirty}
+              previewStepId={wizardPreviewStep}
+              savedBundleFingerprint={savedWizardBundleFp}
               onRegisterSave={(fn) => {
                 wizardSaveRef.current = fn;
               }}
@@ -478,7 +572,7 @@ export function AdminProfileStudio() {
             selectedPage &&
             previewBundle && (
             <DraftPagePreview
-              page={wizardDraftPage ?? selectedPage}
+              page={wizardPageNormalized ?? wizardDraftPage ?? selectedPage}
               site={previewSite}
               bundle={previewBundle}
               previewWizardStepId={wizardPreviewStep}
@@ -509,7 +603,7 @@ export function AdminProfileStudio() {
                   return next;
                 });
               }}
-              onBlocksChange={(nextBlocks) => updatePageBlocks(selectedPage.id, nextBlocks)}
+              onBlocksChange={handleSelectedPageBlocksChange}
               selectedBlockId={selectedBlockId}
               onSelectBlock={setSelectedBlockId}
               profileId={profileId}
@@ -548,6 +642,7 @@ export function AdminProfileStudio() {
               branding={data?.branding}
               previewOpen={pdfPreview}
               onPreviewClose={() => setPdfPreview(false)}
+              onDirtyChange={setPdfDirty}
               onRegisterSave={(fn) => {
                 pdfSaveRef.current = fn;
               }}

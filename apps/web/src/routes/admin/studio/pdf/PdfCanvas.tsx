@@ -1,11 +1,14 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Rnd } from "react-rnd";
 import { useDroppable } from "@dnd-kit/core";
-import { FloatingZoom } from "../figma/FloatingZoom";
+import { StudioCanvas } from "../canvas/StudioCanvas";
+import {
+  STUDIO_CANVAS_DROP_ZONE_ID,
+  useStudioCanvasZoom,
+} from "../canvas/studioCanvasContext";
 import { FIGMA } from "../figma/figmaTokens";
-import { useCanvasNavigation } from "../figma/useCanvasNavigation";
 
-const A4 = { width: 595, height: 842 };
+export const PDF_A4 = { width: 595, height: 842 } as const;
 const SNAP = 8;
 
 const snap = (v: number) => Math.max(0, Math.round(v / SNAP) * SNAP);
@@ -20,13 +23,161 @@ export interface PdfBlock {
   props: Record<string, unknown>;
 }
 
-export function PdfCanvas({
+function PdfPageContent({
   blocks,
   selectedId,
   onSelect,
   onMove: onMoveBlock,
   onResize,
-  dropZoneId = "pdf-canvas-drop",
+  mode,
+  spaceHeld,
+}: {
+  blocks: PdfBlock[];
+  selectedId: string | null;
+  onSelect: (id: string | null) => void;
+  onMove: (id: string, x: number, y: number) => void;
+  onResize: (id: string, w: number, h: number) => void;
+  mode: "auto" | "free";
+  spaceHeld: boolean;
+}) {
+  const zoom = useStudioCanvasZoom();
+  const { setNodeRef, isOver } = useDroppable({ id: STUDIO_CANVAS_DROP_ZONE_ID });
+  const freeMode = mode === "free" && !spaceHeld;
+
+  const handleBgClick = useCallback(
+    (e: React.MouseEvent) => {
+      if (e.target === e.currentTarget) onSelect(null);
+    },
+    [onSelect],
+  );
+
+  return (
+    <div
+      ref={setNodeRef}
+      data-canvas-bg
+      data-testid="grid-canvas"
+      className="relative overflow-hidden bg-white"
+      style={{
+        width: PDF_A4.width,
+        minHeight: PDF_A4.height,
+        height: PDF_A4.height,
+        outline: isOver ? `2px solid ${FIGMA.accent}` : undefined,
+      }}
+      onClick={handleBgClick}
+    >
+      {mode === "free" && (
+        <svg className="pointer-events-none absolute inset-0" width={PDF_A4.width} height={PDF_A4.height}>
+          {Array.from({ length: Math.ceil(PDF_A4.width / SNAP) }).map((_, i) => (
+            <line
+              key={`v${i}`}
+              x1={i * SNAP}
+              y1={0}
+              x2={i * SNAP}
+              y2={PDF_A4.height}
+              stroke="#f0f0f0"
+              strokeWidth={0.5}
+            />
+          ))}
+          {Array.from({ length: Math.ceil(PDF_A4.height / SNAP) }).map((_, i) => (
+            <line
+              key={`h${i}`}
+              x1={0}
+              y1={i * SNAP}
+              x2={PDF_A4.width}
+              y2={i * SNAP}
+              stroke="#f0f0f0"
+              strokeWidth={0.5}
+            />
+          ))}
+        </svg>
+      )}
+
+      {blocks.length === 0 && (
+        <div className="flex h-full flex-col items-center justify-center gap-2 text-sm text-neutral-400">
+          <span>Перетащите PDF-блок слева</span>
+          <span className="text-xs">или кликните по типу</span>
+        </div>
+      )}
+
+      {blocks.map((block) => {
+        const isSelected = selectedId === block.id;
+
+        if (!freeMode) {
+          return (
+            <div
+              key={block.id}
+              className="relative w-full"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect(block.id);
+              }}
+            >
+              {isSelected && (
+                <div
+                  className="pointer-events-none absolute inset-0 z-10"
+                  style={{ boxShadow: `inset 0 0 0 2px ${FIGMA.accent}` }}
+                />
+              )}
+              <PdfBlockPreview block={block} />
+            </div>
+          );
+        }
+
+        return (
+          <Rnd
+            key={block.id}
+            scale={zoom}
+            size={{ width: block.w, height: block.h }}
+            position={{ x: block.x, y: block.y }}
+            bounds="parent"
+            dragGrid={[SNAP, SNAP]}
+            resizeGrid={[SNAP, SNAP]}
+            disableDragging={!freeMode}
+            enableResizing={freeMode}
+            onDragStart={(e) => {
+              e.stopPropagation();
+              onSelect(block.id);
+            }}
+            onResizeStart={(e) => {
+              e.stopPropagation();
+              onSelect(block.id);
+            }}
+            onDragStop={(_e, d) => {
+              onMoveBlock(block.id, snap(d.x), snap(d.y));
+            }}
+            onResizeStop={(_e, _dir, ref, _delta, position) => {
+              onMoveBlock(block.id, snap(position.x), snap(position.y));
+              onResize(
+                block.id,
+                snap(parseInt(ref.style.width, 10)),
+                snap(parseInt(ref.style.height, 10)),
+              );
+            }}
+            style={{ zIndex: isSelected ? 20 : 1 }}
+          >
+            <div className="relative h-full w-full">
+              {isSelected && (
+                <div
+                  className="pointer-events-none absolute inset-0 z-10"
+                  style={{ boxShadow: `inset 0 0 0 2px ${FIGMA.accent}` }}
+                />
+              )}
+              <PdfBlockPreview block={block} />
+            </div>
+          </Rnd>
+        );
+      })}
+    </div>
+  );
+}
+
+export function PdfCanvas({
+  blocks,
+  selectedId,
+  onSelect,
+  onMove,
+  onResize,
+  onDropBlock,
   mode,
 }: {
   blocks: PdfBlock[];
@@ -34,32 +185,31 @@ export function PdfCanvas({
   onSelect: (id: string | null) => void;
   onMove: (id: string, x: number, y: number) => void;
   onResize: (id: string, w: number, h: number) => void;
-  dropZoneId?: string;
+  onDropBlock?: (type: string) => void;
   mode: "auto" | "free";
 }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { setNodeRef: setDropRef, isOver: dndOver } = useDroppable({
-    id: dropZoneId,
-  });
-  const { zoom, pan, handActive, startPan, handleWheel, zoomIn, zoomOut, resetView, spaceHeld } =
-    useCanvasNavigation(0.7);
+  const [spaceHeld, setSpaceHeld] = useState(false);
 
-  const handleMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      const onBg =
-        e.target === containerRef.current ||
-        (e.target as HTMLElement).closest("[data-canvas-bg]");
-      if (spaceHeld || e.button === 1) {
-        e.preventDefault();
-        startPan(e.clientX, e.clientY);
-        return;
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.code === "Space" &&
+        !e.repeat &&
+        !(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)
+      ) {
+        setSpaceHeld(true);
       }
-      if (onBg && e.button === 0) onSelect(null);
-    },
-    [onSelect, spaceHeld, startPan],
-  );
-
-  const freeMode = mode === "free" && !spaceHeld;
+    };
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.code === "Space") setSpaceHeld(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+    };
+  }, []);
 
   return (
     <div className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden">
@@ -75,147 +225,23 @@ export function PdfCanvas({
         </span>
       </div>
 
-      <div
-        ref={containerRef}
-        className={`relative flex-1 overflow-hidden ${handActive ? "cursor-grab active:cursor-grabbing" : ""}`}
-        style={{
-          backgroundColor: FIGMA.appBg,
-          backgroundImage: `radial-gradient(circle, ${FIGMA.canvasDot} 1px, transparent 1px)`,
-          backgroundSize: `${16 / zoom}px ${16 / zoom}px`,
-          backgroundPosition: `${pan.x}px ${pan.y}px`,
-        }}
-        onWheel={handleWheel}
-        onMouseDown={handleMouseDown}
-        onContextMenu={(e) => e.preventDefault()}
+      <StudioCanvas
+        artboardLabel="A4"
+        artboardWidth={PDF_A4.width}
+        artboardMinHeight={PDF_A4.height}
+        onSelect={onSelect}
+        onDropBlock={onDropBlock}
       >
-        <div
-          className="absolute left-1/2 top-0"
-          style={{
-            transform: `translate(calc(-50% + ${pan.x}px), ${48 + pan.y}px) scale(${zoom})`,
-            transformOrigin: "top center",
-          }}
-        >
-          <div className="mb-1.5 flex items-center gap-2 pl-0.5">
-            <span className="text-[11px] font-medium text-[#b3b3b3]">A4</span>
-            <span className="font-mono text-[10px] text-[#666]">595 × 842 pt</span>
-          </div>
-          <div
-            ref={setDropRef}
-            data-canvas-bg
-            className="relative overflow-hidden bg-white"
-            style={{
-              width: A4.width,
-              height: A4.height,
-              boxShadow: FIGMA.artboardShadow,
-              outline: dndOver ? `2px solid ${FIGMA.accent}` : undefined,
-            }}
-          >
-            {mode === "free" && (
-              <svg className="pointer-events-none absolute inset-0" width={A4.width} height={A4.height}>
-                {Array.from({ length: Math.ceil(A4.width / SNAP) }).map((_, i) => (
-                  <line
-                    key={`v${i}`}
-                    x1={i * SNAP}
-                    y1={0}
-                    x2={i * SNAP}
-                    y2={A4.height}
-                    stroke="#f0f0f0"
-                    strokeWidth={0.5}
-                  />
-                ))}
-                {Array.from({ length: Math.ceil(A4.height / SNAP) }).map((_, i) => (
-                  <line
-                    key={`h${i}`}
-                    x1={0}
-                    y1={i * SNAP}
-                    x2={A4.width}
-                    y2={i * SNAP}
-                    stroke="#f0f0f0"
-                    strokeWidth={0.5}
-                  />
-                ))}
-              </svg>
-            )}
-
-            {blocks.length === 0 && (
-              <div className="flex h-full flex-col items-center justify-center gap-2 text-sm text-neutral-400">
-                <span>Перетащите PDF-блок слева</span>
-                <span className="text-xs">или кликните по типу</span>
-              </div>
-            )}
-
-            {blocks.map((block) => {
-              const isSelected = selectedId === block.id;
-
-              if (!freeMode) {
-                return (
-                  <div
-                    key={block.id}
-                    className="relative w-full"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelect(block.id);
-                    }}
-                  >
-                    {isSelected && (
-                      <div
-                        className="pointer-events-none absolute inset-0 z-10"
-                        style={{ boxShadow: `inset 0 0 0 2px ${FIGMA.accent}` }}
-                      />
-                    )}
-                    <PdfBlockPreview block={block} />
-                  </div>
-                );
-              }
-
-              return (
-                <Rnd
-                  key={block.id}
-                  size={{ width: block.w, height: block.h }}
-                  position={{ x: block.x, y: block.y }}
-                  bounds="parent"
-                  dragGrid={[SNAP, SNAP]}
-                  resizeGrid={[SNAP, SNAP]}
-                  disableDragging={!freeMode}
-                  enableResizing={freeMode}
-                  onDragStart={(e) => {
-                    e.stopPropagation();
-                    onSelect(block.id);
-                  }}
-                  onResizeStart={(e) => {
-                    e.stopPropagation();
-                    onSelect(block.id);
-                  }}
-                  onDragStop={(_e, d) => {
-                    onMoveBlock(block.id, snap(d.x), snap(d.y));
-                  }}
-                  onResizeStop={(_e, _dir, ref, _delta, position) => {
-                    onMoveBlock(block.id, snap(position.x), snap(position.y));
-                    onResize(
-                      block.id,
-                      snap(parseInt(ref.style.width, 10)),
-                      snap(parseInt(ref.style.height, 10)),
-                    );
-                  }}
-                  style={{ zIndex: isSelected ? 20 : 1 }}
-                >
-                  <div className="relative h-full w-full">
-                    {isSelected && (
-                      <div
-                        className="pointer-events-none absolute inset-0 z-10"
-                        style={{ boxShadow: `inset 0 0 0 2px ${FIGMA.accent}` }}
-                      />
-                    )}
-                    <PdfBlockPreview block={block} />
-                  </div>
-                </Rnd>
-              );
-            })}
-          </div>
-        </div>
-
-        <FloatingZoom zoom={zoom} onZoomIn={zoomIn} onZoomOut={zoomOut} onFit={resetView} />
-      </div>
+        <PdfPageContent
+          blocks={blocks}
+          selectedId={selectedId}
+          onSelect={onSelect}
+          onMove={onMove}
+          onResize={onResize}
+          mode={mode}
+          spaceHeld={spaceHeld}
+        />
+      </StudioCanvas>
     </div>
   );
 }

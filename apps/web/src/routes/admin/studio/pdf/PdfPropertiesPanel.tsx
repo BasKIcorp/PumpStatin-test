@@ -40,6 +40,11 @@ function BindingField({
 
 export function PdfPropertiesPanel({
   block,
+  pageCount,
+  currentPageIndex,
+  onAddPage,
+  onRemovePage,
+  onSelectPage,
   templateName,
   mode,
   onModeChange,
@@ -48,6 +53,11 @@ export function PdfPropertiesPanel({
   onInsertBinding,
 }: {
   block: PdfBlock | null;
+  pageCount?: number;
+  currentPageIndex?: number;
+  onAddPage?: () => void;
+  onRemovePage?: () => void;
+  onSelectPage?: (index: number) => void;
   templateName: string;
   mode: "auto" | "free";
   onModeChange: (m: "auto" | "free") => void;
@@ -88,6 +98,49 @@ export function PdfPropertiesPanel({
             ))}
           </div>
         </div>
+
+        <div>
+          <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-[#888]">
+            Страницы
+          </div>
+          <div className="mb-2 flex flex-wrap gap-1">
+            {Array.from({ length: pageCount ?? 1 }).map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => onSelectPage?.(i)}
+                className="rounded px-2 py-1 text-[10px]"
+                style={
+                  currentPageIndex === i
+                    ? { background: FIGMA.accentSoft, color: FIGMA.accent }
+                    : { background: FIGMA.inputBg, color: FIGMA.textMuted }
+                }
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={onAddPage}
+              className="flex-1 rounded py-1.5 text-[11px]"
+              style={{ background: FIGMA.inputBg, color: FIGMA.textMuted }}
+            >
+              + Страница
+            </button>
+            <button
+              type="button"
+              onClick={onRemovePage}
+              disabled={(pageCount ?? 1) <= 1}
+              className="flex-1 rounded py-1.5 text-[11px] disabled:opacity-40"
+              style={{ background: FIGMA.inputBg, color: FIGMA.textMuted }}
+            >
+              − Страница
+            </button>
+          </div>
+        </div>
+
         <p className="text-[11px] leading-relaxed text-[#666]">
           Выберите блок на холсте или добавьте из панели «Блоки».
         </p>
@@ -149,6 +202,29 @@ export function PdfPropertiesPanel({
           />
         </>
       )}
+
+      {block.type === "curves-chart" && (
+        <>
+          <BindingField
+            label="Путь данных (binding)"
+            value={String(block.props.dataPath ?? "{{curves.qh_main}}")}
+            onChange={(v) => onChangeProp("dataPath", v)}
+          />
+          <div>
+            <label className="mb-1 block text-[11px] text-[#b3b3b3]">Пресет графика</label>
+            <select
+              className={inputClass}
+              style={{ background: FIGMA.inputBg }}
+              value={String(block.props.chartPreset ?? "qh-five-curves")}
+              onChange={(e) => onChangeProp("chartPreset", e.target.value)}
+            >
+              <option value="qh-five-curves">Q-H (5 кривых + система)</option>
+              <option value="power-npsh">Мощность / NPSH</option>
+            </select>
+          </div>
+        </>
+      )}
+
       {block.type === "signature" && (
         <BindingField
           label="ФИО"

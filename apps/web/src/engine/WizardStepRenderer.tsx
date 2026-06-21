@@ -4,7 +4,20 @@ import { GridPageContent } from "@/engine/GridPageContent";
 import { WizardEngine } from "@/engines/WizardEngine";
 import type { PageEditorOptions } from "@/engine/pageEditorTypes";
 import { clampLayout, canPlaceLayout, pageGridMetrics } from "@/lib/gridLayout";
-import { frameBlocksForStep } from "@/routes/admin/studio/wizard/wizardFrameUtils";
+import { useProfile } from "@/providers/ProfileProvider";
+import {
+  frameBlocksForStep,
+  usesDecomposedSelectionFormFrames,
+  usesDecomposedStrelaFrames,
+  usesDecomposedWizardFrames,
+} from "@/routes/admin/studio/wizard/wizardFrameUtils";
+import {
+  blocksForWizardStep,
+  normalizeWizardPage,
+  wizardUsesUnifiedBlocks,
+} from "@/routes/admin/studio/wizard/wizardUnifiedBlocks";
+import { SelectionFormBlocksProvider } from "@/blocks/wizard/WizardBlocks";
+import type { NavigationConfig } from "@/types/wizard";
 import type { WizardStepDef } from "@/types/wizard";
 
 export interface WizardStepRendererProps {
@@ -23,8 +36,8 @@ export interface WizardStepRendererProps {
 
 /**
  * Единый рендер шага визарда.
- * Live / read-only preview → WizardEngine (оригинальная вёрстка Strela).
- * Studio с editor → frames + GridPageContent для drag/resize.
+ * Декомпозированные Strela-frames → GridPageContent (sidebar, heading, cards как блоки).
+ * Legacy monolithic frames / без editor → WizardEngine.
  */
 export function WizardStepRenderer({
   page,
@@ -36,19 +49,29 @@ export function WizardStepRenderer({
   selectedCardId,
   onSelectCard,
 }: WizardStepRendererProps) {
-  if (!editor) {
-    return (
-      <WizardEngine
-        previewStep={stepId}
-        selectedCardId={selectedCardId}
-        onSelectCard={onSelectCard}
-      />
-    );
-  }
-
-  const frameBlocks = frameBlocksForStep(page, stepId, stepDef, strela);
-  const useFrames = frameBlocks.length > 0;
-  const { cols } = pageGridMetrics(page);
+  const { wizard, branding } = useProfile();
+  const nav = wizard.navigation as NavigationConfig;
+  const cards = nav.cards?.[stepId] ?? [];
+  const appearance = branding.appearance;
+  const unifiedPage = normalizeWizardPage(page);
+  const unified = wizardUsesUnifiedBlocks(unifiedPage);
+  const frameBlocks = unified
+    ? blocksForWizardStep(unifiedPage, stepId)
+    : frameBlocksForStep(
+        page,
+        stepId,
+        stepDef,
+        strela,
+        cards,
+        editor ? undefined : appearance,
+      );
+  const gridDecomposed = usesDecomposedWizardFrames(frameBlocks);
+  const strelaDecomposed = strela && usesDecomposedStrelaFrames(frameBlocks);
+  const selectionFormDecomposed =
+    strela && stepDef?.type === "selection-form" && usesDecomposedSelectionFormFrames(frameBlocks);
+  const useFrames = frameBlocks.length > 0 && (Boolean(editor) || gridDecomposed);
+  const gridMetrics = pageGridMetrics(page, page.type === "wizard" ? frameBlocks : undefined);
+  const { cols } = gridMetrics;
 
   const onLayoutChange = useCallback(
     (id: string, layout: BlockGridLayout) => {
@@ -63,7 +86,7 @@ export function WizardStepRenderer({
   );
 
   if (useFrames) {
-    const stepPage: PageConfig = { ...page, blocks: frameBlocks };
+    const stepPage: PageConfig = { ...page, type: "wizard", blocks: frameBlocks };
     const editorOpts: PageEditorOptions | undefined = editor
       ? {
           selectedId: editor.selectedId,
@@ -75,7 +98,25 @@ export function WizardStepRenderer({
       : undefined;
 
     return (
-      <GridPageContent page={stepPage} blocks={frameBlocks} site={site} editor={editorOpts} />
+      <div
+        className={
+          strelaDecomposed && editor
+            ? "flex w-full min-h-0 flex-col overflow-x-auto overflow-y-auto bg-[var(--funnel-page-bg)]"
+            : strelaDecomposed
+              ? selectionFormDecomposed
+                ? "flex min-h-[100dvh] w-full flex-col overflow-hidden bg-[var(--funnel-page-bg)]"
+                : "flex min-h-0 w-full flex-col overflow-x-auto overflow-y-auto bg-[var(--funnel-page-bg)]"
+              : "h-full w-full"
+        }
+      >
+        {selectionFormDecomposed ? (
+          <SelectionFormBlocksProvider>
+            <GridPageContent page={stepPage} blocks={frameBlocks} site={site} editor={editorOpts} />
+          </SelectionFormBlocksProvider>
+        ) : (
+          <GridPageContent page={stepPage} blocks={frameBlocks} site={site} editor={editorOpts} />
+        )}
+      </div>
     );
   }
 
@@ -94,7 +135,12 @@ export function wizardStepUsesFrames(
   stepId: string,
   stepDef?: WizardStepDef,
   strela = true,
+  cards: { id: string }[] = [],
 ): boolean {
-  const blocks = frameBlocksForStep(page, stepId, stepDef, strela);
+  const unified = normalizeWizardPage(page);
+  if (wizardUsesUnifiedBlocks(unified)) {
+    return blocksForWizardStep(unified, stepId).length > 0;
+  }
+  const blocks = frameBlocksForStep(page, stepId, stepDef, strela, cards);
   return blocks.length > 0;
 }

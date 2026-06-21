@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
-import { DEFAULT_CARD_UI, type ImageHoverVariant } from "@/lib/strela/cardUi";
+import { DEFAULT_CARD_UI, GRID_CARD_IMAGE_MAX_HEIGHT, type ImageHoverVariant } from "@/lib/strela/cardUi";
 
 interface Props {
   image: ReactNode;
@@ -13,6 +13,8 @@ interface Props {
   imageHoverVariant?: ImageHoverVariant;
   captionLogoSrc?: string | null;
   widthPx?: number;
+  /** strip — горизонтальная лента (22rem); grid — ячейка canvas, w-full и естественная высота */
+  layoutMode?: "strip" | "grid";
 }
 
 export function MockupCard({
@@ -26,6 +28,7 @@ export function MockupCard({
   imageHoverVariant = "zoomSubtle",
   captionLogoSrc = null,
   widthPx,
+  layoutMode = "strip",
 }: Props) {
   const ui = DEFAULT_CARD_UI;
   const captionLogo = captionLogoSrc ?? null;
@@ -45,20 +48,26 @@ export function MockupCard({
       ? "group-hover:-translate-y-0.5 group-hover:shadow-[0_12px_28px_rgba(15,23,42,0.14),0_4px_10px_rgba(15,23,42,0.09)] group-focus-visible:-translate-y-0.5 group-focus-visible:shadow-[0_12px_28px_rgba(15,23,42,0.14),0_4px_10px_rgba(15,23,42,0.09)]"
       : "group-hover:shadow-[0_8px_22px_rgba(15,23,42,0.12),0_2px_6px_rgba(15,23,42,0.08)] group-focus-visible:shadow-[0_8px_22px_rgba(15,23,42,0.12),0_2px_6px_rgba(15,23,42,0.08)]";
 
+  const isGrid = layoutMode === "grid";
+
   const face = (
     <div
       className={cn(
-        "selection-mockup-card-face flex min-h-0 w-full flex-col overflow-hidden rounded-xl border-0 bg-white shadow-[0_2px_8px_rgba(15,23,42,0.08),0_1px_3px_rgba(15,23,42,0.06)] ring-0 transition-[box-shadow,transform] duration-300 ease-out",
+        "selection-mockup-card-face flex w-full flex-col overflow-hidden rounded-xl border-0 bg-white shadow-[0_2px_8px_rgba(15,23,42,0.08),0_1px_3px_rgba(15,23,42,0.06)] ring-0 transition-[box-shadow,transform] duration-300 ease-out",
+        isGrid ? "h-full min-h-0" : "min-h-0",
         selected && "ring-2 ring-[#0d99ff] ring-offset-2",
         cardShadow,
       )}
     >
       <div
-        className="relative box-border w-full max-w-full shrink-0 overflow-hidden bg-[var(--funnel-card-media-bg)] p-1 sm:p-1.5"
+        className={cn(
+          "relative box-border w-full max-w-full overflow-hidden bg-[var(--funnel-card-media-bg)] p-1 sm:p-1.5",
+          "shrink-0",
+        )}
         style={{
           width: "100%",
           aspectRatio: ui.imageAspectRatio,
-          maxHeight: ui.imageMaxHeightCss,
+          maxHeight: isGrid ? GRID_CARD_IMAGE_MAX_HEIGHT : ui.imageMaxHeightCss,
         }}
       >
         <div
@@ -82,7 +91,11 @@ export function MockupCard({
           </div>
         </div>
       </div>
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white px-3 pb-2.5 pt-1 sm:px-4 sm:pb-3">
+      <div
+        className={cn(
+          "flex min-h-0 flex-1 flex-col overflow-y-auto bg-white px-3 pb-2.5 pt-1 sm:px-4 sm:pb-3",
+        )}
+      >
         {bullets.length === 1 ? (
           <p className={ui.bulletSingleClass}>{bullets[0]}</p>
         ) : (
@@ -104,7 +117,11 @@ export function MockupCard({
 
   const shellClass = cn(
     "group m-0 flex min-w-0 flex-col overflow-visible border-0 bg-transparent p-0 text-left shadow-none outline-none",
-    widthPx ? "shrink-0" : "w-[min(100%,var(--selection-card-width,22rem))] shrink-0 snap-start",
+    isGrid
+      ? "h-full w-full max-w-full"
+      : widthPx
+        ? "shrink-0"
+        : "w-[min(100%,var(--selection-card-width,22rem))] shrink-0 snap-start",
     disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
   );
 

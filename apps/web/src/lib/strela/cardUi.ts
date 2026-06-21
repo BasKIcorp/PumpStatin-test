@@ -17,3 +17,6 @@ export const DEFAULT_CARD_UI = {
 export type ImageHoverVariant = "zoom" | "zoomSubtle" | "lift";
 
 export const CARD_HOVER_VARIANTS: ImageHoverVariant[] = ["zoom", "zoomSubtle", "lift"];
+
+/** Доля высоты ячейки под медиа-блок (aspect 5/4 от ширины, но не больше % ячейки) */
+export const GRID_CARD_IMAGE_MAX_HEIGHT = "58%";

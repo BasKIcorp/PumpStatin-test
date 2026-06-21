@@ -1,5 +1,6 @@
 import { getAuthHeader } from "@/stores/authStore";
 import type { PdfBlock } from "./PdfCanvas";
+import type { PdfPage } from "./pdfTemplateUtils";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
@@ -10,6 +11,7 @@ export async function fetchPdfPreviewBlob(
     templateName: string;
     mode: "auto" | "free";
     blocks: PdfBlock[];
+    pages?: PdfPage[];
     branding?: Record<string, unknown>;
   },
 ): Promise<Blob> {
@@ -25,6 +27,7 @@ export async function fetchPdfPreviewBlob(
         templateName: payload.templateName,
         mode: payload.mode,
         blocks: payload.blocks,
+        pages: payload.pages,
         branding: payload.branding ?? {},
         selection: {
           configuration: {

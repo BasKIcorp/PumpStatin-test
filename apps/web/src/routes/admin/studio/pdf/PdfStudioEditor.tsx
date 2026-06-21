@@ -10,11 +10,21 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
+import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { apiFetch } from "@/api/client";
 import { useUndoRedo } from "@/hooks/useUndoRedo";
 import { StudioLeftSidebar } from "@/routes/admin/studio/figma/StudioLeftSidebar";
 import { StudioRightSidebar } from "@/routes/admin/studio/figma/StudioRightSidebar";
 import { UndoRedoButtons } from "@/routes/admin/studio/components/UndoRedoButtons";
+import { STUDIO_CANVAS_DROP_ZONE_ID } from "@/routes/admin/studio/canvas/studioCanvasContext";
+import { pdfTemplateFingerprint } from "@/routes/admin/studio/studioDraftUtils";
+import {
+  flattenPdfBlocks,
+  newPdfPage,
+  normalizePdfTemplate,
+  pdfTemplatePayload,
+  type PdfPage,
+} from "./pdfTemplateUtils";
 import { PdfCanvas, type PdfBlock } from "./PdfCanvas";
 import { PdfPalette } from "./PdfPalette";
 import { PdfLayersPanel } from "./PdfLayersPanel";
@@ -36,13 +46,6 @@ const BLOCK_SIZES: Record<string, { w: number; h: number }> = {
   "curves-chart": { w: 500, h: 200 },
 };
 
-function inferPdfMode(data: { mode?: string; blocks?: PdfBlock[] }): "auto" | "free" {
-  if (data.mode === "auto" || data.mode === "free") return data.mode;
-  const blocks = data.blocks ?? [];
-  if (blocks.some((b) => (b.y ?? 0) > 0 || (b.x ?? 0) > 0)) return "free";
-  return "auto";
-}
-
 function defaultProps(type: string): Record<string, unknown> {
   switch (type) {
     case "header":
@@ -55,6 +58,8 @@ function defaultProps(type: string): Record<string, unknown> {
       return { caption: "Изображение", src: "" };
     case "customer-info":
       return { organization: "{{profile.displayName}}", date: "{{selection.date}}" };
+    case "curves-chart":
+      return { dataPath: "{{curves.qh_main}}", chartPreset: "qh-five-curves" };
     case "signature":
       return { name: "ФИО" };
     default:
@@ -66,20 +71,42 @@ export function PdfStudioEditor({
   profileId,
   branding,
   onRegisterSave,
+  onDirtyChange,
   previewOpen,
   onPreviewClose,
 }: {
   profileId?: string;
   branding?: Record<string, unknown>;
   onRegisterSave?: (save: () => Promise<void>) => void;
+  onDirtyChange?: (dirty: boolean) => void;
   previewOpen?: boolean;
   onPreviewClose?: () => void;
 }) {
-  const { state: blocks, setState: setBlocks, undo, redo, canUndo, canRedo } = useUndoRedo<PdfBlock[]>([]);
-  const blocksRef = useRef(blocks);
-  blocksRef.current = blocks;
+  const { state: pages, setState: setPages, undo, redo, reset, canUndo, canRedo } =
+    useUndoRedo<PdfPage[]>([{ id: "page-1", label: "Страница 1", blocks: [] }]);
+  const [currentPageIndex, setCurrentPageIndex] = useState(0);
+  const pagesRef = useRef(pages);
+  pagesRef.current = pages;
+  const currentPageIndexRef = useRef(currentPageIndex);
+  currentPageIndexRef.current = currentPageIndex;
+  const blocks = pages[currentPageIndex]?.blocks ?? [];
+  const setBlocks = useCallback(
+    (updater: PdfBlock[] | ((prev: PdfBlock[]) => PdfBlock[])) => {
+      setPages((prevPages) => {
+        const idx = currentPageIndexRef.current;
+        const page = prevPages[idx];
+        if (!page) return prevPages;
+        const nextBlocks = typeof updater === "function" ? updater(page.blocks) : updater;
+        const next = [...prevPages];
+        next[idx] = { ...page, blocks: nextBlocks };
+        return next;
+      });
+    },
+    [setPages],
+  );
   const modeRef = useRef<"auto" | "free">("auto");
   const templateNameRef = useRef("custom");
+  const savedFpRef = useRef("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [templateName, setTemplateName] = useState("custom");
   const [mode, setMode] = useState<"auto" | "free">("auto");
@@ -93,22 +120,46 @@ export function PdfStudioEditor({
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(KeyboardSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
   useEffect(() => {
     if (!profileId) return;
-    apiFetch<{ templateName?: string; mode?: string; blocks?: PdfBlock[] }>(
+    apiFetch<{ templateName?: string; mode?: string; blocks?: PdfBlock[]; pages?: PdfPage[] }>(
       `/api/v1/admin/profiles/${encodeURIComponent(profileId)}/pdf/template`,
     )
       .then((data) => {
-        if (data.blocks?.length) setBlocks(data.blocks, false);
-        if (data.templateName) setTemplateName(data.templateName);
-        setMode(inferPdfMode(data));
+        const normalized = normalizePdfTemplate(data);
+        const loadedMode = normalized.mode;
+        const loadedName = normalized.templateName;
+        reset(normalized.pages);
+        setCurrentPageIndex(0);
+        setTemplateName(loadedName);
+        setMode(loadedMode);
+        savedFpRef.current = pdfTemplateFingerprint({
+          templateName: loadedName,
+          mode: loadedMode,
+          pages: normalized.pages,
+          blocks: flattenPdfBlocks(normalized.pages),
+        });
+        onDirtyChange?.(false);
       })
       .catch(() => {})
       .finally(() => setLoaded(true));
-  }, [profileId, setBlocks]);
+  }, [profileId, reset, onDirtyChange]);
+
+  useEffect(() => {
+    if (!loaded) return;
+    const dirty =
+      savedFpRef.current !== "" &&
+      pdfTemplateFingerprint({
+        templateName,
+        mode,
+        pages,
+        blocks: flattenPdfBlocks(pages),
+      }) !== savedFpRef.current;
+    onDirtyChange?.(dirty);
+  }, [pages, templateName, mode, loaded, onDirtyChange]);
 
   const addBlock = useCallback(
     (type: string) => {
@@ -124,6 +175,27 @@ export function PdfStudioEditor({
     },
     [setBlocks],
   );
+
+
+  const addPage = useCallback(() => {
+    setPages((prev) => {
+      const next = [...prev, newPdfPage(prev.length + 1)];
+      setCurrentPageIndex(next.length - 1);
+      setSelectedId(null);
+      return next;
+    });
+  }, [setPages]);
+
+  const removePage = useCallback(() => {
+    setPages((prev) => {
+      if (prev.length <= 1) return prev;
+      const idx = currentPageIndexRef.current;
+      const next = prev.filter((_, i) => i !== idx);
+      setCurrentPageIndex(Math.max(0, idx - 1));
+      setSelectedId(null);
+      return next;
+    });
+  }, [setPages]);
 
   const removeBlock = (id: string) => {
     setBlocks((prev) => prev.filter((b) => b.id !== id));
@@ -162,15 +234,23 @@ export function PdfStudioEditor({
 
   const handleSave = useCallback(async () => {
     if (!profileId) return;
+    const payload = pdfTemplatePayload({
+      templateName: templateNameRef.current,
+      mode: modeRef.current,
+      pages: pagesRef.current,
+    });
     await apiFetch(`/api/v1/admin/profiles/${encodeURIComponent(profileId)}/pdf/template`, {
       method: "PUT",
-      body: JSON.stringify({
-        templateName: templateNameRef.current,
-        mode: modeRef.current,
-        blocks: blocksRef.current,
-      }),
+      body: JSON.stringify(payload),
     });
-  }, [profileId]);
+    savedFpRef.current = pdfTemplateFingerprint(payload as {
+      templateName: string;
+      mode: string;
+      pages: PdfPage[];
+      blocks: PdfBlock[];
+    });
+    onDirtyChange?.(false);
+  }, [profileId, onDirtyChange]);
 
   useEffect(() => {
     if (!previewOpen || !profileId) {
@@ -187,7 +267,8 @@ export function PdfStudioEditor({
     fetchPdfPreviewBlob(profileId, {
       templateName,
       mode,
-      blocks,
+      pages,
+      blocks: flattenPdfBlocks(pages),
       branding,
     })
       .then((blob) => {
@@ -209,7 +290,7 @@ export function PdfStudioEditor({
       cancelled = true;
       if (revoked) URL.revokeObjectURL(revoked);
     };
-  }, [previewOpen, profileId, templateName, mode, blocks, branding]);
+  }, [previewOpen, profileId, templateName, mode, pages, branding]);
 
   useEffect(() => {
     onRegisterSave?.(handleSave);
@@ -225,27 +306,50 @@ export function PdfStudioEditor({
     if (!over) return;
 
     const activeId = String(active.id);
-    const overId = String(over.id);
+    if (!activeId.startsWith("palette-")) return;
 
-    if (activeId.startsWith("pdf-palette-")) {
-      const type = (active.data.current as { blockType?: string })?.blockType;
-      if (!type) return;
-      if (overId === "pdf-canvas-drop" || overId.startsWith("pdf-layer:")) {
-        addBlock(type);
-      }
+    const type = (active.data.current as { blockType?: string })?.blockType;
+    if (!type) return;
+
+    const overId = String(over.id);
+    if (overId === STUDIO_CANVAS_DROP_ZONE_ID) {
+      addBlock(type);
       return;
     }
 
-    if (activeId.startsWith("pdf-layer:") && overId.startsWith("pdf-layer:")) {
-      const from = blocks.findIndex((b) => `pdf-layer:${b.id}` === activeId);
-      const to = blocks.findIndex((b) => `pdf-layer:${b.id}` === overId);
-      if (from >= 0 && to >= 0) reorderBlocks(from, to);
+    const overIndex = blocks.findIndex((b) => b.id === overId);
+    if (overIndex >= 0) {
+      const id = `pdf-${Date.now()}`;
+      const size = BLOCK_SIZES[type] ?? { w: 300, h: 100 };
+      setBlocks((prev) => {
+        const y =
+          prev.length > 0 ? prev.reduce((max, b) => Math.max(max, b.y + b.h), 0) + 10 : 10;
+        const newBlock: PdfBlock = { id, type, x: 20, y, ...size, props: defaultProps(type) };
+        const next = [...prev];
+        next.splice(overIndex, 0, newBlock);
+        return next;
+      });
+      setSelectedId(id);
+    } else {
+      addBlock(type);
     }
   };
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        e.target instanceof HTMLSelectElement
+      ) {
+        return;
+      }
+      if (e.key === "Escape") setSelectedId(null);
+      if ((e.key === "Delete" || e.key === "Backspace") && selectedId) {
+        e.preventDefault();
+        setBlocks((prev) => prev.filter((b) => b.id !== selectedId));
+        setSelectedId(null);
+      }
       if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
         e.preventDefault();
         undo();
@@ -257,7 +361,7 @@ export function PdfStudioEditor({
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [undo, redo]);
+  }, [selectedId, setBlocks, undo, redo]);
 
   const selectedBlock = blocks.find((b) => b.id === selectedId) ?? null;
 
@@ -312,6 +416,10 @@ export function PdfStudioEditor({
     );
   }
 
+  const activePaletteType = activeDragId?.startsWith("palette-")
+    ? activeDragId.replace("palette-", "")
+    : null;
+
   return (
     <DndContext
       sensors={sensors}
@@ -319,7 +427,7 @@ export function PdfStudioEditor({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex min-h-0 flex-1 overflow-hidden">
+      <div className="flex h-full min-h-0 flex-1 overflow-hidden">
         <StudioLeftSidebar
           layers={
             <div className="space-y-2">
@@ -331,6 +439,7 @@ export function PdfStudioEditor({
                 blocks={blocks}
                 selectedId={selectedId}
                 onSelect={setSelectedId}
+                onReorder={reorderBlocks}
                 onDelete={removeBlock}
               />
             </div>
@@ -348,12 +457,18 @@ export function PdfStudioEditor({
           onResize={(id, w, h) =>
             setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, w, h } : b)))
           }
+          onDropBlock={addBlock}
           mode={mode}
         />
 
         <StudioRightSidebar>
           <PdfPropertiesPanel
             block={selectedBlock}
+            pageCount={pages.length}
+            currentPageIndex={currentPageIndex}
+            onAddPage={addPage}
+            onRemovePage={removePage}
+            onSelectPage={setCurrentPageIndex}
             templateName={templateName}
             mode={mode}
             onModeChange={setMode}
@@ -365,9 +480,11 @@ export function PdfStudioEditor({
       </div>
 
       <DragOverlay>
-        {activeDragId?.startsWith("pdf-palette-") && (
-          <div className="rounded bg-[#333] px-3 py-2 text-xs text-white shadow-lg">PDF блок</div>
-        )}
+        {activePaletteType ? (
+          <div className="rounded bg-[#383838] px-3 py-2 text-xs text-white shadow-lg">
+            + {activePaletteType}
+          </div>
+        ) : null}
       </DragOverlay>
     </DndContext>
   );

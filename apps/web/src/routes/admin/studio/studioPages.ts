@@ -24,7 +24,6 @@ export function pickDefaultStudioPageId(pages: PageConfig[]): string | null {
   if (home) return home.id;
   const wizard = editable.find((p) => p.type === "wizard");
   if (wizard) return wizard.id;
-  if (home) return home.id;
   const login = editable.find((p) => p.type === "auth");
   if (login) return login.id;
   return editable[0]?.id ?? null;

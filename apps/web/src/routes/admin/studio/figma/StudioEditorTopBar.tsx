@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import {
   CONSTRUCTOR_TABS,
   FRONTEND_MODES,
@@ -24,6 +25,7 @@ export function StudioEditorTopBar({
   saveMsg,
   contextLabel,
   dirtyHint,
+  wizardStepSwitcher,
 }: {
   profileTitle: string;
   pages?: PageConfig[];
@@ -41,6 +43,8 @@ export function StudioEditorTopBar({
   contextLabel?: string;
   /** Несохранённые изменения */
   dirtyHint?: string;
+  /** Compact wizard step dropdown in toolbar */
+  wizardStepSwitcher?: ReactNode;
 }) {
   const showPageSelector =
     activeTab === "frontend" &&
@@ -107,6 +111,8 @@ export function StudioEditorTopBar({
           ))}
         </nav>
       )}
+
+      {wizardStepSwitcher}
 
       <div className="flex-1" />
 

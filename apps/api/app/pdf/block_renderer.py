@@ -41,6 +41,21 @@ def _ensure_font() -> str:
     return "Helvetica"
 
 
+
+
+def _iter_pdf_block_pages(template_json: dict[str, Any]) -> list[list[dict[str, Any]]]:
+    """Return block lists per page; legacy templates use top-level blocks as one page."""
+    pages = template_json.get("pages")
+    if isinstance(pages, list) and pages:
+        result: list[list[dict[str, Any]]] = []
+        for page in pages:
+            if isinstance(page, dict):
+                result.append(list(page.get("blocks") or []))
+        if result:
+            return result
+    return [list(template_json.get("blocks", []))]
+
+
 def render_pdf_from_blocks(
     template_json: dict[str, Any],
     selection: dict[str, Any] | None = None,
@@ -48,10 +63,8 @@ def render_pdf_from_blocks(
 ) -> bytes:
     """Генерирует PDF из template.json с подстановкой данных."""
     font_name = _ensure_font()
-    blocks = list(template_json.get("blocks", []))
     mode = template_json.get("mode", "auto")
-    if mode == "free":
-        blocks.sort(key=lambda b: (b.get("y", 0), b.get("x", 0)))
+    page_block_lists = _iter_pdf_block_pages(template_json)
     ctx = _build_pdf_context(selection, branding)
 
     buf = BytesIO()
@@ -80,142 +93,151 @@ def render_pdf_from_blocks(
 
     flowables: list[Any] = []
 
-    for block in blocks:
-        btype = block.get("type", "text")
-        props = block.get("props", {})
+    for page_index, blocks in enumerate(page_block_lists):
+        blocks = list(blocks)
+        if mode == "free":
+            blocks.sort(key=lambda b: (b.get("y", 0), b.get("x", 0)))
+        if page_index > 0:
+            from reportlab.platypus import PageBreak
 
-        # Подстановка данных
-        resolved = _resolve(props, ctx)
+            flowables.append(PageBreak())
 
-        if btype == "header":
-            flowables.append(Paragraph(
-                f"<b>{resolved.get('title', '')}</b>", heading_style
-            ))
-            if resolved.get("subtitle"):
+        for block in blocks:
+            btype = block.get("type", "text")
+            props = block.get("props", {})
+
+            # Подстановка данных
+            resolved = _resolve(props, ctx)
+
+            if btype == "header":
                 flowables.append(Paragraph(
-                    resolved["subtitle"], base_style
+                    f"<b>{resolved.get('title', '')}</b>", heading_style
                 ))
-            flowables.append(Spacer(1, 6))
+                if resolved.get("subtitle"):
+                    flowables.append(Paragraph(
+                        resolved["subtitle"], base_style
+                    ))
+                flowables.append(Spacer(1, 6))
 
-        elif btype == "footer":
-            flowables.append(Spacer(1, 6))
-            flowables.append(Paragraph(
-                resolved.get("text", ""), small_style
-            ))
-
-        elif btype == "text":
-            flowables.append(Paragraph(
-                resolved.get("content", ""), base_style
-            ))
-
-        elif btype == "divider":
-            flowables.append(Spacer(1, 4))
-
-        elif btype == "customer-info":
-            if resolved.get("organization"):
+            elif btype == "footer":
+                flowables.append(Spacer(1, 6))
                 flowables.append(Paragraph(
-                    f"<b>{resolved['organization']}</b>", base_style
+                    resolved.get("text", ""), small_style
                 ))
-            if resolved.get("date"):
+
+            elif btype == "text":
                 flowables.append(Paragraph(
-                    resolved["date"], small_style
+                    resolved.get("content", ""), base_style
                 ))
-            flowables.append(Spacer(1, 6))
 
-        elif btype == "equipment-table":
-            rows = [["Модель", "Q, м³/ч", "H, м", "N, кВт"]]
-            pumps = _get_pumps(ctx)
-            if not pumps:
-                pump = ctx.get("pump")
-                if isinstance(pump, dict) and pump:
-                    pumps = [pump]
-            for p in pumps:
-                rows.append([
-                    p.get("name", p.get("model", "")),
-                    str(p.get("nominal_flow", p.get("flow", ""))),
-                    str(p.get("nominal_head", p.get("head", ""))),
-                    str(p.get("power_kw", p.get("powerKw", p.get("power", "")))),
-                ])
-            if len(pumps) == 0:
-                rows.append(["—", "—", "—", "—"])
+            elif btype == "divider":
+                flowables.append(Spacer(1, 4))
 
-            col_widths = [120, 80, 80, 80]
-            table = Table(rows, colWidths=col_widths)
-            table.setStyle(TableStyle([
-                ("FONTNAME", (0, 0), (-1, -1), font_name),
-                ("FONTSIZE", (0, 0), (-1, -1), 9),
-                ("BACKGROUND", (0, 0), (-1, 0), colors.Color(19/255, 52/255, 127/255)),
-                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-                ("ALIGN", (1, 0), (-1, -1), "CENTER"),
-                ("GRID", (0, 0), (-1, -1), 0.5, colors.Color(0.8, 0.8, 0.8)),
-                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.Color(0.97, 0.97, 0.97)]),
-                ("TOPPADDING", (0, 0), (-1, -1), 4),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
-            ]))
-            flowables.append(table)
-            flowables.append(Spacer(1, 6))
+            elif btype == "customer-info":
+                if resolved.get("organization"):
+                    flowables.append(Paragraph(
+                        f"<b>{resolved['organization']}</b>", base_style
+                    ))
+                if resolved.get("date"):
+                    flowables.append(Paragraph(
+                        resolved["date"], small_style
+                    ))
+                flowables.append(Spacer(1, 6))
 
-        elif btype == "dn-info":
-            station = ctx.get("station", {})
-            dn = station.get("DN", "—")
-            vel = station.get("velocity", "")
-            text = f"Диаметр трубопровода DN {dn} мм"
-            if vel:
-                text += f", скорость {vel} м/с"
-            flowables.append(Paragraph(f"<b>{text}</b>", base_style))
-            flowables.append(Spacer(1, 6))
+            elif btype == "equipment-table":
+                rows = [["Модель", "Q, м³/ч", "H, м", "N, кВт"]]
+                pumps = _get_pumps(ctx)
+                if not pumps:
+                    pump = ctx.get("pump")
+                    if isinstance(pump, dict) and pump:
+                        pumps = [pump]
+                for p in pumps:
+                    rows.append([
+                        p.get("name", p.get("model", "")),
+                        str(p.get("nominal_flow", p.get("flow", ""))),
+                        str(p.get("nominal_head", p.get("head", ""))),
+                        str(p.get("power_kw", p.get("powerKw", p.get("power", "")))),
+                    ])
+                if len(pumps) == 0:
+                    rows.append(["—", "—", "—", "—"])
 
-        elif btype == "bom-table":
-            flowables.append(Paragraph("<b>Спецификация (BOM)</b>", heading_style))
-            rows = [["Позиция", "Кол-во"]]
-            bom_items = _get_bom_items(ctx)
-            for item in bom_items:
-                label = item.get("label") or item.get("id") or "—"
-                rows.append([str(label), str(item.get("qty", 1))])
-            if len(bom_items) == 0:
-                rows.append(["—", "—"])
-            table = Table(rows, colWidths=[280, 80])
-            table.setStyle(TableStyle([
-                ("FONTNAME", (0, 0), (-1, -1), font_name),
-                ("FONTSIZE", (0, 0), (-1, -1), 9),
-                ("BACKGROUND", (0, 0), (-1, 0), colors.Color(0.9, 0.9, 0.9)),
-                ("GRID", (0, 0), (-1, -1), 0.5, colors.Color(0.8, 0.8, 0.8)),
-                ("TOPPADDING", (0, 0), (-1, -1), 4),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
-            ]))
-            flowables.append(table)
-            flowables.append(Spacer(1, 6))
+                col_widths = [120, 80, 80, 80]
+                table = Table(rows, colWidths=col_widths)
+                table.setStyle(TableStyle([
+                    ("FONTNAME", (0, 0), (-1, -1), font_name),
+                    ("FONTSIZE", (0, 0), (-1, -1), 9),
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.Color(19/255, 52/255, 127/255)),
+                    ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                    ("ALIGN", (1, 0), (-1, -1), "CENTER"),
+                    ("GRID", (0, 0), (-1, -1), 0.5, colors.Color(0.8, 0.8, 0.8)),
+                    ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.Color(0.97, 0.97, 0.97)]),
+                    ("TOPPADDING", (0, 0), (-1, -1), 4),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                ]))
+                flowables.append(table)
+                flowables.append(Spacer(1, 6))
 
-        elif btype == "curves-chart":
-            wp = ctx.get("working_point", {})
-            flowables.append(Paragraph(
-                f"<b>Рабочая точка:</b> Q = {wp.get('Q', '—')} м³/ч, H = {wp.get('H', '—')} м",
-                base_style,
-            ))
-            flowables.append(Spacer(1, 6))
+            elif btype == "dn-info":
+                station = ctx.get("station", {})
+                dn = station.get("DN", "—")
+                vel = station.get("velocity", "")
+                text = f"Диаметр трубопровода DN {dn} мм"
+                if vel:
+                    text += f", скорость {vel} м/с"
+                flowables.append(Paragraph(f"<b>{text}</b>", base_style))
+                flowables.append(Spacer(1, 6))
 
-        elif btype == "spec-sheet":
-            specs = _get_specs(ctx)
-            rows = [["Параметр", "Значение"]]
-            for s in specs:
-                rows.append([s.get("label", ""), s.get("value", "")])
-            table = Table(rows, colWidths=[200, 160])
-            table.setStyle(TableStyle([
-                ("FONTNAME", (0, 0), (-1, -1), font_name),
-                ("FONTSIZE", (0, 0), (-1, -1), 9),
-                ("BACKGROUND", (0, 0), (-1, 0), colors.Color(0.9, 0.9, 0.9)),
-                ("GRID", (0, 0), (-1, -1), 0.5, colors.Color(0.8, 0.8, 0.8)),
-                ("TOPPADDING", (0, 0), (-1, -1), 3),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
-            ]))
-            flowables.append(table)
-            flowables.append(Spacer(1, 6))
+            elif btype == "bom-table":
+                flowables.append(Paragraph("<b>Спецификация (BOM)</b>", heading_style))
+                rows = [["Позиция", "Кол-во"]]
+                bom_items = _get_bom_items(ctx)
+                for item in bom_items:
+                    label = item.get("label") or item.get("id") or "—"
+                    rows.append([str(label), str(item.get("qty", 1))])
+                if len(bom_items) == 0:
+                    rows.append(["—", "—"])
+                table = Table(rows, colWidths=[280, 80])
+                table.setStyle(TableStyle([
+                    ("FONTNAME", (0, 0), (-1, -1), font_name),
+                    ("FONTSIZE", (0, 0), (-1, -1), 9),
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.Color(0.9, 0.9, 0.9)),
+                    ("GRID", (0, 0), (-1, -1), 0.5, colors.Color(0.8, 0.8, 0.8)),
+                    ("TOPPADDING", (0, 0), (-1, -1), 4),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                ]))
+                flowables.append(table)
+                flowables.append(Spacer(1, 6))
 
-        elif btype == "signature":
-            flowables.append(Spacer(1, 12))
-            flowables.append(Paragraph(
-                f"___________ / {resolved.get('name', '')} /", small_style
-            ))
+            elif btype == "curves-chart":
+                wp = ctx.get("working_point", {})
+                flowables.append(Paragraph(
+                    f"<b>Рабочая точка:</b> Q = {wp.get('Q', '—')} м³/ч, H = {wp.get('H', '—')} м",
+                    base_style,
+                ))
+                flowables.append(Spacer(1, 6))
+
+            elif btype == "spec-sheet":
+                specs = _get_specs(ctx)
+                rows = [["Параметр", "Значение"]]
+                for s in specs:
+                    rows.append([s.get("label", ""), s.get("value", "")])
+                table = Table(rows, colWidths=[200, 160])
+                table.setStyle(TableStyle([
+                    ("FONTNAME", (0, 0), (-1, -1), font_name),
+                    ("FONTSIZE", (0, 0), (-1, -1), 9),
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.Color(0.9, 0.9, 0.9)),
+                    ("GRID", (0, 0), (-1, -1), 0.5, colors.Color(0.8, 0.8, 0.8)),
+                    ("TOPPADDING", (0, 0), (-1, -1), 3),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                ]))
+                flowables.append(table)
+                flowables.append(Spacer(1, 6))
+
+            elif btype == "signature":
+                flowables.append(Spacer(1, 12))
+                flowables.append(Paragraph(
+                    f"___________ / {resolved.get('name', '')} /", small_style
+                ))
 
     doc.build(flowables)
     return buf.getvalue()

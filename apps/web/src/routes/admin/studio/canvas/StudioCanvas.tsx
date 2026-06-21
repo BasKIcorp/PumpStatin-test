@@ -28,6 +28,9 @@ export function StudioCanvas({
   const panStart = useRef({ x: 0, y: 0 });
   const panStartPos = useRef({ x: 0, y: 0 });
 
+  const scaledWidth = artboardWidth * zoom;
+  const scaledHeight = artboardMinHeight * zoom;
+
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (
@@ -80,13 +83,11 @@ export function StudioCanvas({
   );
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault();
     if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
       const delta = e.deltaY > 0 ? -0.05 : 0.05;
       setZoom((z) => Math.max(0.15, Math.min(2, z + delta)));
-      return;
     }
-    setPan((p) => ({ x: p.x - e.deltaX, y: p.y - e.deltaY }));
   }, []);
 
   const handleMouseDown = useCallback(
@@ -97,7 +98,6 @@ export function StudioCanvas({
         return;
       }
 
-      // Only deselect on dotted outer background — not on artboard/blocks (breaks Rnd drag)
       if (e.target === containerRef.current && e.button === 0) {
         onSelect(null);
       }
@@ -144,53 +144,64 @@ export function StudioCanvas({
     <div className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden">
       <div
         ref={containerRef}
-        className={`relative h-full overflow-hidden ${handActive ? "cursor-grab active:cursor-grabbing" : ""}`}
+        className={`relative h-full overflow-auto ${handActive ? "cursor-grab active:cursor-grabbing" : ""}`}
         style={{
           backgroundColor: FIGMA.appBg,
           backgroundImage: `radial-gradient(circle, ${FIGMA.canvasDot} 1px, transparent 1px)`,
-          backgroundSize: `${16 / zoom}px ${16 / zoom}px`,
-          backgroundPosition: `${pan.x}px ${pan.y}px`,
+          backgroundSize: "16px 16px",
+          backgroundAttachment: "local",
         }}
         onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onContextMenu={(e) => e.preventDefault()}
       >
         <div
-          className="absolute left-1/2 top-0"
+          className="mx-auto px-6 py-12"
           style={{
-            transform: `translate(calc(-50% + ${pan.x}px), ${48 + pan.y}px) scale(${zoom})`,
-            transformOrigin: "top center",
+            width: "100%",
+            minWidth: scaledWidth + 48,
+            minHeight: scaledHeight + 96,
+            transform: pan.x || pan.y ? `translate(${pan.x}px, ${pan.y}px)` : undefined,
           }}
         >
           {artboardLabel && (
             <div className="mb-1.5 flex items-center gap-2 pl-0.5">
               <span className="text-[11px] font-medium text-[#b3b3b3]">{artboardLabel}</span>
               <span className="font-mono text-[10px] text-[#666]">
-                {artboardWidth} × auto
+                {artboardWidth} × {artboardMinHeight}
               </span>
             </div>
           )}
           <div
-            data-canvas-bg
-            className="overflow-hidden bg-white transition-shadow"
             style={{
-              width: artboardWidth,
-              minHeight: artboardMinHeight,
-              boxShadow: FIGMA.artboardShadow,
-              outline: isDragOver ? `2px solid ${FIGMA.accent}` : undefined,
+              width: scaledWidth,
+              minHeight: scaledHeight,
             }}
-            onDragOver={onDropBlock ? handleDragOver : undefined}
-            onDragLeave={onDropBlock ? handleDragLeave : undefined}
-            onDrop={onDropBlock ? handleDrop : undefined}
           >
-            <StudioCanvasZoomContext.Provider value={zoom}>
-              {children}
-            </StudioCanvasZoomContext.Provider>
+            <div
+              data-canvas-bg
+              className="overflow-visible bg-white transition-shadow"
+              style={{
+                width: artboardWidth,
+                minHeight: artboardMinHeight,
+                transform: `scale(${zoom})`,
+                transformOrigin: "top left",
+                boxShadow: FIGMA.artboardShadow,
+                outline: isDragOver ? `2px solid ${FIGMA.accent}` : undefined,
+              }}
+              onDragOver={onDropBlock ? handleDragOver : undefined}
+              onDragLeave={onDropBlock ? handleDragLeave : undefined}
+              onDrop={onDropBlock ? handleDrop : undefined}
+            >
+              <StudioCanvasZoomContext.Provider value={zoom}>
+                {children}
+              </StudioCanvasZoomContext.Provider>
+            </div>
           </div>
         </div>
-
-        <FloatingZoom zoom={zoom} onZoomIn={zoomIn} onZoomOut={zoomOut} onFit={resetView} />
       </div>
+
+      <FloatingZoom zoom={zoom} onZoomIn={zoomIn} onZoomOut={zoomOut} onFit={resetView} />
     </div>
   );
 }

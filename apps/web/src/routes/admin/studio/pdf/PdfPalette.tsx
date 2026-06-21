@@ -29,7 +29,7 @@ function DraggablePdfBlock({
   onAdd: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: `pdf-palette-${type}`,
+    id: `palette-${type}`,
     data: { blockType: type, source: "palette" },
   });
 
@@ -40,14 +40,25 @@ function DraggablePdfBlock({
   return (
     <div
       ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-      onClick={onAdd}
-      className="flex w-full cursor-grab items-center gap-2 rounded px-2 py-1.5 text-left text-xs active:cursor-grabbing hover:bg-[#383838]"
-      style={{ ...style, color: FIGMA.textMuted }}
+      style={style}
+      className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs hover:bg-[#383838]"
     >
-      <span>{icon}</span>
-      <span>{label}</span>
+      <span
+        {...listeners}
+        {...attributes}
+        className="cursor-grab text-[10px] text-[#555] active:cursor-grabbing"
+        aria-label={`Перетащить ${label}`}
+      >
+        ⠿
+      </span>
+      <button
+        type="button"
+        onClick={onAdd}
+        className="flex min-w-0 flex-1 items-center gap-2 text-left"
+      >
+        <span>{icon}</span>
+        <span style={{ color: FIGMA.textMuted }}>{label}</span>
+      </button>
     </div>
   );
 }

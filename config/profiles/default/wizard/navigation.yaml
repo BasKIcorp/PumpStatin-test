@@ -342,11 +342,12 @@ cards:
   - id: domestic
     title: Хозяйственно-питьевая
     description: Водоснабжение, повышение давления в тупиковой сети.
-    flow: bps-w-domestic
+    enabled: true
     next: selection-form
+    flow: bps-w-domestic
   - id: fire-pns
     title: Пожарная насосная станция (ПНС)
     description: 'Пожаротушение: ВПВ, дренчерная, спринклерная.'
-    flow: bps-w-fire
     enabled: false
     next: selection-form
+    flow: bps-w-fire

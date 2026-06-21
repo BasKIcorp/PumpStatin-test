@@ -1,3 +1,4 @@
+/** @deprecated Настройки сайдбара — block `wizard/funnel-sidebar`, PropertiesPanel при выборе блока. */
 import type { StrelaAppearance } from "@/lib/strela/appearance";
 import { STRELA_SIDEBAR_WIDTH } from "@/lib/strela/cardUi";
 import { ImageDropUpload } from "../components/ImageDropUpload";
@@ -34,8 +35,8 @@ export function WizardFunnelLayoutPanel({
     <div className="space-y-3 border-b border-[#333] pb-4">
       <div className="text-xs font-medium text-white">Оболочка Strela (сайдбар)</div>
       <p className="text-[10px] leading-relaxed text-[#666]">
-        Сайдбар не grid-блок — настраивается здесь. Блоки шага (карточки, заголовок) перетаскивайте на
-        canvas в режиме «Сетка».
+        Сайдбар не grid-блок — настраивается здесь. Блоки шага (карточки, форма) перетаскивайте на canvas
+        слева из палитры «Блоки на шаге».
       </p>
       <Field label="Ширина сайдбара (CSS)">
         <input
