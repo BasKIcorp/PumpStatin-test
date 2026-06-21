@@ -38,6 +38,11 @@ export VITE_API_BASE_URL=
 pnpm install --frozen-lockfile 2>/dev/null || pnpm install
 pnpm --filter @pumpstation/web build
 
+echo "==> Postgres v2 columns (if production DB)"
+if [ -f "$APP_ROOT/deploy/production.env" ] && grep -q postgresql "$APP_ROOT/deploy/production.env" 2>/dev/null; then
+  bash "$APP_ROOT/deploy/fix_postgres_v2_columns.sh" || true
+fi
+
 echo "==> systemd"
 cp deploy/pumpstation-api.service /etc/systemd/system/
 systemctl daemon-reload
