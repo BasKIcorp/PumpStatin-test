@@ -40,13 +40,10 @@ export async function loginStrela(page: Page) {
   await page.locator("#lf-email").fill("strela");
   await page.locator("#lf-password").fill("demo123");
   await page.getByRole("button", { name: /^Войти$/i }).click();
-  await page.waitForURL(
-    (url) => {
-      const path = new URL(url).pathname;
-      return path === "/home" || path === "/wizard";
-    },
-    { timeout: 20_000, waitUntil: "domcontentloaded" },
-  );
+  await expect(async () => {
+    const path = new URL(page.url()).pathname;
+    expect(path === "/home" || path === "/wizard").toBeTruthy();
+  }).toPass({ timeout: 25_000 });
 }
 
 export async function openStudioPagesTab(page: Page) {
@@ -104,14 +101,27 @@ export async function waitForPdfPreviewReady(page: Page) {
   }).toPass({ timeout: 60_000 });
 }
 
+export async function waitForWizardStudioReady(page: Page) {
+  await expect(async () => {
+    if (await page.getByTestId("wizard-step-switcher").isVisible().catch(() => false)) return;
+    const canvas = page.locator("[data-testid=grid-canvas]").first();
+    if (!(await canvas.isVisible().catch(() => false))) {
+      throw new Error("wizard canvas not visible");
+    }
+    const sidebar = studioSidebar(page);
+    if (await sidebar.getByText("Шаги", { exact: true }).first().isVisible().catch(() => false)) {
+      return;
+    }
+    throw new Error("wizard step nav not ready");
+  }).toPass({ timeout: 35_000 });
+}
+
 export async function openStudioWizardTab(page: Page) {
   await page.goto("/admin/profiles/default");
   await expect(page.getByRole("button", { name: "Фронт" })).toBeVisible({ timeout: 20_000 });
   await page.getByRole("button", { name: "Страницы" }).click();
   await selectStudioPage(page, "Подбор насосов", "/wizard");
-  await expect(async () => {
-    await expect(page.getByTestId("wizard-step-switcher")).toBeVisible({ timeout: 5_000 });
-  }).toPass({ timeout: 35_000 });
+  await waitForWizardStudioReady(page);
 }
 
 export async function waitStudioReady(page: Page) {

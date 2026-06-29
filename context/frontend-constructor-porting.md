@@ -14,9 +14,9 @@
 | profileId | layoutVariant | Wizard UI | site.yaml |
 |-----------|---------------|-----------|-----------|
 | default | strela-funnel | Strela funnel + charts | да (5 страниц) |
-| acme-industrial | topbar-dark | generic CardGrid | нет |
-| nord-minimal | minimal-light | generic | нет |
-| aqua-pro | sidebar-gradient | generic | нет |
+| acme-industrial | topbar-dark | generic CardGrid | да (seed) |
+| nord-minimal | minimal-light | generic | да (seed) |
+| aqua-pro | sidebar-gradient | generic | да (seed) |
 
 ## Цель порта
 
