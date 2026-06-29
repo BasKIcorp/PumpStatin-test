@@ -10,6 +10,7 @@ import {
   selectStudioPage,
   addBlockFromPalette,
   expectCanvasBlockCount,
+  removeLastCanvasBlockFromLayers,
   studioSidebar,
 } from "./helpers/studio";
 
@@ -149,5 +150,10 @@ test.describe("Studio D&D", () => {
     await waitStudioReady(page);
     await selectStudioPage(page, "О компании", "/about");
     await expectCanvasBlockCount(page, initialCount + 1);
+
+    await removeLastCanvasBlockFromLayers(page, "divider");
+    await page.getByRole("button", { name: "Сохранить" }).click();
+    await expect(page.getByText("Сохранено").first()).toBeVisible({ timeout: 10_000 });
+    await expectCanvasBlockCount(page, initialCount);
   });
 });

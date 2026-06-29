@@ -201,6 +201,15 @@ export async function expectCanvasBlock(page: Page, blockType: string) {
   ).toBeVisible({ timeout: 10_000 });
 }
 
+export async function removeLastCanvasBlockFromLayers(page: Page, blockType: string) {
+  const sidebar = studioSidebar(page);
+  await sidebar.getByRole("button", { name: "Слои" }).click();
+  const rows = sidebar.locator(`[data-layer-block-type="${blockType}"]`);
+  const last = rows.last();
+  await last.hover();
+  await last.locator('button[title="Удалить"]').click();
+}
+
 export async function siteAboutHasDivider(page: Page) {
   return page.evaluate(async () => {
     const raw = localStorage.getItem("pumpstation-auth");

@@ -113,16 +113,6 @@ pages:
   type: page
   pageProfile: cms-default
   blocks:
-  - id: block-1781956390091
-    type: divider
-    layout:
-      x: 0
-      y: 0
-      w: 12
-      h: 1
-    props:
-      style: solid
-      color: '#e5e7eb'
   - id: block-1781964019590
     type: divider
     props:
@@ -133,7 +123,7 @@ pages:
       y: 1
       w: 12
       h: 1
-  - id: block-1782681895609
+  - id: block-1782727321641
     type: divider
     props:
       style: solid
@@ -141,116 +131,6 @@ pages:
     layout:
       x: 0
       y: 2
-      w: 12
-      h: 1
-  - id: block-1782681934341
-    type: divider
-    props:
-      style: solid
-      color: '#e5e7eb'
-    layout:
-      x: 0
-      y: 3
-      w: 12
-      h: 1
-  - id: block-1782723394700
-    type: divider
-    props:
-      style: solid
-      color: '#e5e7eb'
-    layout:
-      x: 0
-      y: 4
-      w: 12
-      h: 1
-  - id: block-1782723623577
-    type: divider
-    props:
-      style: solid
-      color: '#e5e7eb'
-    layout:
-      x: 0
-      y: 5
-      w: 12
-      h: 1
-  - id: block-1782725127736
-    type: divider
-    props:
-      style: solid
-      color: '#e5e7eb'
-    layout:
-      x: 0
-      y: 6
-      w: 12
-      h: 1
-  - id: block-1782725209513
-    type: divider
-    props:
-      style: solid
-      color: '#e5e7eb'
-    layout:
-      x: 0
-      y: 7
-      w: 12
-      h: 1
-  - id: block-1782725492439
-    type: divider
-    props:
-      style: solid
-      color: '#e5e7eb'
-    layout:
-      x: 0
-      y: 8
-      w: 12
-      h: 1
-  - id: block-1782725594080
-    type: divider
-    props:
-      style: solid
-      color: '#e5e7eb'
-    layout:
-      x: 0
-      y: 9
-      w: 12
-      h: 1
-  - id: block-1782725678434
-    type: divider
-    props:
-      style: solid
-      color: '#e5e7eb'
-    layout:
-      x: 0
-      y: 10
-      w: 12
-      h: 1
-  - id: block-1782725828526
-    type: divider
-    props:
-      style: solid
-      color: '#e5e7eb'
-    layout:
-      x: 0
-      y: 11
-      w: 12
-      h: 1
-  - id: block-1782725950868
-    type: divider
-    props:
-      style: solid
-      color: '#e5e7eb'
-    layout:
-      x: 0
-      y: 12
-      w: 12
-      h: 1
-  - id: block-1782726115842
-    type: divider
-    props:
-      style: solid
-      color: '#e5e7eb'
-    layout:
-      x: 0
-      y: 13
       w: 12
       h: 1
 - id: catalog

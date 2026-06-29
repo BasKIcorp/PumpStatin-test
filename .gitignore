@@ -15,6 +15,7 @@ data/*.db-journal
 .vscode/*
 !.vscode/extensions.json
 coverage/
+*.tsbuildinfo
 assets/
 test-results/
 .cursor/projects/

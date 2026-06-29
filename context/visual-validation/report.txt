@@ -65,25 +65,3 @@ Failed to load site config: TypeError: Failed to fetch
     at commitPassiveMountEffects (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:18159:11)
     at flushPassiveEffectsImpl (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:19543:11)
     at flushPassiveEffects (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:19500:22)
-Failed to load site config: TypeError: Failed to fetch
-    at apiFetch (http://127.0.0.1:5199/src/api/client.ts:4:21)
-    at fetchSiteConfig (http://127.0.0.1:5199/src/api/config.ts:3:10)
-    at http://127.0.0.1:5199/src/App.tsx:61:5
-    at commitHookEffectListMount (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:16963:34)
-    at commitPassiveMountOnFiber (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:18206:19)
-    at commitPassiveMountEffects_complete (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:18179:17)
-    at commitPassiveMountEffects_begin (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:18169:15)
-    at commitPassiveMountEffects (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:18159:11)
-    at flushPassiveEffectsImpl (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:19543:11)
-    at flushPassiveEffects (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:19500:22)
-Failed to load site config: TypeError: Failed to fetch
-    at apiFetch (http://127.0.0.1:5199/src/api/client.ts:4:21)
-    at fetchSiteConfig (http://127.0.0.1:5199/src/api/config.ts:3:10)
-    at http://127.0.0.1:5199/src/App.tsx:61:5
-    at commitHookEffectListMount (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:16963:34)
-    at invokePassiveEffectMountInDEV (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:18374:19)
-    at invokeEffectsInDev (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:19754:19)
-    at commitDoubleInvokeEffectsInDEV (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:19739:15)
-    at flushPassiveEffectsImpl (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:19556:13)
-    at flushPassiveEffects (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:19500:22)
-    at http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:19381:17
