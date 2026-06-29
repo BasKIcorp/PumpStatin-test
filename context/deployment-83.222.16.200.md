@@ -41,7 +41,25 @@ ssh -i $env:USERPROFILE\.ssh\id_ed25519_pumpstatin root@83.222.16.200
 
 Полный тест на сервере: `python3 /opt/pumpstation-base/deploy/smoke_test.py`
 
-## Автодеплой (GitHub Actions)
+## Git / GitHub (локальная машина)
+
+**Проблема:** с этой Windows-машины `github.com` не резолвится в DNS (или HTTPS/SSH обрывается). `git push` / `gh` падают с `Could not resolve host` или `SSL_ERROR_SYSCALL`.
+
+**Обходной путь (работает):** push через VPS `83.222.16.200`, где есть deploy-ключ `github_pumpstatin_deploy`:
+
+```powershell
+# 1. Bundle локальных коммитов
+cd c:\projects\PumpStation_Base
+git bundle create $env:TEMP\pumpstation-ahead.bundle origin/base..HEAD
+
+# 2. На сервер и push
+scp -i $env:USERPROFILE\.ssh\id_ed25519_pumpstatin $env:TEMP\pumpstation-ahead.bundle root@83.222.16.200:/tmp/
+ssh -i $env:USERPROFILE\.ssh\id_ed25519_pumpstatin root@83.222.16.200 "cd /tmp && rm -rf pump-push && git clone -b base git@github.com:BasKIcorp/PumpStatin-test.git pump-push && cd pump-push && git fetch /tmp/pumpstation-ahead.bundle HEAD:refs/heads/base-updates && git merge --ff-only base-updates && git push origin base"
+```
+
+**2026-06-29:** коммиты `8bd19ff` + `7e53648` запушены на `origin/base` через VPS.
+
+**hosts (частично):** в `C:\Windows\System32\drivers\etc\hosts` добавлены `github.com` / `api.github.com` → `140.82.121.x` (ping есть, HTTPS с машины всё равно падает).
 
 При **push в ветку `base`** репозитория [BasKIcorp/PumpStatin-test](https://github.com/BasKIcorp/PumpStatin-test) запускается workflow `.github/workflows/deploy-base.yml`: архив → `/opt/pumpstation-base` → `deploy/remote-setup.sh`.
 
