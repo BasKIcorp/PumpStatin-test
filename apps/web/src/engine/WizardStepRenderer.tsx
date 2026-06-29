@@ -17,6 +17,7 @@ import {
   wizardUsesUnifiedBlocks,
 } from "@/routes/admin/studio/wizard/wizardUnifiedBlocks";
 import { SelectionFormBlocksProvider } from "@/blocks/wizard/WizardBlocks";
+import { SelectionFormDecomposedLayout } from "@/engine/SelectionFormDecomposedLayout";
 import type { NavigationConfig } from "@/types/wizard";
 import type { WizardStepDef } from "@/types/wizard";
 import { useHorizontalWheelScroll } from "@/hooks/useHorizontalWheelScroll";
@@ -33,6 +34,8 @@ export interface WizardStepRendererProps {
   };
   selectedCardId?: string | null;
   onSelectCard?: (cardId: string) => void;
+  /** Studio mobile/tablet viewport — stack selection-form panels vertically */
+  stackPanels?: boolean;
 }
 
 /**
@@ -49,6 +52,7 @@ export function WizardStepRenderer({
   editor,
   selectedCardId,
   onSelectCard,
+  stackPanels = false,
 }: WizardStepRendererProps) {
   const { wizard, branding } = useProfile();
   const nav = wizard.navigation as NavigationConfig;
@@ -115,7 +119,13 @@ export function WizardStepRenderer({
       >
         {selectionFormDecomposed ? (
           <SelectionFormBlocksProvider>
-            <GridPageContent page={stepPage} blocks={frameBlocks} site={site} editor={editorOpts} />
+            <SelectionFormDecomposedLayout
+              page={stepPage}
+              blocks={frameBlocks}
+              site={site}
+              editor={editorOpts}
+              stackPanels={stackPanels}
+            />
           </SelectionFormBlocksProvider>
         ) : (
           <GridPageContent page={stepPage} blocks={frameBlocks} site={site} editor={editorOpts} />

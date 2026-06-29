@@ -284,6 +284,7 @@ export function WizardUnifiedPageEditor({
               stepDef={stepDef}
               strela={isStrelaFunnel}
               site={site}
+              stackPanels={viewport.width < 1024}
               editor={{
                 selectedId: selectedBlockId,
                 onSelect: onSelectBlock,

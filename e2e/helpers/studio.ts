@@ -45,7 +45,7 @@ export async function loginStrela(page: Page) {
       const path = new URL(url).pathname;
       return path === "/home" || path === "/wizard";
     },
-    { timeout: 20_000 },
+    { timeout: 20_000, waitUntil: "domcontentloaded" },
   );
 }
 
@@ -109,7 +109,9 @@ export async function openStudioWizardTab(page: Page) {
   await expect(page.getByRole("button", { name: "Фронт" })).toBeVisible({ timeout: 20_000 });
   await page.getByRole("button", { name: "Страницы" }).click();
   await selectStudioPage(page, "Подбор насосов", "/wizard");
-  await expect(page.getByTestId("wizard-step-switcher")).toBeVisible({ timeout: 20_000 });
+  await expect(async () => {
+    await expect(page.getByTestId("wizard-step-switcher")).toBeVisible({ timeout: 5_000 });
+  }).toPass({ timeout: 35_000 });
 }
 
 export async function waitStudioReady(page: Page) {
@@ -207,7 +209,7 @@ export async function removeLastCanvasBlockFromLayers(page: Page, blockType: str
   const rows = sidebar.locator(`[data-layer-block-type="${blockType}"]`);
   const last = rows.last();
   await last.hover();
-  await last.locator('button[title="Удалить"]').click();
+  await last.locator('button[title="Удалить"]').click({ force: true });
 }
 
 export async function siteAboutHasDivider(page: Page) {

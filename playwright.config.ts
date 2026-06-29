@@ -16,12 +16,12 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      testIgnore: [/visual-validation\.spec\.ts$/, /visual-studio-probe\.spec\.ts$/],
+      testIgnore: [/visual-validation\.spec\.ts$/, /visual-studio-probe\.spec\.ts$/, /studio-manual-screenshots\.spec\.ts$/],
       use: { ...devices["Desktop Chrome"] },
     },
     {
       name: "chromium-visual",
-      testMatch: [/visual-validation\.spec\.ts$/, /visual-studio-probe\.spec\.ts$/],
+      testMatch: [/visual-validation\.spec\.ts$/, /visual-studio-probe\.spec\.ts$/, /studio-manual-screenshots\.spec\.ts$/],
       fullyParallel: false,
       workers: 1,
       use: { ...devices["Desktop Chrome"] },

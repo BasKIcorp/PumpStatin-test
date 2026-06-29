@@ -32,6 +32,7 @@ import {
 } from "@/lib/blockTransform";
 import { useStudioCanvasZoom, STUDIO_CANVAS_DROP_ZONE_ID } from "@/routes/admin/studio/canvas/studioCanvasContext";
 import { FIGMA } from "@/routes/admin/studio/figma/figmaTokens";
+import { isWizardSelectionFormPanel } from "@/routes/admin/studio/wizard/wizardFrameUtils";
 
 interface GridPageContentProps {
   page: PageConfig;
@@ -370,7 +371,8 @@ function isWizardInteractiveBlock(type: string): boolean {
   return (
     type === "wizard/card-grid-strela" ||
     type === "wizard/card-grid-simple" ||
-    type === "wizard/selection-card"
+    type === "wizard/selection-card" ||
+    isWizardSelectionFormPanel(type)
   );
 }
 

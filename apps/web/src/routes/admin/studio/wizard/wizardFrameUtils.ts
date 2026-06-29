@@ -61,6 +61,10 @@ export function usesDecomposedSelectionFormFrames(blocks: BlockConfig[]): boolea
   return blocks.some((b) => SELECTION_FORM_BLOCK_TYPES.has(b.type));
 }
 
+export function isWizardSelectionFormPanel(type: string): boolean {
+  return SELECTION_FORM_BLOCK_TYPES.has(type);
+}
+
 export function usesDecomposedStrelaFrames(blocks: BlockConfig[]): boolean {
   return blocks.some(
     (b) =>

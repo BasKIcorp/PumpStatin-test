@@ -22,4 +22,6 @@ Playwright web: порт **5199**, `reuseExistingServer: false` (всегда с
 
 Слои Studio: `data-layer-block-type` (не дублирует `data-block-type` на canvas).
 
-**Статус:** `pnpm exec playwright test e2e/` — 20/20 passed.
+**Статус:** `pnpm exec playwright test e2e/` — 20/20 passed; API pytest 17/17.
+
+Git: `66d99af` на `origin/base` — cleanup e2e pollution about page.

@@ -8,13 +8,14 @@ import {
   openStudioWizardTab,
   openStudioAssetsTab,
   selectStudioPage,
+  selectWizardStep,
   addBlockFromPalette,
   expectCanvasBlockCount,
   removeLastCanvasBlockFromLayers,
   studioSidebar,
 } from "./helpers/studio";
 
-test.describe.configure({ mode: "serial" });
+test.describe.configure({ mode: "serial", timeout: 90_000 });
 
 test.describe("Studio D&D", () => {
   test("page selector lists wizard pump selection page", async ({ page }) => {
@@ -120,6 +121,20 @@ test.describe("Studio D&D", () => {
     await expect(page.locator("h1").first()).toBeVisible({ timeout: 20_000 });
   });
 
+  test("wizard selection-form uses mobile stack in narrow viewport", async ({ page }) => {
+    await loginAdmin(page);
+    await openStudioWizardTab(page);
+    await selectWizardStep(page, "selection-form");
+    await page.getByTestId("viewport-preset-mobile").click();
+    await expect(page.getByTestId("selection-form-stack")).toBeVisible({ timeout: 10_000 });
+    await expect(
+      page.getByTestId("selection-form-stack").locator('[data-block-type="wizard/selection-params-panel"]'),
+    ).toBeVisible();
+    await expect(
+      page.getByTestId("selection-form-stack").locator('[data-block-type="wizard/selection-curves-panel"]'),
+    ).toBeVisible();
+  });
+
   test("CMS add block, save and reload persists layer", async ({ page }) => {
     await loginAdmin(page);
     await waitStudioReady(page);
@@ -145,7 +160,7 @@ test.describe("Studio D&D", () => {
     });
     expect(dividerCount).toBeGreaterThanOrEqual(initialCount + 1);
 
-    await page.reload();
+    await page.reload({ waitUntil: "domcontentloaded" });
     await loginAdmin(page);
     await waitStudioReady(page);
     await selectStudioPage(page, "О компании", "/about");

@@ -26,8 +26,8 @@
 
 1. CMS: довести блоки до parity с SiteLayout + контентные секции
 2. Wizard shell: layout-блоки (sidebar, topbar, funnel-header)
-3. Wizard steps: step-card-grid, step-selection-form как блоки с preview
-4. Экспорт site.yaml для acme/nord/aqua
+3. Wizard steps: step-card-grid, step-selection-form как блоки с preview — **selection-form mobile stack** (`SelectionFormDecomposedLayout`, `lg:` live + studio viewport &lt;1024)
+4. Экспорт site.yaml для acme/nord/aqua — файлы есть, grid OK
 5. Login/cabinet — отдельные шаблоны или вне scope
 
 ## Файлы
