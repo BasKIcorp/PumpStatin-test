@@ -9,3 +9,10 @@ export const StudioCanvasZoomContext = createContext(1);
 export function useStudioCanvasZoom() {
   return useContext(StudioCanvasZoomContext);
 }
+
+/** Space-held pan mode from StudioCanvas (for Rnd blocks inside scaled artboard). */
+export const StudioCanvasPanContext = createContext(false);
+
+export function useStudioCanvasPan() {
+  return useContext(StudioCanvasPanContext);
+}

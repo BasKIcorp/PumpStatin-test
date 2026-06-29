@@ -24,10 +24,12 @@ test.describe("Grid constructor", () => {
     await expect(divider).toHaveAttribute("data-grid-w", "12");
   });
 
-  test("wizard frame product-class visible after login", async ({ page }) => {
+  test("wizard decomposed cards visible after login", async ({ page }) => {
     await loginStrela(page);
-    await expect(
-      page.locator('[data-block-type="wizard/card-grid-strela"]').first(),
-    ).toBeVisible({ timeout: 20_000 });
+    await page.goto("/wizard");
+    await expect(page.locator('[data-block-type="wizard/selection-card"]').first()).toBeVisible({
+      timeout: 20_000,
+    });
+    await expect(page.getByText(/гидромодули/i)).toBeVisible({ timeout: 10_000 });
   });
 });

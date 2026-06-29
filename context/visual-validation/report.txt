@@ -1,6 +1,6 @@
 LOGIN: OK — admin session, URL /admin
 WIZARD BEFORE: C:\projects\PumpStation_Base\context\visual-validation\01-wizard-before-select.png
-WIZARD LAYERS: 21 layer buttons visible
+WIZARD LAYERS: 24 layer buttons visible
 WIZARD DECOMPOSED BLOCKS: heading=false, cards=false, sidebar=false
 WIZARD PROPERTIES: OK — Трансформация panel visible
 WIZARD RESIZE HANDLES: 1 corner resize handles on selected block
@@ -12,8 +12,9 @@ SELECTION-FORM DECOMPOSED: Шапка формы подбора=false, Пара�
 SELECTION-FORM CANVAS BLOCKS: 6 decomposed panels visible
 SELECTION-FORM AFTER: C:\projects\PumpStation_Base\context\visual-validation\11-selection-form-after.png
 MAX DEPTH ERRORS: 0
+WIZARD SAVE RELOAD: SKIPPED — sidebar props input not found
 PDF BEFORE: C:\projects\PumpStation_Base\context\visual-validation\06-pdf-before.png
-PDF CANVAS: NOT FOUND
+PDF CANVAS: VISIBLE
 PDF AFTER: C:\projects\PumpStation_Base\context\visual-validation\07-pdf-after-palette.png
 PDF SHELL: layers=true, blocks=true
 CMS BEFORE: C:\projects\PumpStation_Base\context\visual-validation\08-cms-before.png
@@ -23,42 +24,66 @@ CMS SHELL: layers=true, blocks=true, save=true
 CONSOLE ERRORS:
 Warning: React does not recognize the `%s` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `%s` instead. If you accidentally passed it from a parent component, remove it from the DOM element.%s fetchPriority fetchpriority 
     at img
-    at AuthBrandPanelBlock (http://localhost:5175/src/blocks/auth/AuthBlocks.tsx:23:39)
+    at AuthBrandPanelBlock (http://127.0.0.1:5199/src/blocks/auth/AuthBlocks.tsx:23:39)
     at div
-    at BlockTransformWrap (http://localhost:5175/src/components/studio/BlockTransformWrap.tsx?t=1781995710024:25:3)
     at div
-    at BlockShell (http://localhost:5175/src/lib/gridLayout.tsx?t=1781996044809:108:3)
     at div
-    at GridPageContent (http://localhost:5175/src/engine/GridPageContent.tsx?t=1781996044809:343:35)
-    at AuthLoginProvider (http://localhost:5175/src/blocks/auth/AuthLoginProvider.tsx:21:37)
-    at PageContentRouter (http://localhost:5175/src/engine/PageContentRouter.tsx?t=1781996044809:25:37)
-    at SitePage (http://localhost:5175/src/engine/SitePage.tsx?t=1781996044809:19:28)
-    at ThemeProvider (http://localhost:5175/src/providers/ThemeProvider.tsx?t=1781986524023:21:33)
-    at ProfileProvider (http://localhost:5175/src/providers/ProfileProvider.tsx?t=1781986524023:32:35)
-    at PageRoute (http://localhost:5175/src/App.tsx?t=1781996740416:28:22)
-    at Route (http://localhost:5175/node_modules/.vite/deps/wouter.js?v=47cb06ec:229:16)
-    at Switch (http://localhost:5175/node_modules/.vite/deps/wouter.js?v=47cb06ec:286:17)
-    at SiteConfigProvider (http://localhost:5175/src/providers/SiteConfigProvider.tsx?t=1781996044809:22:3)
-    at App (http://localhost:5175/src/App.tsx?t=1781996740416:57:39)
-TypeError: Failed to fetch
-    at apiFetch (http://localhost:5175/src/api/client.ts:4:21)
-    at fetchSession (http://localhost:5175/src/api/auth.ts:12:10)
-    at http://localhost:5175/src/providers/ProfileProvider.tsx?t=1781986524023:39:24
-    at http://localhost:5175/src/providers/ProfileProvider.tsx?t=1781986524023:68:5
-    at commitHookEffectListMount (http://localhost:5175/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:16963:34)
-    at commitPassiveMountOnFiber (http://localhost:5175/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:18206:19)
-    at commitPassiveMountEffects_complete (http://localhost:5175/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:18179:17)
-    at commitPassiveMountEffects_begin (http://localhost:5175/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:18169:15)
-    at commitPassiveMountEffects (http://localhost:5175/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:18159:11)
-    at flushPassiveEffectsImpl (http://localhost:5175/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:19543:11)
+    at div
+    at div
+    at AuthSplitLayout (http://127.0.0.1:5199/src/engine/AuthSplitLayout.tsx:22:35)
+    at div
+    at AuthPageContent (http://127.0.0.1:5199/src/engine/AuthPageContent.tsx:87:35)
+    at AuthLoginProvider (http://127.0.0.1:5199/src/blocks/auth/AuthLoginProvider.tsx:21:37)
+    at PageContentRouter (http://127.0.0.1:5199/src/engine/PageContentRouter.tsx:27:37)
+    at SitePage (http://127.0.0.1:5199/src/engine/SitePage.tsx:20:28)
+    at ThemeProvider (http://127.0.0.1:5199/src/providers/ThemeProvider.tsx:21:33)
+    at ProfileProvider (http://127.0.0.1:5199/src/providers/ProfileProvider.tsx:35:3)
+    at PageRoute (http://127.0.0.1:5199/src/App.tsx:28:22)
+    at Route (http://127.0.0.1:5199/node_modules/.vite/deps/wouter.js?v=47cb06ec:229:16)
+    at Switch (http://127.0.0.1:5199/node_modules/.vite/deps/wouter.js?v=47cb06ec:286:17)
+    at SiteConfigProvider (http://127.0.0.1:5199/src/providers/SiteConfigProvider.tsx:22:3)
+    at App (http://127.0.0.1:5199/src/App.tsx:57:39)
+Profile load failed, falling back to guest profile TypeError: Failed to fetch
+    at apiFetch (http://127.0.0.1:5199/src/api/client.ts:4:21)
+    at fetchGuestProfile (http://127.0.0.1:5199/src/api/config.ts:6:10)
+    at http://127.0.0.1:5199/src/providers/ProfileProvider.tsx:45:38
+    at http://127.0.0.1:5199/src/providers/ProfileProvider.tsx:93:5
+    at commitHookEffectListMount (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:16963:34)
+    at commitPassiveMountOnFiber (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:18206:19)
+    at commitPassiveMountEffects_complete (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:18179:17)
+    at commitPassiveMountEffects_begin (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:18169:15)
+    at commitPassiveMountEffects (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:18159:11)
+    at flushPassiveEffectsImpl (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:19543:11)
 Failed to load site config: TypeError: Failed to fetch
-    at apiFetch (http://localhost:5175/src/api/client.ts:4:21)
-    at fetchSiteConfig (http://localhost:5175/src/api/config.ts:3:10)
-    at http://localhost:5175/src/App.tsx?t=1781996740416:61:5
-    at commitHookEffectListMount (http://localhost:5175/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:16963:34)
-    at commitPassiveMountOnFiber (http://localhost:5175/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:18206:19)
-    at commitPassiveMountEffects_complete (http://localhost:5175/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:18179:17)
-    at commitPassiveMountEffects_begin (http://localhost:5175/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:18169:15)
-    at commitPassiveMountEffects (http://localhost:5175/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:18159:11)
-    at flushPassiveEffectsImpl (http://localhost:5175/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:19543:11)
-    at flushPassiveEffects (http://localhost:5175/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:19500:22)
+    at apiFetch (http://127.0.0.1:5199/src/api/client.ts:4:21)
+    at fetchSiteConfig (http://127.0.0.1:5199/src/api/config.ts:3:10)
+    at http://127.0.0.1:5199/src/App.tsx:61:5
+    at commitHookEffectListMount (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:16963:34)
+    at commitPassiveMountOnFiber (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:18206:19)
+    at commitPassiveMountEffects_complete (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:18179:17)
+    at commitPassiveMountEffects_begin (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:18169:15)
+    at commitPassiveMountEffects (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:18159:11)
+    at flushPassiveEffectsImpl (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:19543:11)
+    at flushPassiveEffects (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:19500:22)
+Failed to load site config: TypeError: Failed to fetch
+    at apiFetch (http://127.0.0.1:5199/src/api/client.ts:4:21)
+    at fetchSiteConfig (http://127.0.0.1:5199/src/api/config.ts:3:10)
+    at http://127.0.0.1:5199/src/App.tsx:61:5
+    at commitHookEffectListMount (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:16963:34)
+    at commitPassiveMountOnFiber (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:18206:19)
+    at commitPassiveMountEffects_complete (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:18179:17)
+    at commitPassiveMountEffects_begin (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:18169:15)
+    at commitPassiveMountEffects (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:18159:11)
+    at flushPassiveEffectsImpl (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:19543:11)
+    at flushPassiveEffects (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:19500:22)
+Failed to load site config: TypeError: Failed to fetch
+    at apiFetch (http://127.0.0.1:5199/src/api/client.ts:4:21)
+    at fetchSiteConfig (http://127.0.0.1:5199/src/api/config.ts:3:10)
+    at http://127.0.0.1:5199/src/App.tsx:61:5
+    at commitHookEffectListMount (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:16963:34)
+    at invokePassiveEffectMountInDEV (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:18374:19)
+    at invokeEffectsInDev (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:19754:19)
+    at commitDoubleInvokeEffectsInDEV (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:19739:15)
+    at flushPassiveEffectsImpl (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:19556:13)
+    at flushPassiveEffects (http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:19500:22)
+    at http://127.0.0.1:5199/node_modules/.vite/deps/chunk-XI35OFE4.js?v=47cb06ec:19381:17

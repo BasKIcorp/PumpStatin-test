@@ -52,6 +52,8 @@ function SortableLayerRow({
       ref={setNodeRef}
       style={style}
       onClick={onSelect}
+      data-block-id={block.id}
+      data-layer-block-type={block.type}
       className="group flex cursor-grab items-center gap-1.5 rounded px-2 py-1.5 text-xs active:cursor-grabbing"
       {...attributes}
       {...listeners}

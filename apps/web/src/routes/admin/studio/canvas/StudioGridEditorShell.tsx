@@ -24,6 +24,8 @@ export function StudioGridEditorShell({
   artboardLabel,
   artboardWidth,
   artboardMinHeight,
+  viewportGuideWidth,
+  highlightWorkArea,
   onCanvasSelect,
   onDropBlock,
   canvas,
@@ -46,6 +48,8 @@ export function StudioGridEditorShell({
   artboardLabel: string;
   artboardWidth: number;
   artboardMinHeight: number;
+  viewportGuideWidth?: number;
+  highlightWorkArea?: boolean;
   onCanvasSelect: (id: string | null) => void;
   onDropBlock?: (type: string) => void;
   canvas: ReactNode;
@@ -134,6 +138,8 @@ export function StudioGridEditorShell({
             artboardLabel={artboardLabel}
             artboardWidth={artboardWidth}
             artboardMinHeight={artboardMinHeight}
+            viewportGuideWidth={viewportGuideWidth}
+            highlightWorkArea={highlightWorkArea}
             onSelect={onCanvasSelect}
             onDropBlock={onDropBlock}
           >

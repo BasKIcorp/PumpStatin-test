@@ -12,6 +12,7 @@ export async function fetchPdfPreviewBlob(
     mode: "auto" | "free";
     blocks: PdfBlock[];
     pages?: PdfPage[];
+    pageDefaults?: Record<string, number>;
     branding?: Record<string, unknown>;
   },
 ): Promise<Blob> {
@@ -28,6 +29,7 @@ export async function fetchPdfPreviewBlob(
         mode: payload.mode,
         blocks: payload.blocks,
         pages: payload.pages,
+        pageDefaults: payload.pageDefaults,
         branding: payload.branding ?? {},
         selection: {
           configuration: {

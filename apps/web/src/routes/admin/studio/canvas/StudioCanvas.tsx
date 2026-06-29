@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { FloatingZoom } from "../figma/FloatingZoom";
 import { FIGMA } from "../figma/figmaTokens";
-import { StudioCanvasZoomContext } from "./studioCanvasContext";
+import { StudioCanvasZoomContext, StudioCanvasPanContext } from "./studioCanvasContext";
 
 export function StudioCanvas({
   children,
   artboardLabel,
   artboardWidth = 1440,
   artboardMinHeight = 700,
+  viewportGuideWidth,
+  highlightWorkArea = false,
   onSelect,
   onDropBlock,
 }: {
@@ -15,6 +17,8 @@ export function StudioCanvas({
   artboardLabel?: string;
   artboardWidth?: number;
   artboardMinHeight?: number;
+  viewportGuideWidth?: number;
+  highlightWorkArea?: boolean;
   onSelect: (id: string | null) => void;
   onDropBlock?: (type: string) => void;
 }) {
@@ -32,12 +36,14 @@ export function StudioCanvas({
   const scaledHeight = artboardMinHeight * zoom;
 
   useEffect(() => {
+    const isTypingTarget = (target: EventTarget | null) =>
+      target instanceof HTMLInputElement ||
+      target instanceof HTMLTextAreaElement ||
+      target instanceof HTMLSelectElement ||
+      (target instanceof HTMLElement && target.isContentEditable);
+
     const onKeyDown = (e: KeyboardEvent) => {
-      if (
-        e.code === "Space" &&
-        !e.repeat &&
-        !(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement)
-      ) {
+      if (e.code === "Space" && !e.repeat && !isTypingTarget(e.target)) {
         e.preventDefault();
         setSpaceHeld(true);
       }
@@ -180,7 +186,7 @@ export function StudioCanvas({
           >
             <div
               data-canvas-bg
-              className="overflow-visible bg-white transition-shadow"
+              className="relative overflow-visible bg-white transition-shadow"
               style={{
                 width: artboardWidth,
                 minHeight: artboardMinHeight,
@@ -188,14 +194,34 @@ export function StudioCanvas({
                 transformOrigin: "top left",
                 boxShadow: FIGMA.artboardShadow,
                 outline: isDragOver ? `2px solid ${FIGMA.accent}` : undefined,
+                ...(highlightWorkArea
+                  ? { boxShadow: `${FIGMA.artboardShadow}, inset 0 0 0 1px rgba(13,153,255,0.25)` }
+                  : {}),
               }}
               onDragOver={onDropBlock ? handleDragOver : undefined}
               onDragLeave={onDropBlock ? handleDragLeave : undefined}
               onDrop={onDropBlock ? handleDrop : undefined}
             >
-              <StudioCanvasZoomContext.Provider value={zoom}>
-                {children}
-              </StudioCanvasZoomContext.Provider>
+              {viewportGuideWidth != null && viewportGuideWidth < artboardWidth ? (
+                <>
+                  <div
+                    className="pointer-events-none absolute inset-y-0 left-0 z-[5] border-r-2 border-dashed border-[#0d99ff]/50 bg-[#0d99ff]/[0.04]"
+                    style={{ width: viewportGuideWidth }}
+                    aria-hidden
+                  />
+                  <div
+                    className="pointer-events-none absolute left-1 top-1 z-[6] rounded bg-[#0d99ff]/90 px-1.5 py-0.5 text-[9px] font-medium text-white"
+                    aria-hidden
+                  >
+                    Рабочая область
+                  </div>
+                </>
+              ) : null}
+              <StudioCanvasPanContext.Provider value={spaceHeld}>
+                <StudioCanvasZoomContext.Provider value={zoom}>
+                  {children}
+                </StudioCanvasZoomContext.Provider>
+              </StudioCanvasPanContext.Provider>
             </div>
           </div>
         </div>

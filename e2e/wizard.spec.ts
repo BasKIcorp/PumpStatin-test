@@ -1,9 +1,10 @@
 import { test, expect } from "@playwright/test";
+import { loginStrela } from "./helpers/studio";
 
 test.describe("Wizard smoke", () => {
-  test("root redirects to landing", async ({ page }) => {
+  test("root redirects guest to login", async ({ page }) => {
     await page.goto("/");
-    await expect(page).toHaveURL(/\/home/, { timeout: 15_000 });
+    await expect(page).toHaveURL(/\/login/, { timeout: 15_000 });
   });
 
   test("wizard route loads", async ({ page }) => {
@@ -12,14 +13,7 @@ test.describe("Wizard smoke", () => {
   });
 
   test("wizard route shows product class cards", async ({ page }) => {
-    await page.goto("/login");
-    const loginInput = page.getByRole("textbox").first();
-    if (await loginInput.isVisible().catch(() => false)) {
-      await loginInput.fill("strela");
-      await page.locator('input[type="password"]').fill("demo123");
-      await page.getByRole("button", { name: /войти|login/i }).click();
-      await page.waitForURL(/\/(wizard|dashboard|home)?/i, { timeout: 15_000 }).catch(() => {});
-    }
+    await loginStrela(page);
     await page.goto("/wizard");
     await expect(page.locator(".selection-mockup-card-face").first()).toBeVisible({
       timeout: 15_000,

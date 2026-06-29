@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, type ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
+import { useHorizontalWheelScroll } from "@/hooks/useHorizontalWheelScroll";
 import { cn } from "@/lib/cn";
 import { DEFAULT_CARD_UI } from "@/lib/strela/cardUi";
 
@@ -9,22 +10,7 @@ interface Props {
 
 export function MockupCardStrip({ children, stripGapClass = DEFAULT_CARD_UI.stripGapClass }: Props) {
   const ref = useRef<HTMLDivElement>(null);
-
-  const onWheel = useCallback((event: WheelEvent) => {
-    const el = ref.current;
-    if (!el) return;
-    const { deltaX, deltaY } = event;
-    if (Math.abs(deltaX) > Math.abs(deltaY) || el.scrollWidth <= el.clientWidth) return;
-    event.preventDefault();
-    el.scrollLeft += deltaY;
-  }, []);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    el.addEventListener("wheel", onWheel, { passive: false });
-    return () => el.removeEventListener("wheel", onWheel);
-  }, [onWheel]);
+  useHorizontalWheelScroll(ref);
 
   return (
     <div className="selection-mockup-strip-outer flex w-full min-w-0 flex-col overflow-hidden pb-1 sm:pb-2">

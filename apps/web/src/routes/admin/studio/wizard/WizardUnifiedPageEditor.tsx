@@ -4,14 +4,19 @@ import type { BlockConfig, PageConfig, SiteConfig } from "@pumpstation/contracts
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { WizardStepRenderer, wizardStepUsesFrames } from "@/engine/WizardStepRenderer";
 import { StudioGridEditorShell } from "@/routes/admin/studio/canvas/StudioGridEditorShell";
+import { StudioViewportToolbar } from "@/routes/admin/studio/canvas/StudioViewportToolbar";
+import {
+  viewportPresetById,
+  studioViewportGuideWidth,
+  type StudioViewportPresetId,
+} from "@/routes/admin/studio/canvas/studioViewport";
 import { studioArtboardMinHeight } from "@/routes/admin/studio/canvas/studioGridMetrics";
-import { pageGridMetrics } from "@/lib/gridLayout";
+import { artboardWidthForCols, CMS_GRID_MAX_WIDTH_PX, pageGridMetrics } from "@/lib/gridLayout";
 import { Palette } from "@/routes/admin/studio/palette/Palette";
 import { LayersPanel } from "@/routes/admin/studio/palette/LayersPanel";
 import { PropertiesPanel } from "@/routes/admin/studio/properties/PropertiesPanel";
 import { PagePropertiesPanel } from "@/routes/admin/studio/properties/PagePropertiesPanel";
 import { DraftPagePreview } from "@/routes/admin/studio/preview/DraftPagePreview";
-import { useUndoRedo } from "@/hooks/useUndoRedo";
 import { useStudioBlockEditor } from "@/hooks/useStudioBlockEditor";
 import { StudioProfileProvider } from "@/providers/StudioProfileProvider";
 import type { ProfileBundle } from "@/api/config";
@@ -43,6 +48,10 @@ export function WizardUnifiedPageEditor({
   hideNavPanel = false,
   canvasToolbar,
   rightSidebarExtra,
+  canUndo = false,
+  canRedo = false,
+  onUndo,
+  onRedo,
 }: {
   page: PageConfig;
   site: SiteConfig;
@@ -60,16 +69,19 @@ export function WizardUnifiedPageEditor({
   hideNavPanel?: boolean;
   canvasToolbar?: ReactNode;
   rightSidebarExtra?: ReactNode;
+  canUndo?: boolean;
+  canRedo?: boolean;
+  onUndo?: () => void;
+  onRedo?: () => void;
 }) {
   const normalizedPage = useMemo(() => normalizeWizardPage(page), [page]);
   const [stepId, setStepId] = useState(
     previewStepId ?? initialNav.steps[0]?.id ?? "product-class",
   );
-  const { state: allBlocks, setState: setAllBlocks, undo, redo, reset, canUndo, canRedo } =
-    useUndoRedo(normalizedPage.blocks ?? []);
-  const pageIdRef = useRef(page.id);
   const onBlocksChangeRef = useRef(onBlocksChange);
   onBlocksChangeRef.current = onBlocksChange;
+
+  const allBlocks = normalizedPage.blocks ?? [];
 
   useEffect(() => {
     if (previewStepId && previewStepId !== stepId) setStepId(previewStepId);
@@ -83,13 +95,6 @@ export function WizardUnifiedPageEditor({
     },
     [onSelectBlock, onPreviewStepChange],
   );
-
-  useEffect(() => {
-    if (page.id !== pageIdRef.current) {
-      pageIdRef.current = page.id;
-      reset(normalizeWizardPage(page).blocks ?? []);
-    }
-  }, [page, reset]);
 
   const stepDef = initialNav.steps.find((s) => s.id === stepId);
   const stepCards = initialNav.cards[stepId] ?? [];
@@ -106,21 +111,26 @@ export function WizardUnifiedPageEditor({
     [normalizedPage, allBlocks],
   );
 
-  useEffect(() => {
-    onBlocksChangeRef.current({ ...draftPage, blocks: allBlocks, frames: undefined });
-  }, [allBlocks, draftPage]);
+  const commitAllBlocks = useCallback(
+    (nextBlocks: BlockConfig[]) => {
+      onBlocksChangeRef.current({
+        ...normalizedPage,
+        blocks: nextBlocks,
+        frames: undefined,
+      });
+    },
+    [normalizedPage],
+  );
 
   const patchStepBlocks = useCallback(
     (next: BlockConfig[] | ((prev: BlockConfig[]) => BlockConfig[])) => {
-      setAllBlocks((prev) => {
-        const currentStep = prev.filter((b) => readBlockStepId(b) === stepId);
-        const resolved = typeof next === "function" ? next(currentStep) : next;
-        const tagged = resolved.map((b) => withBlockStepId(b, stepId));
-        const rest = prev.filter((b) => readBlockStepId(b) !== stepId);
-        return [...rest, ...tagged];
-      });
+      const currentStep = allBlocks.filter((b) => readBlockStepId(b) === stepId);
+      const resolved = typeof next === "function" ? next(currentStep) : next;
+      const tagged = resolved.map((b) => withBlockStepId(b, stepId));
+      const rest = allBlocks.filter((b) => readBlockStepId(b) !== stepId);
+      commitAllBlocks([...rest, ...tagged]);
     },
-    [setAllBlocks, stepId],
+    [allBlocks, stepId, commitAllBlocks],
   );
 
   const gridMetrics = useMemo(
@@ -209,6 +219,21 @@ export function WizardUnifiedPageEditor({
   };
 
   const stepTitle = stepDef?.title ?? stepDef?.titleKey ?? stepId;
+  const [viewportPreset, setViewportPreset] = useState<StudioViewportPresetId>("desktop");
+  const viewport = viewportPresetById(viewportPreset);
+  const workAreaCap =
+    gridMetrics.minCols && gridMetrics.cols > gridMetrics.minCols
+      ? artboardWidthForCols(gridMetrics.minCols, gridMetrics.minCols, CMS_GRID_MAX_WIDTH_PX)
+      : CMS_GRID_MAX_WIDTH_PX;
+  const viewportGuideWidth = studioViewportGuideWidth(viewport.width, gridMetrics.artboardWidth, {
+    maxContentWidth: workAreaCap,
+  });
+
+  const mergedCanvasToolbar = (
+    <>
+      <StudioViewportToolbar value={viewportPreset} onChange={setViewportPreset} extra={canvasToolbar} />
+    </>
+  );
 
   return (
     <StudioGridEditorShell
@@ -223,8 +248,8 @@ export function WizardUnifiedPageEditor({
               onRemoveStep={() => {}}
               canUndo={canUndo}
               canRedo={canRedo}
-              onUndo={undo}
-              onRedo={redo}
+              onUndo={onUndo ?? (() => {})}
+              onRedo={onRedo ?? (() => {})}
             />
           )}
           <div className="border-t border-[#333] pt-3">
@@ -245,7 +270,9 @@ export function WizardUnifiedPageEditor({
       artboardLabel={`${page.title} — ${stepTitle}`}
       artboardWidth={gridMetrics.artboardWidth}
       artboardMinHeight={artboardMinHeight}
-      canvasToolbar={canvasToolbar}
+      viewportGuideWidth={viewportGuideWidth}
+      highlightWorkArea
+      canvasToolbar={mergedCanvasToolbar}
       onCanvasSelect={onSelectBlock}
       onDropBlock={addBlock}
       canvas={
@@ -282,8 +309,8 @@ export function WizardUnifiedPageEditor({
       onClearSelection={() => onSelectBlock(null)}
       onDeleteSelected={() => selectedBlockId && removeBlock(selectedBlockId)}
       onRotateSelected={() => selectedBlockId && rotateSelectedBlock(selectedBlockId)}
-      onUndo={undo}
-      onRedo={redo}
+      onUndo={onUndo}
+      onRedo={onRedo}
       canUndo={canUndo}
       canRedo={canRedo}
       rightSidebar={

@@ -67,14 +67,22 @@ def render_pdf_from_blocks(
     page_block_lists = _iter_pdf_block_pages(template_json)
     ctx = _build_pdf_context(selection, branding)
 
+    defaults = template_json.get("pageDefaults") if isinstance(template_json.get("pageDefaults"), dict) else {}
+    page_w = float(defaults.get("width", 595))
+    page_h = float(defaults.get("height", 842))
+    margin_top = float(defaults.get("marginTop", 42))
+    margin_bottom = float(defaults.get("marginBottom", 42))
+    margin_left = float(defaults.get("marginLeft", 56))
+    margin_right = float(defaults.get("marginRight", 56))
+
     buf = BytesIO()
     doc = SimpleDocTemplate(
         buf,
-        pagesize=A4,
-        topMargin=15 * mm,
-        bottomMargin=15 * mm,
-        leftMargin=20 * mm,
-        rightMargin=20 * mm,
+        pagesize=(page_w, page_h),
+        topMargin=margin_top,
+        bottomMargin=margin_bottom,
+        leftMargin=margin_left,
+        rightMargin=margin_right,
     )
 
     base_style = ParagraphStyle(

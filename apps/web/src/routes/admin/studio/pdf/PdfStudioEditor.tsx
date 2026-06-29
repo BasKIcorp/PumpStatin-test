@@ -18,18 +18,18 @@ import { StudioRightSidebar } from "@/routes/admin/studio/figma/StudioRightSideb
 import { UndoRedoButtons } from "@/routes/admin/studio/components/UndoRedoButtons";
 import { STUDIO_CANVAS_DROP_ZONE_ID } from "@/routes/admin/studio/canvas/studioCanvasContext";
 import { pdfTemplateFingerprint } from "@/routes/admin/studio/studioDraftUtils";
-import {
-  flattenPdfBlocks,
-  newPdfPage,
-  normalizePdfTemplate,
-  pdfTemplatePayload,
-  type PdfPage,
-} from "./pdfTemplateUtils";
 import { PdfCanvas, type PdfBlock } from "./PdfCanvas";
 import { PdfPalette } from "./PdfPalette";
 import { PdfLayersPanel } from "./PdfLayersPanel";
 import { PdfPropertiesPanel } from "./PdfPropertiesPanel";
+import { PdfPageToolbar } from "./PdfPageToolbar";
 import { fetchPdfPreviewBlob } from "./pdfPreviewFetch";
+import {
+  DEFAULT_PDF_PAGE,
+  normalizePdfPages,
+  parsePdfPageDefaults,
+  type PdfPageDefaults,
+} from "./pdfPageDefaults";
 
 const BLOCK_SIZES: Record<string, { w: number; h: number }> = {
   header: { w: 595, h: 60 },
@@ -46,6 +46,13 @@ const BLOCK_SIZES: Record<string, { w: number; h: number }> = {
   "curves-chart": { w: 500, h: 200 },
 };
 
+function inferPdfMode(data: { mode?: string; blocks?: PdfBlock[] }): "auto" | "free" {
+  if (data.mode === "auto" || data.mode === "free") return data.mode;
+  const blocks = data.blocks ?? [];
+  if (blocks.some((b) => (b.y ?? 0) > 0 || (b.x ?? 0) > 0)) return "free";
+  return "auto";
+}
+
 function defaultProps(type: string): Record<string, unknown> {
   switch (type) {
     case "header":
@@ -58,8 +65,6 @@ function defaultProps(type: string): Record<string, unknown> {
       return { caption: "Изображение", src: "" };
     case "customer-info":
       return { organization: "{{profile.displayName}}", date: "{{selection.date}}" };
-    case "curves-chart":
-      return { dataPath: "{{curves.qh_main}}", chartPreset: "qh-five-curves" };
     case "signature":
       return { name: "ФИО" };
     default:
@@ -82,31 +87,19 @@ export function PdfStudioEditor({
   previewOpen?: boolean;
   onPreviewClose?: () => void;
 }) {
-  const { state: pages, setState: setPages, undo, redo, reset, canUndo, canRedo } =
-    useUndoRedo<PdfPage[]>([{ id: "page-1", label: "Страница 1", blocks: [] }]);
-  const [currentPageIndex, setCurrentPageIndex] = useState(0);
-  const pagesRef = useRef(pages);
-  pagesRef.current = pages;
-  const currentPageIndexRef = useRef(currentPageIndex);
-  currentPageIndexRef.current = currentPageIndex;
-  const blocks = pages[currentPageIndex]?.blocks ?? [];
-  const setBlocks = useCallback(
-    (updater: PdfBlock[] | ((prev: PdfBlock[]) => PdfBlock[])) => {
-      setPages((prevPages) => {
-        const idx = currentPageIndexRef.current;
-        const page = prevPages[idx];
-        if (!page) return prevPages;
-        const nextBlocks = typeof updater === "function" ? updater(page.blocks) : updater;
-        const next = [...prevPages];
-        next[idx] = { ...page, blocks: nextBlocks };
-        return next;
-      });
-    },
-    [setPages],
-  );
+  const { state: blocks, setState: setBlocks, undo, redo, reset, canUndo, canRedo } =
+    useUndoRedo<PdfBlock[]>([]);
+  const blocksRef = useRef(blocks);
+  blocksRef.current = blocks;
   const modeRef = useRef<"auto" | "free">("auto");
   const templateNameRef = useRef("custom");
   const savedFpRef = useRef("");
+  const pagesRef = useRef<PdfBlock[][]>([[]]);
+  const pageDefaultsRef = useRef<PdfPageDefaults>({ ...DEFAULT_PDF_PAGE });
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageCount, setPageCount] = useState(1);
+  const [pageDefaults, setPageDefaults] = useState<PdfPageDefaults>({ ...DEFAULT_PDF_PAGE });
+  pageDefaultsRef.current = pageDefaults;
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [templateName, setTemplateName] = useState("custom");
   const [mode, setMode] = useState<"auto" | "free">("auto");
@@ -125,22 +118,33 @@ export function PdfStudioEditor({
 
   useEffect(() => {
     if (!profileId) return;
-    apiFetch<{ templateName?: string; mode?: string; blocks?: PdfBlock[]; pages?: PdfPage[] }>(
-      `/api/v1/admin/profiles/${encodeURIComponent(profileId)}/pdf/template`,
-    )
+    apiFetch<{
+      templateName?: string;
+      mode?: string;
+      blocks?: PdfBlock[];
+      pages?: Array<{ blocks?: PdfBlock[] }>;
+      pageDefaults?: unknown;
+    }>(`/api/v1/admin/profiles/${encodeURIComponent(profileId)}/pdf/template`)
       .then((data) => {
-        const normalized = normalizePdfTemplate(data);
-        const loadedMode = normalized.mode;
-        const loadedName = normalized.templateName;
-        reset(normalized.pages);
-        setCurrentPageIndex(0);
+        const loadedPages = normalizePdfPages(data);
+        const loadedBlocks = loadedPages[0] ?? [];
+        const loadedMode = inferPdfMode(data);
+        const loadedName = data.templateName ?? "custom";
+        const loadedDefaults = parsePdfPageDefaults(data.pageDefaults);
+        pagesRef.current = loadedPages;
+        pageDefaultsRef.current = loadedDefaults;
+        setPageDefaults(loadedDefaults);
+        setPageCount(loadedPages.length);
+        setPageIndex(0);
+        reset(loadedBlocks);
         setTemplateName(loadedName);
         setMode(loadedMode);
         savedFpRef.current = pdfTemplateFingerprint({
           templateName: loadedName,
           mode: loadedMode,
-          pages: normalized.pages,
-          blocks: flattenPdfBlocks(normalized.pages),
+          pageDefaults: loadedDefaults,
+          pages: loadedPages.map((b) => ({ blocks: b })),
+          blocks: loadedBlocks,
         });
         onDirtyChange?.(false);
       })
@@ -150,16 +154,52 @@ export function PdfStudioEditor({
 
   useEffect(() => {
     if (!loaded) return;
+    pagesRef.current = [...pagesRef.current];
+    pagesRef.current[pageIndex] = blocks;
     const dirty =
       savedFpRef.current !== "" &&
       pdfTemplateFingerprint({
         templateName,
         mode,
-        pages,
-        blocks: flattenPdfBlocks(pages),
+        pageDefaults,
+        pages: pagesRef.current.map((b) => ({ blocks: b })),
+        blocks: pagesRef.current[0] ?? [],
       }) !== savedFpRef.current;
     onDirtyChange?.(dirty);
-  }, [pages, templateName, mode, loaded, onDirtyChange]);
+  }, [blocks, templateName, mode, pageDefaults, pageIndex, loaded, onDirtyChange]);
+
+  const selectPage = useCallback(
+    (index: number) => {
+      if (index === pageIndex) return;
+      pagesRef.current = [...pagesRef.current];
+      pagesRef.current[pageIndex] = blocksRef.current;
+      setPageIndex(index);
+      reset(pagesRef.current[index] ?? []);
+      setSelectedId(null);
+    },
+    [pageIndex, reset],
+  );
+
+  const addPage = useCallback(() => {
+    pagesRef.current = [...pagesRef.current];
+    pagesRef.current[pageIndex] = blocksRef.current;
+    pagesRef.current.push([]);
+    const nextIndex = pagesRef.current.length - 1;
+    setPageCount(pagesRef.current.length);
+    setPageIndex(nextIndex);
+    reset([]);
+    setSelectedId(null);
+  }, [pageIndex, reset]);
+
+  const removePage = useCallback(() => {
+    if (pagesRef.current.length <= 1) return;
+    pagesRef.current = pagesRef.current.filter((_, i) => i !== pageIndex);
+    const nextIndex = Math.max(0, pageIndex - 1);
+    setPageCount(pagesRef.current.length);
+    setPageIndex(nextIndex);
+    reset(pagesRef.current[nextIndex] ?? []);
+    setSelectedId(null);
+  }, [pageIndex, reset]);
 
   const addBlock = useCallback(
     (type: string) => {
@@ -175,27 +215,6 @@ export function PdfStudioEditor({
     },
     [setBlocks],
   );
-
-
-  const addPage = useCallback(() => {
-    setPages((prev) => {
-      const next = [...prev, newPdfPage(prev.length + 1)];
-      setCurrentPageIndex(next.length - 1);
-      setSelectedId(null);
-      return next;
-    });
-  }, [setPages]);
-
-  const removePage = useCallback(() => {
-    setPages((prev) => {
-      if (prev.length <= 1) return prev;
-      const idx = currentPageIndexRef.current;
-      const next = prev.filter((_, i) => i !== idx);
-      setCurrentPageIndex(Math.max(0, idx - 1));
-      setSelectedId(null);
-      return next;
-    });
-  }, [setPages]);
 
   const removeBlock = (id: string) => {
     setBlocks((prev) => prev.filter((b) => b.id !== id));
@@ -234,23 +253,22 @@ export function PdfStudioEditor({
 
   const handleSave = useCallback(async () => {
     if (!profileId) return;
-    const payload = pdfTemplatePayload({
+    pagesRef.current = [...pagesRef.current];
+    pagesRef.current[pageIndex] = blocksRef.current;
+    const payload = {
       templateName: templateNameRef.current,
       mode: modeRef.current,
-      pages: pagesRef.current,
-    });
+      pageDefaults: pageDefaultsRef.current,
+      pages: pagesRef.current.map((pageBlocks) => ({ blocks: pageBlocks })),
+      blocks: pagesRef.current[0] ?? [],
+    };
     await apiFetch(`/api/v1/admin/profiles/${encodeURIComponent(profileId)}/pdf/template`, {
       method: "PUT",
       body: JSON.stringify(payload),
     });
-    savedFpRef.current = pdfTemplateFingerprint(payload as {
-      templateName: string;
-      mode: string;
-      pages: PdfPage[];
-      blocks: PdfBlock[];
-    });
+    savedFpRef.current = pdfTemplateFingerprint(payload);
     onDirtyChange?.(false);
-  }, [profileId, onDirtyChange]);
+  }, [profileId, pageIndex, onDirtyChange]);
 
   useEffect(() => {
     if (!previewOpen || !profileId) {
@@ -267,8 +285,13 @@ export function PdfStudioEditor({
     fetchPdfPreviewBlob(profileId, {
       templateName,
       mode,
-      pages,
-      blocks: flattenPdfBlocks(pages),
+      blocks,
+      pages: pagesRef.current.map((pageBlocks, i) => ({
+        id: `page-${i}`,
+        label: `Страница ${i + 1}`,
+        blocks: pageBlocks,
+      })),
+      pageDefaults,
       branding,
     })
       .then((blob) => {
@@ -290,7 +313,7 @@ export function PdfStudioEditor({
       cancelled = true;
       if (revoked) URL.revokeObjectURL(revoked);
     };
-  }, [previewOpen, profileId, templateName, mode, pages, branding]);
+  }, [previewOpen, profileId, templateName, mode, blocks, pageDefaults, branding]);
 
   useEffect(() => {
     onRegisterSave?.(handleSave);
@@ -427,7 +450,7 @@ export function PdfStudioEditor({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex h-full min-h-0 flex-1 overflow-hidden">
+      <div className="flex h-full min-h-0 flex-1 overflow-hidden" data-testid="pdf-studio-ready">
         <StudioLeftSidebar
           layers={
             <div className="space-y-2">
@@ -447,28 +470,37 @@ export function PdfStudioEditor({
           assets={<PdfPalette onAddBlock={addBlock} />}
         />
 
-        <PdfCanvas
-          blocks={blocks}
-          selectedId={selectedId}
-          onSelect={setSelectedId}
-          onMove={(id, x, y) =>
-            setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, x, y } : b)))
-          }
-          onResize={(id, w, h) =>
-            setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, w, h } : b)))
-          }
-          onDropBlock={addBlock}
-          mode={mode}
-        />
+        <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+          <PdfPageToolbar
+            pageCount={pageCount}
+            currentPageIndex={pageIndex}
+            onAddPage={addPage}
+            onRemovePage={removePage}
+            onSelectPage={selectPage}
+            pageDefaults={pageDefaults}
+            onPageDefaultsChange={setPageDefaults}
+          />
+          <PdfCanvas
+            blocks={blocks}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+            onMove={(id, x, y) =>
+              setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, x, y } : b)))
+            }
+            onResize={(id, w, h) =>
+              setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, w, h } : b)))
+            }
+            onDropBlock={addBlock}
+            mode={mode}
+            pageWidth={pageDefaults.width}
+            pageHeight={pageDefaults.height}
+            margins={pageDefaults}
+          />
+        </div>
 
         <StudioRightSidebar>
           <PdfPropertiesPanel
             block={selectedBlock}
-            pageCount={pages.length}
-            currentPageIndex={currentPageIndex}
-            onAddPage={addPage}
-            onRemovePage={removePage}
-            onSelectPage={setCurrentPageIndex}
             templateName={templateName}
             mode={mode}
             onModeChange={setMode}

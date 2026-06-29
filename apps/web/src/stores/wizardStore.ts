@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persistWizardStep } from "@/lib/wizardPersistence";
 
 export type WizardStepId = string;
 
@@ -29,7 +30,15 @@ export const useWizardStore = create<WizardState>((set, get) => ({
   formValues: {},
   matchedPumps: null,
   stationResult: null,
-  setStep: (step) => set({ step }),
+  setStep: (step) => {
+    set({ step });
+    try {
+      const profileId = sessionStorage.getItem("pumpstation-wizard-profile");
+      if (profileId) persistWizardStep(profileId, step);
+    } catch {
+      /* ignore */
+    }
+  },
   initFromNavigation: (firstStepId) => set({ step: firstStepId }),
   selectCard: (step, cardId, meta = {}) => {
     const patch: Partial<WizardState> = { ...meta };
@@ -48,7 +57,15 @@ export const useWizardStore = create<WizardState>((set, get) => ({
       patch.flowId = String(meta.flow);
     }
     const next = meta.next as WizardStepId | undefined;
-    if (next) patch.step = next;
+    if (next) {
+      patch.step = next;
+      try {
+        const profileId = sessionStorage.getItem("pumpstation-wizard-profile");
+        if (profileId) persistWizardStep(profileId, next);
+      } catch {
+        /* ignore */
+      }
+    }
     set(patch);
   },
   setFormValue: (fieldId, value) =>
@@ -59,22 +76,31 @@ export const useWizardStore = create<WizardState>((set, get) => ({
   setStationResult: (result) => set({ stationResult: result }),
   goBack: (nav) => {
     const { step } = get();
+    let prevStep: WizardStepId | undefined;
     if (nav?.steps) {
       const current = nav.steps.find((s) => s.id === step);
       if (current?.parent) {
-        set({ step: current.parent });
-        return;
+        prevStep = current.parent;
       }
     }
-    const legacy: Record<string, WizardStepId> = {
-      "selection-form": "installation-type",
-      "installation-type": "pu-line",
-      "pu-line": "product-class",
-      "hm-line": "product-class",
-      "simpel-line": "product-class",
-      "product-line": "product-class",
-    };
-    const prev = legacy[step];
-    if (prev) set({ step: prev });
+    if (!prevStep) {
+      const legacy: Record<string, WizardStepId> = {
+        "selection-form": "installation-type",
+        "installation-type": "pu-line",
+        "pu-line": "product-class",
+        "hm-line": "product-class",
+        "simpel-line": "product-class",
+        "product-line": "product-class",
+      };
+      prevStep = legacy[step];
+    }
+    if (!prevStep) return;
+    set({ step: prevStep });
+    try {
+      const profileId = sessionStorage.getItem("pumpstation-wizard-profile");
+      if (profileId) persistWizardStep(profileId, prevStep);
+    } catch {
+      /* ignore */
+    }
   },
 }));

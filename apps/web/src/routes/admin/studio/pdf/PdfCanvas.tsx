@@ -1,9 +1,16 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Rnd } from "react-rnd";
 import { useDroppable } from "@dnd-kit/core";
 import { StudioCanvas } from "../canvas/StudioCanvas";
+import { StudioViewportToolbar } from "../canvas/StudioViewportToolbar";
+import {
+  studioViewportGuideWidth,
+  viewportPresetById,
+  type StudioViewportPresetId,
+} from "../canvas/studioViewport";
 import {
   STUDIO_CANVAS_DROP_ZONE_ID,
+  useStudioCanvasPan,
   useStudioCanvasZoom,
 } from "../canvas/studioCanvasContext";
 import { FIGMA } from "../figma/figmaTokens";
@@ -30,7 +37,9 @@ function PdfPageContent({
   onMove: onMoveBlock,
   onResize,
   mode,
-  spaceHeld,
+  pageWidth,
+  pageHeight,
+  margins,
 }: {
   blocks: PdfBlock[];
   selectedId: string | null;
@@ -38,9 +47,12 @@ function PdfPageContent({
   onMove: (id: string, x: number, y: number) => void;
   onResize: (id: string, w: number, h: number) => void;
   mode: "auto" | "free";
-  spaceHeld: boolean;
+  pageWidth: number;
+  pageHeight: number;
+  margins?: { marginTop: number; marginBottom: number; marginLeft: number; marginRight: number };
 }) {
   const zoom = useStudioCanvasZoom();
+  const spaceHeld = useStudioCanvasPan();
   const { setNodeRef, isOver } = useDroppable({ id: STUDIO_CANVAS_DROP_ZONE_ID });
   const freeMode = mode === "free" && !spaceHeld;
 
@@ -58,32 +70,44 @@ function PdfPageContent({
       data-testid="grid-canvas"
       className="relative overflow-hidden bg-white"
       style={{
-        width: PDF_A4.width,
-        minHeight: PDF_A4.height,
-        height: PDF_A4.height,
+        width: pageWidth,
+        minHeight: pageHeight,
+        height: pageHeight,
         outline: isOver ? `2px solid ${FIGMA.accent}` : undefined,
       }}
       onClick={handleBgClick}
     >
+      {margins ? (
+        <div
+          className="pointer-events-none absolute border border-dashed border-[#0d99ff]/40 bg-[#0d99ff]/[0.03]"
+          style={{
+            left: margins.marginLeft,
+            top: margins.marginTop,
+            right: margins.marginRight,
+            bottom: margins.marginBottom,
+          }}
+          aria-hidden
+        />
+      ) : null}
       {mode === "free" && (
-        <svg className="pointer-events-none absolute inset-0" width={PDF_A4.width} height={PDF_A4.height}>
-          {Array.from({ length: Math.ceil(PDF_A4.width / SNAP) }).map((_, i) => (
+        <svg className="pointer-events-none absolute inset-0" width={pageWidth} height={pageHeight}>
+          {Array.from({ length: Math.ceil(pageWidth / SNAP) }).map((_, i) => (
             <line
               key={`v${i}`}
               x1={i * SNAP}
               y1={0}
               x2={i * SNAP}
-              y2={PDF_A4.height}
+              y2={pageHeight}
               stroke="#f0f0f0"
               strokeWidth={0.5}
             />
           ))}
-          {Array.from({ length: Math.ceil(PDF_A4.height / SNAP) }).map((_, i) => (
+          {Array.from({ length: Math.ceil(pageHeight / SNAP) }).map((_, i) => (
             <line
               key={`h${i}`}
               x1={0}
               y1={i * SNAP}
-              x2={PDF_A4.width}
+              x2={pageWidth}
               y2={i * SNAP}
               stroke="#f0f0f0"
               strokeWidth={0.5}
@@ -179,6 +203,9 @@ export function PdfCanvas({
   onResize,
   onDropBlock,
   mode,
+  pageWidth = PDF_A4.width,
+  pageHeight = PDF_A4.height,
+  margins,
 }: {
   blocks: PdfBlock[];
   selectedId: string | null;
@@ -187,32 +214,17 @@ export function PdfCanvas({
   onResize: (id: string, w: number, h: number) => void;
   onDropBlock?: (type: string) => void;
   mode: "auto" | "free";
+  pageWidth?: number;
+  pageHeight?: number;
+  margins?: { marginTop: number; marginBottom: number; marginLeft: number; marginRight: number };
 }) {
-  const [spaceHeld, setSpaceHeld] = useState(false);
-
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (
-        e.code === "Space" &&
-        !e.repeat &&
-        !(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)
-      ) {
-        setSpaceHeld(true);
-      }
-    };
-    const onKeyUp = (e: KeyboardEvent) => {
-      if (e.code === "Space") setSpaceHeld(false);
-    };
-    window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("keyup", onKeyUp);
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("keyup", onKeyUp);
-    };
-  }, []);
+  const [viewportPreset, setViewportPreset] = useState<StudioViewportPresetId>("a4");
+  const viewport = viewportPresetById(viewportPreset);
+  const viewportGuideWidth = studioViewportGuideWidth(viewport.width, pageWidth);
 
   return (
     <div className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+      <StudioViewportToolbar value={viewportPreset} onChange={setViewportPreset} />
       <div
         className="flex shrink-0 items-center gap-2 px-3 py-1.5"
         style={{ background: FIGMA.panel, borderBottom: `1px solid ${FIGMA.panelBorder}` }}
@@ -226,9 +238,11 @@ export function PdfCanvas({
       </div>
 
       <StudioCanvas
-        artboardLabel="A4"
-        artboardWidth={PDF_A4.width}
-        artboardMinHeight={PDF_A4.height}
+        artboardLabel={`PDF ${pageWidth}×${pageHeight}`}
+        artboardWidth={pageWidth}
+        artboardMinHeight={pageHeight}
+        viewportGuideWidth={viewportGuideWidth}
+        highlightWorkArea
         onSelect={onSelect}
         onDropBlock={onDropBlock}
       >
@@ -239,7 +253,9 @@ export function PdfCanvas({
           onMove={onMove}
           onResize={onResize}
           mode={mode}
-          spaceHeld={spaceHeld}
+          pageWidth={pageWidth}
+          pageHeight={pageHeight}
+          margins={margins}
         />
       </StudioCanvas>
     </div>

@@ -15,7 +15,7 @@ import { useAuthStore } from "@/stores/authStore";
 function PageRoute({ page, site }: { page: PageConfig; site: SiteConfig }) {
   if (page.type === "auth") {
     return (
-      <ProfileProvider>
+      <ProfileProvider guestOnly>
         <SitePage page={page} site={site} />
       </ProfileProvider>
     );

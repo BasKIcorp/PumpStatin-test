@@ -91,11 +91,54 @@ class SiteConfig(BaseModel):
     routing: SiteRoutingConfig | None = None
 
 
+def default_login_page() -> PageConfig:
+    """Minimal auth page when profile has no site.yaml."""
+    return PageConfig(
+        id="login",
+        title="Вход",
+        route="/login",
+        inMenu=False,
+        type="auth",
+        pageProfile="auth-minimal",
+        grid=PageGridConfig(cols=12, rowHeight=40),
+        blocks=[
+            BlockConfig(
+                id="login-brand",
+                type="auth/brand-panel",
+                layout=BlockGridLayout(x=0, y=0, w=8, h=16),
+            ),
+            BlockConfig(
+                id="login-form",
+                type="auth/login-form",
+                layout=BlockGridLayout(x=8, y=0, w=4, h=8),
+                props={"title": "Вход"},
+            ),
+            BlockConfig(
+                id="login-quick",
+                type="auth/quick-login",
+                layout=BlockGridLayout(x=8, y=8, w=4, h=6),
+            ),
+            BlockConfig(
+                id="login-admin",
+                type="auth/admin-entry",
+                layout=BlockGridLayout(x=8, y=14, w=4, h=2),
+            ),
+            BlockConfig(
+                id="login-back",
+                type="auth/back-link",
+                layout=BlockGridLayout(x=8, y=16, w=4, h=1),
+            ),
+        ],
+    )
+
+
 def get_default_site(profile_id: str) -> dict[str, Any]:
     """Дефолтная структура site.yaml для профиля без своего конфига."""
+    _ = profile_id
     return SiteConfig(
         routing=SiteRoutingConfig(landingPageId="home"),
         pages=[
+            default_login_page(),
             PageConfig(
                 id="home",
                 title="Главная",

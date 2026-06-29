@@ -6,8 +6,24 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { FIGMA } from "@/routes/admin/studio/figma/figmaTokens";
 import { UndoRedoButtons } from "@/routes/admin/studio/components/UndoRedoButtons";
+import { useProfile } from "@/providers/ProfileProvider";
 import type { WizardNavState, WizardStep } from "../wizardTypes";
 import { STEP_ICONS } from "../wizardTypes";
+
+function resolveStepLabel(
+  step: WizardStep,
+  branding: ReturnType<typeof useProfile>["branding"],
+): string {
+  if (step.title?.trim()) return step.title;
+  if (step.titleKey) {
+    const top = branding[step.titleKey as keyof typeof branding];
+    if (typeof top === "string" && top.trim()) return top;
+    const copy = (branding.copy as Record<string, string> | undefined)?.[step.titleKey];
+    if (copy?.trim()) return copy;
+  }
+  if (step.subtitle?.trim()) return step.subtitle;
+  return step.titleKey ?? step.id;
+}
 
 function SortableRow({
   id,
@@ -34,9 +50,12 @@ function SortableRow({
     color: isSelected ? FIGMA.accent : FIGMA.textMuted,
   };
 
+  const stepId = id.startsWith("step:") ? id.slice("step:".length) : id;
+
   return (
     <div
       ref={setNodeRef}
+      data-wizard-step-id={stepId}
       style={style}
       onClick={onSelect}
       className="group flex cursor-pointer items-center gap-1.5 rounded px-2 py-1.5 text-[11px]"
@@ -92,9 +111,12 @@ export function WizardNavPanel({
   /** Toolbar dropdown instead of full list */
   compactStepSwitcher?: boolean;
 }) {
+  const { branding } = useProfile();
+
   if (compactStepSwitcher) {
     return (
       <select
+        data-testid="wizard-step-switcher"
         className="max-w-[220px] rounded border-0 px-2 py-1 text-[11px] text-white"
         style={{ background: FIGMA.inputBg }}
         value={selectedStepId ?? ""}
@@ -102,7 +124,7 @@ export function WizardNavPanel({
       >
         {nav.steps.map((step) => (
           <option key={step.id} value={step.id}>
-            {step.title ?? step.titleKey ?? step.id}
+            {resolveStepLabel(step, branding)}
           </option>
         ))}
       </select>
@@ -125,7 +147,7 @@ export function WizardNavPanel({
               key={step.id}
               id={`step:${step.id}`}
               icon={STEP_ICONS[step.type] ?? "🔹"}
-              label={step.title ?? step.titleKey ?? step.id}
+              label={resolveStepLabel(step, branding)}
               isSelected={selectedStepId === step.id}
               onSelect={() => onSelectStep(step.id)}
               onDelete={() => onRemoveStep(step.id)}

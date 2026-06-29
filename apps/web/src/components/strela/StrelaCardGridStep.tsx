@@ -74,7 +74,7 @@ export function StrelaCardGridStep({
                 .split(/\n+/)
                 .map((line) => line.trim())
                 .filter(Boolean)
-            : ["—"];
+            : [];
           const disabled = card.enabled === false;
 
           const studioMode = Boolean(onSelectCard);
@@ -84,7 +84,7 @@ export function StrelaCardGridStep({
               key={card.id}
               identifier={card.title}
               boxTitle={null}
-              bullets={bullets.length ? bullets : ["—"]}
+              bullets={bullets}
               image={<CardImage src={cardImageSrc(card, index)} title={card.title} />}
               captionLogoSrc={captionLogo}
               imageHoverVariant={CARD_HOVER_VARIANTS[index % CARD_HOVER_VARIANTS.length]}

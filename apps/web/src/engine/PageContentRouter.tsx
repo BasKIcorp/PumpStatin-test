@@ -1,12 +1,14 @@
 import { useCallback } from "react";
 import type { BlockConfig, BlockGridLayout, PageConfig, SiteConfig } from "@pumpstation/contracts";
+import { DEFAULT_GRID_COLS } from "@pumpstation/contracts";
 import { useProfile } from "@/providers/ProfileProvider";
 import { AppShell } from "@/components/layout/AppShell";
 import { SiteLayout } from "@/engine/SiteLayout";
 import { GridPageContent } from "@/engine/GridPageContent";
+import { AuthPageContent } from "@/engine/AuthPageContent";
 import { AuthLoginProvider } from "@/blocks/auth/AuthLoginProvider";
 import type { PageEditorOptions } from "@/engine/pageEditorTypes";
-import { clampLayout, canPlaceLayout, pageGridMetrics } from "@/lib/gridLayout";
+import { clampLayout, canPlaceLayout, pageGridMetrics, reorderAuthColumnByIds } from "@/lib/gridLayout";
 
 export interface PageContentRouterProps {
   page: PageConfig;
@@ -49,11 +51,27 @@ export function PageContentRouter({ page, blocks, site, editor }: PageContentRou
     : undefined;
 
   if (page.type === "auth") {
-    const grid = (
-      <GridPageContent page={page} blocks={blocks} site={site} editor={editorOpts} />
+    const authCols = page.grid?.cols ?? DEFAULT_GRID_COLS;
+    const authEditor = editor
+      ? {
+          selectedId: editor.selectedId,
+          onSelect: editor.onSelect,
+          profileId: editor.profileId,
+          blocks,
+          onColumnReorder: editor.onBlocksChange
+            ? (column: "left" | "right", orderedIds: string[]) => {
+                editor.onBlocksChange!((prev) =>
+                  reorderAuthColumnByIds(prev, column, orderedIds, authCols),
+                );
+              }
+            : undefined,
+        }
+      : undefined;
+    const authContent = (
+      <AuthPageContent page={page} blocks={blocks} site={site} editor={authEditor} />
     );
-    if (editor) return grid;
-    return <AuthLoginProvider>{grid}</AuthLoginProvider>;
+    if (editor) return authContent;
+    return <AuthLoginProvider>{authContent}</AuthLoginProvider>;
   }
 
   const grid = <GridPageContent page={page} blocks={blocks} site={site} editor={editorOpts} />;

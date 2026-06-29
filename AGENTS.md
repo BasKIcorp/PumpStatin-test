@@ -49,7 +49,8 @@
 
 ```powershell
 pnpm install
-pnpm dev:api    # API :8000 (SQLite data/pumpstation.db)
+pnpm dev:local  # API + UI на свободных портах (см. .dev-ports.json)
+pnpm dev:api    # API :8000
 pnpm dev:web    # UI :5173
 ```
 

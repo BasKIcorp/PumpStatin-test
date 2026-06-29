@@ -8,7 +8,9 @@ import { blockProfileProps } from "@/engine/blockProfile";
 import type { PageEditorOptions } from "@/engine/pageEditorTypes";
 import {
   BlockShell,
+  CMS_GRID_MAX_WIDTH_PX,
   GRID_GAP_PX,
+  artboardWidthForCols,
   canPlaceLayout,
   clampLayout,
   gridContentHeight,
@@ -410,6 +412,10 @@ export function GridPageContent({ page, blocks, site, editor }: GridPageContentP
   const wizardSurface = page.type === "wizard";
   const wizardEditorSurface = Boolean(editor && wizardSurface);
   const wizardExpandedGrid = wizardSurface && cols > (gridMetrics.minCols ?? cols);
+  const viewportWidth =
+    wizardExpandedGrid && gridMetrics.minCols
+      ? artboardWidthForCols(gridMetrics.minCols, gridMetrics.minCols, CMS_GRID_MAX_WIDTH_PX)
+      : null;
 
   return (
     <div
@@ -442,6 +448,28 @@ export function GridPageContent({ page, blocks, site, editor }: GridPageContentP
           : undefined
       }
     >
+      {editor && viewportWidth != null ? (
+        <>
+          <div
+            className="pointer-events-none absolute inset-y-0 left-0 z-[1] border-r-2 border-dashed border-[#0d99ff]/50 bg-[#0d99ff]/[0.03]"
+            style={{ width: viewportWidth }}
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute left-2 top-1 z-[2] rounded bg-[#0d99ff]/90 px-1.5 py-0.5 text-[9px] font-medium text-white"
+            aria-hidden
+          >
+            Рабочая область
+          </div>
+          <div
+            className="pointer-events-none absolute z-[2] rounded bg-neutral-500/80 px-1.5 py-0.5 text-[9px] text-white"
+            style={{ left: viewportWidth + 8, top: 4 }}
+            aria-hidden
+          >
+            Лента карточек
+          </div>
+        </>
+      ) : null}
       {normalized.map((block) => {
         if (editor) {
           return (

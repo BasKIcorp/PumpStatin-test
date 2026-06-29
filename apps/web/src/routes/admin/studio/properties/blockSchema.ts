@@ -25,6 +25,27 @@ export interface BlockTypeInfo {
 
 const BLOCK_SCHEMAS: BlockTypeInfo[] = [
   {
+    type: "cta-button",
+    label: "Кнопка (CTA)",
+    icon: "🔘",
+    category: "content",
+    ioRole: "action",
+    fields: [
+      { key: "label", label: "Текст", section: "content", type: "text", defaultValue: "Подобрать" },
+      { key: "href", label: "Ссылка (URL)", section: "behavior", type: "text", defaultValue: "/" },
+      { key: "pageId", label: "Страница (id)", section: "behavior", type: "text" },
+      {
+        key: "variant",
+        label: "Стиль",
+        section: "style",
+        type: "select",
+        defaultValue: "primary",
+        options: ["primary", "outline", "ghost"],
+      },
+      { key: "openInNewTab", label: "Новая вкладка", section: "behavior", type: "checkbox", defaultValue: false },
+    ],
+  },
+  {
     type: "hero",
     label: "Hero (заголовок + CTA)",
     icon: "🎯",
@@ -166,7 +187,14 @@ const BLOCK_SCHEMAS: BlockTypeInfo[] = [
     label: "Форма входа",
     icon: "🔐",
     category: "auth",
-    fields: [{ key: "title", label: "Заголовок", section: "content", type: "text", defaultValue: "Вход" }],
+    fields: [
+      { key: "title", label: "Заголовок формы", section: "content", type: "text", defaultValue: "Вход" },
+      { key: "emailLabel", label: "Подпись email", section: "content", type: "text", defaultValue: "Email или логин" },
+      { key: "passwordLabel", label: "Подпись пароля", section: "content", type: "text", defaultValue: "Пароль" },
+      { key: "submitLabel", label: "Текст кнопки", section: "content", type: "text", defaultValue: "Войти" },
+      { key: "emailPlaceholder", label: "Placeholder email", section: "content", type: "text" },
+      { key: "passwordPlaceholder", label: "Placeholder пароля", section: "content", type: "text" },
+    ],
   },
   {
     type: "auth/quick-login",
@@ -247,6 +275,17 @@ const BLOCK_SCHEMAS: BlockTypeInfo[] = [
     ],
   },
   {
+    type: "wizard/funnel-header-actions",
+    label: "Кнопки шапки funnel",
+    icon: "🔘",
+    category: "wizard",
+    ioRole: "action",
+    fields: [
+      { key: "stepId", label: "ID шага", section: "behavior", type: "text", defaultValue: "product-class" },
+      { key: "loginLabel", label: "Текст «Войти»", section: "content", type: "text" },
+    ],
+  },
+  {
     type: "wizard/selection-card",
     label: "Карточка подбора",
     icon: "🃏",
@@ -258,9 +297,11 @@ const BLOCK_SCHEMAS: BlockTypeInfo[] = [
       { key: "title", label: "Заголовок", section: "content", type: "text" },
       { key: "description", label: "Описание", section: "content", type: "textarea" },
       { key: "image", label: "Изображение", section: "content", type: "text" },
-      { key: "next", label: "Следующий шаг", section: "behavior", type: "text" },
-      { key: "flow", label: "Flow ID", section: "behavior", type: "text" },
-      { key: "enabled", label: "Активна", section: "behavior", type: "checkbox" },
+      { key: "showCaptionLogo", label: "Маркер у названия", section: "style", type: "checkbox", defaultValue: false },
+      { key: "captionLogoUrl", label: "URL маркера", section: "style", type: "text" },
+      { key: "next", label: "Следующий шаг (id)", section: "behavior", type: "text" },
+      { key: "flow", label: "Сценарий (flow id)", section: "behavior", type: "text" },
+      { key: "enabled", label: "Активна на сайте", section: "behavior", type: "checkbox", defaultValue: true },
     ],
   },
   {
@@ -317,6 +358,9 @@ const BLOCK_SCHEMAS: BlockTypeInfo[] = [
         defaultValue: "curves.qh",
         options: ["curves.qh", "curves.p2", "curves.npsh", "curves.qh_main"],
       },
+      { key: "lineColor", label: "Цвет линии", section: "style", type: "color", defaultValue: "#13347f" },
+      { key: "lineWidth", label: "Толщина линии", section: "style", type: "number", defaultValue: 2 },
+      { key: "gridStep", label: "Шаг сетки", section: "style", type: "number", defaultValue: 10 },
     ],
   },
   {

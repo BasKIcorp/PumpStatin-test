@@ -90,10 +90,12 @@ export function pdfTemplateFingerprint(data: {
   mode: string;
   blocks?: unknown[];
   pages?: unknown[];
+  pageDefaults?: unknown;
 }): string {
   return stableStringify({
     templateName: data.templateName,
     mode: data.mode,
+    pageDefaults: data.pageDefaults,
     pages: data.pages,
     blocks: data.blocks,
   });

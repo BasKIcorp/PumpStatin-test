@@ -1,11 +1,13 @@
 import { useState } from "react";
+import { ImageDropUpload } from "@/routes/admin/studio/components/ImageDropUpload";
 
 export interface ThemeEditorProps {
   branding: Record<string, unknown>;
   onSave: (branding: Record<string, unknown>) => void;
+  profileId?: string;
 }
 
-export function ThemeEditor({ branding, onSave }: ThemeEditorProps) {
+export function ThemeEditor({ branding, onSave, profileId }: ThemeEditorProps) {
   const b = branding as Record<string, any>;
   const colors: Record<string, string> = b.colors ?? {};
   const fonts: Record<string, string> = b.fonts ?? {};
@@ -25,6 +27,8 @@ export function ThemeEditor({ branding, onSave }: ThemeEditorProps) {
     logoUrl: assets.logoUrl ?? "",
     funnelBg: String(appearance.funnelBackground ?? "#f5f7fa"),
     panelBorder: String(appearance.panelBorder ?? "#d1d5db"),
+    sidebarWordmark: String(appearance.funnel_sidebar_wordmark_url ?? ""),
+    cardCaptionLogo: String(appearance.selection_card_caption_logo_url ?? ""),
   });
 
   const layoutOptions = [
@@ -58,6 +62,8 @@ export function ThemeEditor({ branding, onSave }: ThemeEditorProps) {
         ...appearance,
         funnelBackground: form.funnelBg,
         panelBorder: form.panelBorder,
+        funnel_sidebar_wordmark_url: form.sidebarWordmark || appearance.funnel_sidebar_wordmark_url,
+        selection_card_caption_logo_url: form.cardCaptionLogo || appearance.selection_card_caption_logo_url,
       },
     });
   };
@@ -101,12 +107,54 @@ export function ThemeEditor({ branding, onSave }: ThemeEditorProps) {
             </select>
           </Field>
 
-          <Field label="URL логотипа">
-            <input
-              className="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm"
-              value={form.logoUrl}
-              onChange={(e) => setForm({ ...form, logoUrl: e.target.value })}
-            />
+          <Field label="Логотип сайта (header)">
+            {profileId ? (
+              <ImageDropUpload
+                profileId={profileId}
+                value={form.logoUrl}
+                onChange={(url) => setForm({ ...form, logoUrl: url })}
+              />
+            ) : (
+              <input
+                className="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm"
+                value={form.logoUrl}
+                onChange={(e) => setForm({ ...form, logoUrl: e.target.value })}
+              />
+            )}
+          </Field>
+        </section>
+
+        <section className="space-y-3">
+          <h4 className="text-xs font-semibold uppercase text-neutral-500">Логотипы визарда</h4>
+          <Field label="Wordmark сайдбара">
+            {profileId ? (
+              <ImageDropUpload
+                profileId={profileId}
+                value={form.sidebarWordmark}
+                onChange={(url) => setForm({ ...form, sidebarWordmark: url })}
+              />
+            ) : (
+              <input
+                className="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm"
+                value={form.sidebarWordmark}
+                onChange={(e) => setForm({ ...form, sidebarWordmark: e.target.value })}
+              />
+            )}
+          </Field>
+          <Field label="Маркер карточки (по умолчанию)">
+            {profileId ? (
+              <ImageDropUpload
+                profileId={profileId}
+                value={form.cardCaptionLogo}
+                onChange={(url) => setForm({ ...form, cardCaptionLogo: url })}
+              />
+            ) : (
+              <input
+                className="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm"
+                value={form.cardCaptionLogo}
+                onChange={(e) => setForm({ ...form, cardCaptionLogo: e.target.value })}
+              />
+            )}
           </Field>
         </section>
 

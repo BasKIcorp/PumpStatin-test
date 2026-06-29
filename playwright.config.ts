@@ -1,14 +1,32 @@
 import { defineConfig, devices } from "@playwright/test";
 
+/** Dedicated port so e2e does not reuse a stale or foreign dev server on 5173. */
+const E2E_WEB_PORT = process.env.PLAYWRIGHT_WEB_PORT ?? "5199";
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${E2E_WEB_PORT}`;
+
 export default defineConfig({
   testDir: "./e2e",
   timeout: 60_000,
   retries: process.env.CI ? 1 : 0,
+  workers: process.env.CI ? undefined : 2,
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:5173",
+    baseURL,
     trace: "on-first-retry",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    {
+      name: "chromium",
+      testIgnore: [/visual-validation\.spec\.ts$/, /visual-studio-probe\.spec\.ts$/],
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "chromium-visual",
+      testMatch: [/visual-validation\.spec\.ts$/, /visual-studio-probe\.spec\.ts$/],
+      fullyParallel: false,
+      workers: 1,
+      use: { ...devices["Desktop Chrome"] },
+    },
+  ],
   webServer: process.env.CI
     ? undefined
     : [
@@ -19,9 +37,9 @@ export default defineConfig({
           timeout: 120_000,
         },
         {
-          command: "pnpm --filter @pumpstation/web dev --host 127.0.0.1 --port 5173",
-          url: "http://127.0.0.1:5173",
-          reuseExistingServer: true,
+          command: `pnpm --filter @pumpstation/web dev --host 127.0.0.1 --port ${E2E_WEB_PORT} --strictPort`,
+          url: baseURL,
+          reuseExistingServer: false,
           timeout: 120_000,
         },
       ],

@@ -1,6 +1,7 @@
 import type { BlockProps } from "@pumpstation/contracts";
 
 import { HeroBlock } from "@/blocks/HeroBlock";
+import { CtaButtonBlock } from "@/blocks/CtaButtonBlock";
 import { RichTextBlock } from "@/blocks/RichTextBlock";
 import { CardGridBlock } from "@/blocks/CardGridBlock";
 import {
@@ -26,6 +27,7 @@ import {
   WizardCardGridStrelaBlock,
   WizardEmbedBlock,
   WizardFunnelHeadingBlock,
+  WizardFunnelHeaderActionsBlock,
   WizardFunnelSidebarBlock,
   WizardLegacySelectionBlock,
   WizardSelectionCardBlock,
@@ -43,6 +45,7 @@ export type BlockComponent = React.ComponentType<BlockProps>;
 
 export const BLOCK_REGISTRY: Record<string, BlockComponent> = {
   hero: HeroBlock,
+  "cta-button": CtaButtonBlock,
   "rich-text": RichTextBlock,
   "card-grid": CardGridBlock,
   "product-grid": ProductGridBlock,
@@ -64,6 +67,7 @@ export const BLOCK_REGISTRY: Record<string, BlockComponent> = {
   "wizard/step-heading": WizardStepHeadingBlock,
   "wizard/funnel-sidebar": WizardFunnelSidebarBlock,
   "wizard/funnel-heading": WizardFunnelHeadingBlock,
+  "wizard/funnel-header-actions": WizardFunnelHeaderActionsBlock,
   "wizard/selection-card": WizardSelectionCardBlock,
   "wizard/selection-work-header": WizardSelectionWorkHeaderBlock,
   "wizard/selection-params-panel": WizardSelectionParamsPanelBlock,

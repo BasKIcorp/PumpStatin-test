@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import type { BlockConfig, BlockGridLayout, PageConfig, SiteConfig } from "@pumpstation/contracts";
 import { GridPageContent } from "@/engine/GridPageContent";
 import { WizardEngine } from "@/engines/WizardEngine";
@@ -19,6 +19,7 @@ import {
 import { SelectionFormBlocksProvider } from "@/blocks/wizard/WizardBlocks";
 import type { NavigationConfig } from "@/types/wizard";
 import type { WizardStepDef } from "@/types/wizard";
+import { useHorizontalWheelScroll } from "@/hooks/useHorizontalWheelScroll";
 
 export interface WizardStepRendererProps {
   page: PageConfig;
@@ -72,6 +73,8 @@ export function WizardStepRenderer({
   const useFrames = frameBlocks.length > 0 && (Boolean(editor) || gridDecomposed);
   const gridMetrics = pageGridMetrics(page, page.type === "wizard" ? frameBlocks : undefined);
   const { cols } = gridMetrics;
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useHorizontalWheelScroll(scrollRef, Boolean(strelaDecomposed && !editor));
 
   const onLayoutChange = useCallback(
     (id: string, layout: BlockGridLayout) => {
@@ -99,6 +102,7 @@ export function WizardStepRenderer({
 
     return (
       <div
+        ref={scrollRef}
         className={
           strelaDecomposed && editor
             ? "flex w-full min-h-0 flex-col overflow-x-auto overflow-y-auto bg-[var(--funnel-page-bg)]"

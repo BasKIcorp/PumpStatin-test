@@ -14,6 +14,7 @@ import {
   type FlowConfig,
   type WizardNavState,
   type WizardStep,
+  STEP_TYPES,
   flowKeyFromRef,
 } from "./wizardTypes";
 import {
@@ -21,7 +22,6 @@ import {
   blocksForWizardStep,
   normalizeWizardPage,
   navWithCardsFromBlocks,
-  patchSelectionCardProps,
   patchWizardStepBlocks,
   persistNormalizedWizardPage,
   removeCardBlockFromUnifiedStep,
@@ -35,8 +35,6 @@ import {
   WIZARD_SELECTION_CARD,
 } from "./wizardFrameUtils";
 import { FIGMA } from "../figma/figmaTokens";
-import { ImageDropUpload } from "../components/ImageDropUpload";
-import { STEP_TYPES } from "./wizardTypes";
 import { WizardStudioContext } from "./WizardStudioContext";
 
 const EMPTY_APPEARANCE = {} as StrelaAppearance;
@@ -301,25 +299,6 @@ export function WizardUnifiedStudioEditor({
     [patchEditor, isStrelaFunnel],
   );
 
-  const updateCard = useCallback(
-    (stepId: string, cardId: string, patch: Partial<CardItem>) => {
-      patchEditor((prev) => ({
-        ...prev,
-        nav: {
-          ...prev.nav,
-          cards: {
-            ...prev.nav.cards,
-            [stepId]: (prev.nav.cards[stepId] ?? []).map((c) =>
-              c.id === cardId ? { ...c, ...patch } : c,
-            ),
-          },
-        },
-        draftPage: patchSelectionCardProps(prev.draftPage, stepId, cardId, patch),
-      }));
-    },
-    [patchEditor],
-  );
-
   const updateFlow = useCallback(
     (flow: FlowConfig) => {
       setNav((prev) => ({
@@ -552,32 +531,16 @@ export function WizardUnifiedStudioEditor({
           </div>
         </div>
       )}
-      {selectedCard && selectedStepId && (
-        <div className="space-y-2 text-sm">
-          <div className="mb-2 text-xs font-medium text-white">Карточка</div>
-          <label className="mb-1 block text-[10px] text-[#888]">Заголовок</label>
-          <input
-            className="mb-2 w-full rounded border-0 px-2 py-1 text-xs text-white"
-            style={{ background: FIGMA.inputBg }}
-            value={selectedCard.title}
-            onChange={(e) => updateCard(selectedStepId, selectedCard.id, { title: e.target.value })}
-          />
-          <ImageDropUpload
-            profileId={profileBundle.profile.id}
-            value={selectedCard.image}
-            onChange={(url) => updateCard(selectedStepId, selectedCard.id, { image: url || undefined })}
-          />
-          <label className="mb-1 block text-[10px] text-[#888]">Описание</label>
-          <textarea
-            className="mb-2 w-full rounded border-0 px-2 py-1 text-xs text-white"
-            style={{ background: FIGMA.inputBg }}
-            rows={3}
-            value={selectedCard.description ?? ""}
-            onChange={(e) =>
-              updateCard(selectedStepId, selectedCard.id, { description: e.target.value })
-            }
-          />
-        </div>
+      {selectedCard && selectedStepId && selectedBlockId && (
+        <p className="mb-4 rounded bg-[#2a2a2a] px-2 py-2 text-[10px] leading-snug text-[#888]">
+          Свойства карточки редактируются в панели «Свойства» ниже (или справа). Здесь — только
+          шаг и маршрутизация страницы.
+        </p>
+      )}
+      {selectedCard && selectedStepId && !selectedBlockId && (
+        <p className="mb-4 rounded border border-dashed border-[#444] px-2 py-2 text-[10px] text-[#888]">
+          Кликните карточку на холсте или в «Слоях», чтобы редактировать заголовок и описание.
+        </p>
       )}
       {selectedField && currentFlow && (
         <WizardFlowFieldEditor
@@ -613,18 +576,21 @@ export function WizardUnifiedStudioEditor({
         site={site}
         profileBundle={profileBundle}
         initialNav={nav}
-        onPageChange={(patch) => setDraftPage((prev) => ({ ...prev, ...patch }))}
+        onPageChange={(patch) =>
+          patchEditor((prev) => ({ ...prev, draftPage: { ...prev.draftPage, ...patch } }))
+        }
         onBlocksChange={(nextPage) => {
           const persisted = persistNormalizedWizardPage(nextPage);
-          patchEditor(
-            (prev) => ({
-              ...prev,
-              draftPage: persisted,
-              nav: navWithCardsFromBlocks(prev.nav, persisted),
-            }),
-            false,
-          );
+          patchEditor((prev) => ({
+            ...prev,
+            draftPage: persisted,
+            nav: navWithCardsFromBlocks(prev.nav, persisted),
+          }));
         }}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        onUndo={undo}
+        onRedo={redo}
         selectedBlockId={selectedBlockId}
         onSelectBlock={setSelectedBlockId}
         previewStepId={previewStep}

@@ -24,6 +24,11 @@ export function AuthBrandPanelBlock({ block }: BlockProps) {
 export function AuthLoginFormBlock({ block }: BlockProps) {
   const { email, setEmail, password, setPassword, error, loading, doLogin } = useAuthLogin();
   const title = String(block.props.title ?? "Вход");
+  const emailLabel = String(block.props.emailLabel ?? "Email или логин");
+  const passwordLabel = String(block.props.passwordLabel ?? "Пароль");
+  const submitLabel = String(block.props.submitLabel ?? "Войти");
+  const emailPlaceholder = String(block.props.emailPlaceholder ?? "");
+  const passwordPlaceholder = String(block.props.passwordPlaceholder ?? "");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,13 +41,14 @@ export function AuthLoginFormBlock({ block }: BlockProps) {
         <form onSubmit={handleSubmit}>
           <div className="mb-[10px]">
             <label htmlFor="lf-email" className={labelCls}>
-              Email или логин
+              {emailLabel}
             </label>
             <input
               id="lf-email"
               type="text"
               required
               autoComplete="username"
+              placeholder={emailPlaceholder || undefined}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className={inputCls}
@@ -50,13 +56,14 @@ export function AuthLoginFormBlock({ block }: BlockProps) {
           </div>
           <div className="mb-[10px]">
             <label htmlFor="lf-password" className={labelCls}>
-              Пароль
+              {passwordLabel}
             </label>
             <input
               id="lf-password"
               type="password"
               required
               autoComplete="current-password"
+              placeholder={passwordPlaceholder || undefined}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className={inputCls}
@@ -72,7 +79,7 @@ export function AuthLoginFormBlock({ block }: BlockProps) {
             disabled={loading}
             className="w-full rounded-none border border-black bg-white py-[5px] text-[12px] font-semibold text-black hover:bg-neutral-50 disabled:opacity-50"
           >
-            {loading ? "Вход…" : "Войти"}
+            {loading ? "Вход…" : submitLabel}
           </button>
         </form>
     </div>

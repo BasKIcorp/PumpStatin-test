@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import type { PageConfig, SiteConfig } from "@pumpstation/contracts";
 import { useProfile } from "@/providers/ProfileProvider";
 import { useWizardStore } from "@/stores/wizardStore";
+import { readPersistedWizardStep } from "@/lib/wizardPersistence";
 import { AppShell } from "@/components/layout/AppShell";
 import { StrelaWizardShell } from "@/components/strela/StrelaWizardShell";
 import { WizardStepRenderer } from "@/engine/WizardStepRenderer";
@@ -34,7 +35,7 @@ export function WizardGridPage({
   /** Studio/preview: сайдбар absolute внутри контейнера, не fixed на viewport */
   embedded?: boolean;
 }) {
-  const { branding, wizard } = useProfile();
+  const { branding, wizard, profile } = useProfile();
   const storeStep = useWizardStore((s) => s.step);
   const step = previewStepId ?? storeStep;
   const initFromNavigation = useWizardStore((s) => s.initFromNavigation);
@@ -42,6 +43,7 @@ export function WizardGridPage({
   const nav = wizard.navigation as NavigationConfig;
   const stepDef = nav.steps?.find((s) => s.id === step);
   const cards = nav.cards?.[step] ?? [];
+  const profileId = profile.id;
   const normalizedPage = normalizeWizardPage(page);
   const frameBlocks =
     (normalizedPage.blocks ?? []).some((b) => b.props?.stepId)
@@ -58,8 +60,14 @@ export function WizardGridPage({
 
   useEffect(() => {
     if (previewStepId) return;
-    const first = nav?.steps?.[0]?.id;
-    if (first && storeStep === "product-class") {
+    const stepIds = nav?.steps?.map((s) => s.id) ?? [];
+    const restored = readPersistedWizardStep(profileId, stepIds);
+    if (restored && restored !== storeStep && stepIds.includes(restored)) {
+      useWizardStore.setState({ step: restored });
+      return;
+    }
+    const first = stepIds[0];
+    if (first && !stepIds.includes(storeStep)) {
       initFromNavigation(first);
     }
   }, [wizard.navigation, initFromNavigation, storeStep, nav?.steps, previewStepId]);

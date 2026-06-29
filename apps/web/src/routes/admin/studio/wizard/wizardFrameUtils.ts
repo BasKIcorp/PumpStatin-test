@@ -5,6 +5,7 @@ import type { WizardStepDef } from "@/types/wizard";
 
 export const WIZARD_FUNNEL_SIDEBAR = "wizard/funnel-sidebar";
 export const WIZARD_FUNNEL_HEADING = "wizard/funnel-heading";
+export const WIZARD_FUNNEL_HEADER_ACTIONS = "wizard/funnel-header-actions";
 export const WIZARD_SELECTION_CARD = "wizard/selection-card";
 export const WIZARD_SELECTION_WORK_HEADER = "wizard/selection-work-header";
 export const WIZARD_SELECTION_PARAMS = "wizard/selection-params-panel";
@@ -25,8 +26,9 @@ const SELECTION_FORM_BLOCK_TYPES = new Set([
 
 const SIDEBAR_COLS = 2;
 const CONTENT_X = 2;
-/** Ширина заголовка funnel в колонках (видимая область) */
-const CONTENT_W = 10;
+/** Ширина заголовка funnel в колонках (видимая область) — reserved for future layout rules */
+const _CONTENT_W = 10;
+void _CONTENT_W;
 
 /** Ширина одной карточки в колонках grid (~352px при базовой сетке 12 col / 1152px) */
 export const SELECTION_CARD_COL_W = 4;
@@ -64,6 +66,7 @@ export function usesDecomposedStrelaFrames(blocks: BlockConfig[]): boolean {
     (b) =>
       b.type === WIZARD_FUNNEL_SIDEBAR ||
       b.type === WIZARD_FUNNEL_HEADING ||
+      b.type === WIZARD_FUNNEL_HEADER_ACTIONS ||
       b.type === WIZARD_SELECTION_CARD,
   );
 }
@@ -117,13 +120,17 @@ export function ensureDecomposedCardBlocks(
 
   const shell = strela
     ? blocks.filter(
-        (b) => b.type === WIZARD_FUNNEL_SIDEBAR || b.type === WIZARD_FUNNEL_HEADING,
+        (b) =>
+          b.type === WIZARD_FUNNEL_SIDEBAR ||
+          b.type === WIZARD_FUNNEL_HEADING ||
+          b.type === WIZARD_FUNNEL_HEADER_ACTIONS,
       )
     : blocks.filter((b) => b.type === "wizard/step-heading");
   const other = blocks.filter(
     (b) =>
       b.type !== WIZARD_FUNNEL_SIDEBAR &&
       b.type !== WIZARD_FUNNEL_HEADING &&
+      b.type !== WIZARD_FUNNEL_HEADER_ACTIONS &&
       b.type !== "wizard/step-heading" &&
       b.type !== WIZARD_SELECTION_CARD &&
       b.type !== "wizard/card-grid-strela" &&
@@ -134,6 +141,21 @@ export function ensureDecomposedCardBlocks(
     existingCards.map((b) => [String(b.props.cardId), b]),
   );
   const reposition = cardLayoutNeedsReposition(existingCards, cards);
+
+  if (strela && !shell.some((b) => b.type === WIZARD_FUNNEL_HEADER_ACTIONS)) {
+    const heading = shell.find((b) => b.type === WIZARD_FUNNEL_HEADING);
+    shell.push({
+      id: `w-factions-${step.id}`,
+      type: WIZARD_FUNNEL_HEADER_ACTIONS,
+      layout: {
+        x: CONTENT_X + 8,
+        y: heading?.layout?.y ?? 0,
+        w: 2,
+        h: heading?.layout?.h ?? 2,
+      },
+      props: { stepId: step.id },
+    });
+  }
 
   const cardBlocks = cards.map((card, index) => {
     const id = cardBlockId(step.id, card.id);
@@ -173,6 +195,7 @@ export function buildDecomposedStrelaFrameBlocks(
   const byId = new Map(preserveBlocks.map((b) => [b.id, b]));
   const sidebarId = `w-sidebar-${step.id}`;
   const headingId = `w-fheading-${step.id}`;
+  const actionsId = `w-factions-${step.id}`;
 
   const preservedSidebar =
     byId.get(sidebarId) ?? preserveBlocks.find((b) => b.type === WIZARD_FUNNEL_SIDEBAR);
@@ -192,12 +215,21 @@ export function buildDecomposedStrelaFrameBlocks(
     ({
       id: headingId,
       type: WIZARD_FUNNEL_HEADING,
-      layout: { x: CONTENT_X, y: 0, w: CONTENT_W, h: 2 },
+      layout: { x: CONTENT_X, y: 0, w: 8, h: 2 },
       props: {
         stepId: step.id,
         title: step.title,
         subtitle: step.subtitle,
       },
+    } satisfies BlockConfig);
+
+  const headerActions =
+    byId.get(actionsId) ??
+    ({
+      id: actionsId,
+      type: WIZARD_FUNNEL_HEADER_ACTIONS,
+      layout: { x: CONTENT_X + 8, y: 0, w: 2, h: 2 },
+      props: { stepId: step.id },
     } satisfies BlockConfig);
 
   const cardBlocks = cards.map((card, index) => {
@@ -212,7 +244,7 @@ export function buildDecomposedStrelaFrameBlocks(
     };
   });
 
-  return [sidebar, heading, ...cardBlocks];
+  return [sidebar, heading, headerActions, ...cardBlocks];
 }
 
 /** Non-Strela card-grid: step heading + selection-card blocks (Option C). */

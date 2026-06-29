@@ -13,6 +13,8 @@ import {
   studioSidebar,
 } from "./helpers/studio";
 
+test.describe.configure({ mode: "serial" });
+
 test.describe("Studio D&D", () => {
   test("page selector lists wizard pump selection page", async ({ page }) => {
     await loginAdmin(page);
@@ -43,13 +45,15 @@ test.describe("Studio D&D", () => {
     await waitStudioReady(page);
     await selectStudioPage(page, "Вход", "/login");
 
-    const sidebar = studioSidebar(page);
-    await sidebar.getByRole("button", { name: "Слои" }).click();
-    await sidebar.getByText("Форма входа").first().click();
+    await page
+      .locator("[data-testid=grid-canvas] [data-block-type='auth/login-form']")
+      .click({ force: true });
 
     const propsPanel = page.locator("aside").filter({ hasText: "Свойства" });
     await expect(propsPanel.getByText("Форма входа").first()).toBeVisible({ timeout: 5_000 });
-    const titleInput = propsPanel.locator("label", { hasText: "Заголовок" }).locator("xpath=following-sibling::*[1]");
+    const titleInput = propsPanel
+      .locator("label", { hasText: "Заголовок формы" })
+      .locator("xpath=following-sibling::*[1]");
     await titleInput.fill("Тестовый вход");
     await expect(page.locator("[data-testid=grid-canvas] h2").filter({ hasText: "Тестовый вход" })).toBeVisible({
       timeout: 5_000,
@@ -80,10 +84,12 @@ test.describe("Studio D&D", () => {
     await loginAdmin(page);
     await openStudioWizardTab(page);
     await expect(page.getByText("Подбор насосов").first()).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText("Шаги").first()).toBeVisible();
+    const sidebar = studioSidebar(page);
+    await expect(sidebar.getByText("Шаги", { exact: true }).first()).toBeVisible();
+    await expect(sidebar.getByRole("button", { name: "+ Шаг: карточки" })).toBeVisible({ timeout: 5_000 });
     await openStudioAssetsTab(page);
-    await expect(page.getByText("Шаг: карточки").first()).toBeVisible({ timeout: 5_000 });
-    await expect(page.getByText("Блоки на шаге").first()).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByPlaceholder("Поиск блоков...").first()).toBeVisible({ timeout: 5_000 });
+    await expect(sidebar.getByText("Заголовок шага").first()).toBeVisible({ timeout: 5_000 });
   });
 
   test("PDF editor: layers and palette", async ({ page }) => {
@@ -117,15 +123,16 @@ test.describe("Studio D&D", () => {
     await loginAdmin(page);
     await waitStudioReady(page);
     await selectStudioPage(page, "О компании", "/about");
-    await expectCanvasBlockCount(page, 1);
+    const initialCount = await page.locator("[data-testid=grid-canvas] [data-block-type]").count();
+    expect(initialCount).toBeGreaterThan(0);
 
     await addBlockFromPalette(page, "Разделитель");
-    await expectCanvasBlockCount(page, 2);
+    await expectCanvasBlockCount(page, initialCount + 1);
 
     await page.getByRole("button", { name: "Сохранить" }).click();
     await expect(page.getByText("Сохранено").first()).toBeVisible({ timeout: 10_000 });
 
-    const hasDivider = await page.evaluate(async () => {
+    const dividerCount = await page.evaluate(async () => {
       const raw = localStorage.getItem("pumpstation-auth");
       const token = raw ? (JSON.parse(raw).state?.token as string | null) : null;
       const res = await fetch("/api/v1/admin/profiles/default/site", {
@@ -133,14 +140,14 @@ test.describe("Studio D&D", () => {
       });
       const site = await res.json();
       const about = site.pages?.find((p: { id: string }) => p.id === "about");
-      return (about?.blocks?.filter((b: { type: string }) => b.type === "divider").length ?? 0) >= 2;
+      return about?.blocks?.filter((b: { type: string }) => b.type === "divider").length ?? 0;
     });
-    expect(hasDivider).toBe(true);
+    expect(dividerCount).toBeGreaterThanOrEqual(initialCount + 1);
 
     await page.reload();
     await loginAdmin(page);
     await waitStudioReady(page);
     await selectStudioPage(page, "О компании", "/about");
-    await expectCanvasBlockCount(page, 2);
+    await expectCanvasBlockCount(page, initialCount + 1);
   });
 });

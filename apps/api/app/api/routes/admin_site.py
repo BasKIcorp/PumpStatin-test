@@ -264,6 +264,8 @@ def admin_pdf_preview(
         }
         if body.get("pages") is not None:
             template["pages"] = body["pages"]
+        if body.get("pageDefaults") is not None:
+            template["pageDefaults"] = body["pageDefaults"]
     elif tpl_path.is_file():
         with tpl_path.open("r", encoding="utf-8") as f:
             import json
@@ -399,6 +401,31 @@ def admin_status(
 
 
 # --- PDF templates ---
+
+
+@router.get("/profiles/{profile_id}/pdf/bindings")
+def admin_pdf_bindings(
+    profile_id: str,
+    _: Annotated[dict, Depends(require_admin)],
+):
+    """Список путей для {{bindings}} в PDF-шаблоне."""
+    if profile_id not in config_store.list_profile_ids():
+        raise HTTPException(404, "Profile not found")
+    return {
+        "paths": [
+            {"path": "branding.appTitle", "label": "Название сайта"},
+            {"path": "station.DN", "label": "DN станции"},
+            {"path": "station.dn_suction", "label": "DN всасывания"},
+            {"path": "station.dn_discharge", "label": "DN нагнетания"},
+            {"path": "station.velocity", "label": "Скорость"},
+            {"path": "pump.name", "label": "Модель насоса"},
+            {"path": "working_point.Q", "label": "Рабочая точка Q"},
+            {"path": "working_point.H", "label": "Рабочая точка H"},
+            {"path": "bom.items", "label": "Спецификация BOM"},
+            {"path": "curves.qh_main", "label": "Кривая Q-H"},
+            {"path": "configuration.DN", "label": "DN из конфигурации"},
+        ]
+    }
 
 
 @router.get("/profiles/{profile_id}/pdf/template")

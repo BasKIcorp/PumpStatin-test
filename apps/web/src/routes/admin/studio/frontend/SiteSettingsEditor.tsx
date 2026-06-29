@@ -9,6 +9,7 @@ export function SiteSettingsEditor({
   layout,
   routing,
   pages,
+  profileId,
   onSaveTheme,
   onSaveLayout,
   onSaveRouting,
@@ -17,6 +18,7 @@ export function SiteSettingsEditor({
   layout: SiteConfig["layout"];
   routing: SiteConfig["routing"];
   pages: SiteConfig["pages"];
+  profileId?: string;
   onSaveTheme: (branding: Record<string, unknown>) => void;
   onSaveLayout: (layout: SiteConfig["layout"]) => void;
   onSaveRouting: (routing: NonNullable<SiteConfig["routing"]>) => void;
@@ -24,7 +26,7 @@ export function SiteSettingsEditor({
   return (
     <div className="flex h-full min-h-0 flex-1 overflow-auto p-6" style={{ background: FIGMA.appBg }}>
       <div className="mx-auto w-full max-w-3xl space-y-8 rounded-lg bg-white p-6 shadow-xl">
-        <ThemeEditor branding={branding} onSave={onSaveTheme} />
+        <ThemeEditor branding={branding} profileId={profileId} onSave={onSaveTheme} />
         <hr className="border-neutral-200" />
         <SiteRoutingEditor routing={routing} pages={pages} onChange={onSaveRouting} />
         <hr className="border-neutral-200" />

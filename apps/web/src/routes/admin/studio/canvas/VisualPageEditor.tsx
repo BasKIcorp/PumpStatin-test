@@ -8,7 +8,14 @@ import { PropertiesPanel } from "@/routes/admin/studio/properties/PropertiesPane
 import { PagePropertiesPanel } from "@/routes/admin/studio/properties/PagePropertiesPanel";
 import { DraftPagePreview } from "@/routes/admin/studio/preview/DraftPagePreview";
 import { StudioGridEditorShell } from "./StudioGridEditorShell";
+import { StudioViewportToolbar } from "./StudioViewportToolbar";
+import {
+  viewportPresetById,
+  studioViewportGuideWidth,
+  type StudioViewportPresetId,
+} from "./studioViewport";
 import { pageGridMetrics, studioArtboardMinHeight } from "./studioGridMetrics";
+import { CMS_GRID_MAX_WIDTH_PX } from "@/lib/gridLayout";
 import { useUndoRedo } from "@/hooks/useUndoRedo";
 import { useStudioBlockEditor } from "@/hooks/useStudioBlockEditor";
 import { UndoRedoButtons } from "@/routes/admin/studio/components/UndoRedoButtons";
@@ -125,6 +132,12 @@ export function VisualPageEditor({
     />
   );
 
+  const [viewportPreset, setViewportPreset] = useState<StudioViewportPresetId>("desktop");
+  const viewport = viewportPresetById(viewportPreset);
+  const viewportGuideWidth = studioViewportGuideWidth(viewport.width, gridMetrics.artboardWidth, {
+    maxContentWidth: CMS_GRID_MAX_WIDTH_PX,
+  });
+
   return (
     <StudioGridEditorShell
       layers={
@@ -159,6 +172,11 @@ export function VisualPageEditor({
       artboardLabel={page.title}
       artboardWidth={gridMetrics.artboardWidth}
       artboardMinHeight={artboardMinHeight}
+      viewportGuideWidth={viewportGuideWidth}
+      highlightWorkArea
+      canvasToolbar={
+        <StudioViewportToolbar value={viewportPreset} onChange={setViewportPreset} />
+      }
       onCanvasSelect={onSelectBlock}
       onDropBlock={addBlock}
       canvas={isAuthPage ? <AuthLoginProvider>{canvas}</AuthLoginProvider> : canvas}

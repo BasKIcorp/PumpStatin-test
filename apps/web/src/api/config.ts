@@ -35,3 +35,7 @@ export interface ProfileBundle {
 export function fetchSiteConfig(): Promise<SiteConfig> {
   return apiFetch<SiteConfig>("/api/v1/config/site");
 }
+
+export function fetchGuestProfile(): Promise<ProfileBundle> {
+  return apiFetch<ProfileBundle>("/api/v1/config/profile");
+}

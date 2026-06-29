@@ -75,7 +75,7 @@ export function AuthPageContent({ page, blocks, site, editor }: AuthPageContentP
     <div
       ref={canvasRef}
       id={editor ? STUDIO_CANVAS_DROP_ZONE_ID : undefined}
-      data-testid={editor ? "grid-canvas" : undefined}
+      data-testid={editor ? "grid-canvas" : "login-page"}
       data-page-id={page.id}
       className={editor ? "relative h-full min-h-[900px] w-full" : undefined}
       style={

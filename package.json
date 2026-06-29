@@ -4,8 +4,10 @@
   "packageManager": "pnpm@9.15.0",
   "scripts": {
     "dev": "pnpm --parallel -r dev",
+    "dev:local": "powershell -ExecutionPolicy Bypass -File scripts/dev.ps1",
     "dev:web": "pnpm --filter @pumpstation/web dev",
-    "dev:api": "cd apps/api && uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000",
+    "dev:web:5180": "pnpm --filter @pumpstation/web dev --host 127.0.0.1 --port 5180 --strictPort",
+    "dev:api": "cd apps/api && uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 8000",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",

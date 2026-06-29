@@ -630,6 +630,7 @@ export function AdminProfileStudio() {
               layout={layout}
               routing={routing}
               pages={pages}
+              profileId={profileId}
               onSaveTheme={handleSaveTheme}
               onSaveLayout={handleSaveLayout}
               onSaveRouting={handleSaveRouting}

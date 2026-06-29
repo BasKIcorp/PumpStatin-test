@@ -8,6 +8,7 @@ import {
   openStudioWizardTab,
   openStudioAssetsTab,
   selectStudioPage,
+  selectWizardStep,
   studioSidebar,
 } from "./helpers/studio";
 
@@ -33,6 +34,8 @@ async function collectConsoleErrors(page: Page) {
   return errors;
 }
 
+test.describe.configure({ mode: "serial" });
+
 test.describe("Visual validation — PumpStation Studio", () => {
   test("control-ui surfaces", async ({ page }) => {
     const consoleErrors = await collectConsoleErrors(page);
@@ -57,8 +60,8 @@ test.describe("Visual validation — PumpStation Studio", () => {
     const layerCount = await layerButtons.count();
     report.push(`WIZARD LAYERS: ${layerCount} layer buttons visible`);
 
-    await expect(page.getByText("Шаги", { exact: true }).first()).toBeVisible({ timeout: 5_000 });
-    await expect(page.getByText("Слои", { exact: true }).first()).toBeVisible({ timeout: 5_000 });
+    await expect(sidebar.getByText("Шаги", { exact: true }).first()).toBeVisible({ timeout: 5_000 });
+    await expect(sidebar.getByText("Слои", { exact: true }).first()).toBeVisible({ timeout: 5_000 });
 
     const headingLayer = sidebar.getByText("Заголовок funnel", { exact: true }).first();
     const cardsLayer = sidebar.getByText("Карточка подбора", { exact: true }).first();
@@ -105,20 +108,13 @@ test.describe("Visual validation — PumpStation Studio", () => {
     report.push(`WIZARD AFTER CTRL+Z: ${wizardAfterUndo}`);
 
     // 2. Selection-form step «Подбор насосной установки»
-    await sidebar.getByRole("button", { name: "Слои" }).click();
-    await expect(page.getByText("Шаги", { exact: true }).first()).toBeVisible({ timeout: 5_000 });
-
-    const selectionFormStep = sidebar.getByText("Подбор насосной установки", { exact: true }).first();
-    await selectionFormStep.scrollIntoViewIfNeeded();
-    await expect(selectionFormStep).toBeVisible({ timeout: 5_000 });
+    await selectWizardStep(page, "selection-form");
     const selectionFormBefore = await snap(page, "10-selection-form-before");
     report.push(`SELECTION-FORM BEFORE: ${selectionFormBefore}`);
-
-    await selectionFormStep.click();
     await expect(page.getByText("Подбор насосов — Подбор насосной установки")).toBeVisible({
       timeout: 10_000,
     });
-    await expect(page.getByText("Слои", { exact: true }).first()).toBeVisible({ timeout: 10_000 });
+    await expect(sidebar.getByText("Слои", { exact: true }).first()).toBeVisible({ timeout: 10_000 });
     await page.waitForTimeout(500);
 
     const wizardCanvas = page.locator("[data-testid=grid-canvas]").first();
@@ -142,10 +138,9 @@ test.describe("Visual validation — PumpStation Studio", () => {
     ] as const;
 
     for (const blockType of selectionFormBlockTypes) {
-      await expect(page.locator(`[data-block-type="${blockType}"]`)).toHaveCount(1, {
+      await expect(wizardCanvas.locator(`[data-block-type="${blockType}"]`)).toHaveCount(1, {
         timeout: 10_000,
       });
-      await expect(wizardCanvas.locator(`[data-block-type="${blockType}"]`)).toHaveCount(1);
     }
 
     const layerChecks = await Promise.all(
@@ -169,8 +164,11 @@ test.describe("Visual validation — PumpStation Studio", () => {
     const depthErrors = consoleErrors.filter((msg) => /Maximum update depth exceeded/i.test(msg));
     report.push(`MAX DEPTH ERRORS: ${depthErrors.length}`);
 
-    // Wizard save → reload: decomposed blocks persist
-    await sidebar.getByText("Сайдбар Strela", { exact: true }).first().click();
+    // Wizard save → reload: return to product-class and edit sidebar wordmark
+    await selectWizardStep(page, "product-class");
+    await page
+      .locator('[data-testid=grid-canvas] [data-block-type="wizard/funnel-sidebar"]')
+      .click({ force: true });
     const propInput = page.locator('aside').filter({ hasText: "Свойства" }).locator('input[type="text"]').first();
     if (await propInput.isVisible().catch(() => false)) {
       await propInput.fill("strela-save-test");
@@ -181,7 +179,7 @@ test.describe("Visual validation — PumpStation Studio", () => {
       await page.reload();
       await loginAdmin(page);
       await openStudioWizardTab(page);
-      await expect(page.getByText("Слои", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
+      await expect(sidebar.getByText("Слои", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
       report.push("WIZARD SAVE RELOAD: OK — editor restored after reload");
     } else {
       report.push("WIZARD SAVE RELOAD: SKIPPED — sidebar props input not found");

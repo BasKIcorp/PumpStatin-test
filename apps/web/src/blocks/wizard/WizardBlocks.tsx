@@ -218,7 +218,7 @@ export function WizardFunnelSidebarBlock({ block }: BlockProps) {
   );
 }
 
-/** Заголовок funnel — grid-блок */
+/** Заголовок funnel — только текст (без кнопок входа) */
 export function WizardFunnelHeadingBlock({ block }: BlockProps) {
   const { wizard, branding } = useProfile();
   const nav = wizard.navigation as NavigationConfig;
@@ -228,14 +228,19 @@ export function WizardFunnelHeadingBlock({ block }: BlockProps) {
 
   return (
     <div className="flex h-full min-h-0 flex-col justify-center bg-[var(--funnel-page-bg)] px-2 sm:px-4">
-      <div className="flex min-h-[44px] items-center justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <FunnelHeading title={title} subtitle={subtitle} />
-        </div>
-        <div className="shrink-0">
-          <FunnelHeaderRight loginLabel={branding.copy?.loginLabel} />
-        </div>
-      </div>
+      <FunnelHeading title={title} subtitle={subtitle} />
+    </div>
+  );
+}
+
+/** Кнопки шапки funnel (Войти и др.) — отдельный grid-блок */
+export function WizardFunnelHeaderActionsBlock({ block }: BlockProps) {
+  const { branding } = useProfile();
+  const loginLabel =
+    (block.props.loginLabel as string | undefined) ?? branding.copy?.loginLabel ?? "Войти";
+  return (
+    <div className="flex h-full min-h-0 items-center justify-end bg-[var(--funnel-page-bg)] px-2 sm:px-4">
+      <FunnelHeaderRight loginLabel={loginLabel} />
     </div>
   );
 }
@@ -279,7 +284,6 @@ function resolveSelectionCardFromBlock(
 export function WizardSelectionCardBlock({ block }: BlockProps) {
   const { wizard, branding } = useProfile();
   const studio = useWizardStudio();
-  const selectCard = useWizardStore((s) => s.selectCard);
   const stepId = String(block.props.stepId ?? "product-class") as WizardStepId;
   const cardId = String(block.props.cardId ?? "");
   const nav = wizard.navigation as NavigationConfig;
@@ -291,8 +295,14 @@ export function WizardSelectionCardBlock({ block }: BlockProps) {
     card ? 0 : -1,
   );
   const appearance = branding.appearance;
+  const showCaptionLogo =
+    block.props.showCaptionLogo !== undefined && block.props.showCaptionLogo !== null
+      ? Boolean(block.props.showCaptionLogo)
+      : Boolean(appearance?.selection_card_caption_logo_url);
   const captionLogo =
-    appearance?.selection_card_caption_logo_url ?? CARD_CAPTION_MARK_DEFAULT_SRC;
+    (block.props.captionLogoUrl as string | undefined) ??
+    appearance?.selection_card_caption_logo_url ??
+    CARD_CAPTION_MARK_DEFAULT_SRC;
 
   if (!card) {
     return (
@@ -307,7 +317,7 @@ export function WizardSelectionCardBlock({ block }: BlockProps) {
         .split(/\n+/)
         .map((line) => line.trim())
         .filter(Boolean)
-    : ["—"];
+    : [];
   const disabled = card.enabled === false;
   const studioMode = Boolean(studio);
 
@@ -315,9 +325,9 @@ export function WizardSelectionCardBlock({ block }: BlockProps) {
     <div className="wizard-selection-card-grid flex h-full w-full min-h-0 items-stretch justify-stretch overflow-hidden p-0.5">
       <MockupCard
         layoutMode="grid"
-        identifier={card.title}
+        identifier={card.title || " "}
         boxTitle={null}
-        bullets={bullets.length ? bullets : ["—"]}
+        bullets={bullets}
         image={
           <img
             src={cardImageSrc(card, index >= 0 ? index : 0)}
@@ -328,6 +338,7 @@ export function WizardSelectionCardBlock({ block }: BlockProps) {
           />
         }
         captionLogoSrc={captionLogo}
+        showCaptionLogo={showCaptionLogo}
         imageHoverVariant={CARD_HOVER_VARIANTS[(index >= 0 ? index : 0) % CARD_HOVER_VARIANTS.length]}
         disabled={!studioMode && disabled}
         selected={studioMode && studio?.selectedCardId === card.id}
@@ -337,7 +348,7 @@ export function WizardSelectionCardBlock({ block }: BlockProps) {
             : disabled
               ? undefined
               : () =>
-                  selectCard(stepId, card.id, {
+                  useWizardStore.getState().selectCard(stepId, card.id, {
                     next: card.next,
                     flow: card.flow,
                   })

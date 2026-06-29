@@ -12,6 +12,8 @@ interface Props {
   onClick?: () => void;
   imageHoverVariant?: ImageHoverVariant;
   captionLogoSrc?: string | null;
+  /** When false, hide caption marker next to title */
+  showCaptionLogo?: boolean;
   widthPx?: number;
   /** strip — горизонтальная лента (22rem); grid — ячейка canvas, w-full и естественная высота */
   layoutMode?: "strip" | "grid";
@@ -27,11 +29,12 @@ export function MockupCard({
   onClick,
   imageHoverVariant = "zoomSubtle",
   captionLogoSrc = null,
+  showCaptionLogo = false,
   widthPx,
   layoutMode = "strip",
 }: Props) {
   const ui = DEFAULT_CARD_UI;
-  const captionLogo = captionLogoSrc ?? null;
+  const captionLogo = showCaptionLogo && captionLogoSrc ? captionLogoSrc : null;
   const hasLogo = Boolean(captionLogo);
   const title = boxTitle?.trim() ? boxTitle.trim() : identifier;
   const showCode = Boolean(boxTitle?.trim()) && identifier.trim() !== (boxTitle ?? "").trim();
@@ -96,7 +99,7 @@ export function MockupCard({
           "flex min-h-0 flex-1 flex-col overflow-y-auto bg-white px-3 pb-2.5 pt-1 sm:px-4 sm:pb-3",
         )}
       >
-        {bullets.length === 1 ? (
+        {bullets.length === 0 ? null : bullets.length === 1 ? (
           <p className={ui.bulletSingleClass}>{bullets[0]}</p>
         ) : (
           <ul className={ui.bulletListClass}>

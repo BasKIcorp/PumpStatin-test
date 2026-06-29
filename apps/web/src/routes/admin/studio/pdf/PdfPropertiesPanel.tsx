@@ -1,13 +1,6 @@
 import type { PdfBlock } from "./PdfCanvas";
 import { FIGMA } from "../figma/figmaTokens";
-
-const DATA_SOURCES = [
-  { path: "selection.input.flowRate", desc: "Расход из формы" },
-  { path: "selection.input.head", desc: "Напор из формы" },
-  { path: "selection.result.pumps[].model", desc: "Модель насоса" },
-  { path: "profile.displayName", desc: "Название профиля" },
-  { path: "selection.date", desc: "Дата" },
-];
+import { PDF_BINDING_PATHS } from "./pdfPageDefaults";
 
 const inputClass =
   "w-full rounded border-0 px-2 py-1.5 text-sm text-white outline-none focus:ring-1 focus:ring-[#0d99ff]";
@@ -40,11 +33,6 @@ function BindingField({
 
 export function PdfPropertiesPanel({
   block,
-  pageCount,
-  currentPageIndex,
-  onAddPage,
-  onRemovePage,
-  onSelectPage,
   templateName,
   mode,
   onModeChange,
@@ -53,11 +41,6 @@ export function PdfPropertiesPanel({
   onInsertBinding,
 }: {
   block: PdfBlock | null;
-  pageCount?: number;
-  currentPageIndex?: number;
-  onAddPage?: () => void;
-  onRemovePage?: () => void;
-  onSelectPage?: (index: number) => void;
   templateName: string;
   mode: "auto" | "free";
   onModeChange: (m: "auto" | "free") => void;
@@ -99,50 +82,8 @@ export function PdfPropertiesPanel({
           </div>
         </div>
 
-        <div>
-          <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-[#888]">
-            Страницы
-          </div>
-          <div className="mb-2 flex flex-wrap gap-1">
-            {Array.from({ length: pageCount ?? 1 }).map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => onSelectPage?.(i)}
-                className="rounded px-2 py-1 text-[10px]"
-                style={
-                  currentPageIndex === i
-                    ? { background: FIGMA.accentSoft, color: FIGMA.accent }
-                    : { background: FIGMA.inputBg, color: FIGMA.textMuted }
-                }
-              >
-                {i + 1}
-              </button>
-            ))}
-          </div>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={onAddPage}
-              className="flex-1 rounded py-1.5 text-[11px]"
-              style={{ background: FIGMA.inputBg, color: FIGMA.textMuted }}
-            >
-              + Страница
-            </button>
-            <button
-              type="button"
-              onClick={onRemovePage}
-              disabled={(pageCount ?? 1) <= 1}
-              className="flex-1 rounded py-1.5 text-[11px] disabled:opacity-40"
-              style={{ background: FIGMA.inputBg, color: FIGMA.textMuted }}
-            >
-              − Страница
-            </button>
-          </div>
-        </div>
-
         <p className="text-[11px] leading-relaxed text-[#666]">
-          Выберите блок на холсте или добавьте из панели «Блоки».
+          Параметры страниц — в панели над холстом. Выберите блок для редактирования свойств.
         </p>
       </div>
     );
@@ -238,7 +179,7 @@ export function PdfPropertiesPanel({
           Источники данных
         </summary>
         <div className="mt-2 space-y-1">
-          {DATA_SOURCES.map((ds) => (
+          {PDF_BINDING_PATHS.map((ds) => (
             <button
               key={ds.path}
               type="button"

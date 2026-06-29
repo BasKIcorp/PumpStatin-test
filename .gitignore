@@ -6,6 +6,7 @@ __pycache__/
 *.pyc
 .env
 .env.local
+.dev-ports.json
 data/*.db
 data/*.db-journal
 *.log
@@ -15,6 +16,7 @@ data/*.db-journal
 !.vscode/extensions.json
 coverage/
 assets/
+test-results/
 .cursor/projects/
 *.pdf
 !docs/**/*.pdf
