@@ -113,16 +113,6 @@ pages:
   type: page
   pageProfile: cms-default
   blocks:
-  - id: block-1781964019590
-    type: divider
-    props:
-      style: solid
-      color: '#e5e7eb'
-    layout:
-      x: 0
-      y: 1
-      w: 12
-      h: 1
   - id: block-1782727321641
     type: divider
     props:
@@ -131,6 +121,16 @@ pages:
     layout:
       x: 0
       y: 2
+      w: 12
+      h: 1
+  - id: block-1782733548682
+    type: divider
+    props:
+      style: solid
+      color: '#e5e7eb'
+    layout:
+      x: 0
+      y: 3
       w: 12
       h: 1
 - id: catalog
